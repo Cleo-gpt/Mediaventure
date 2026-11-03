@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Aperçu objets de quête</title>
+<style>body{margin:0;background:#F1E6D0;font-family:sans-serif;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px}
+figure{margin:0;background:#9bb3d6;border-radius:12px;overflow:hidden}figcaption{padding:6px 10px;color:#243447;font-weight:bold}canvas{display:block;width:100%;aspect-ratio:1}</style>
+<script type="importmap">{"imports":{"three":"../vendor/three.module.min.js","three/addons/":"../vendor/addons/"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const fichiers = ['sas_cle','multimedia_camera','design_regle-cutter','informatique_raspberry-pi','marketing_parchemin','admin_bouteille-gaia'];
+const loader = new GLTFLoader();
+window.pret = 0;
+for (const f of fichiers) {
+  const fig = document.createElement('figure');
+  const cv = document.createElement('canvas'); cv.width = cv.height = 400;
+  fig.append(cv, Object.assign(document.createElement('figcaption'), { textContent: f }));
+  document.body.append(fig);
+  const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true });
+  r.toneMapping = THREE.ACESFilmicToneMapping;
+  const s = new THREE.Scene(); s.background = new THREE.Color('#9bb3d6');
+  s.add(new THREE.HemisphereLight('#ffffff', '#243447', 1.6));
+  const d = new THREE.DirectionalLight('#fff', 2.5); d.position.set(2, 4, 3); s.add(d);
+  const gltf = await loader.loadAsync(`../../objets-quete/${f}.glb`);
+  s.add(gltf.scene);
+  const box = new THREE.Box3().setFromObject(gltf.scene), c = box.getCenter(new THREE.Vector3());
+  const R = box.getSize(new THREE.Vector3()).length();
+  const cam = new THREE.PerspectiveCamera(35, 1, 0.001, 100);
+  cam.position.copy(c).add(new THREE.Vector3(0.9, 0.7, 1.1).multiplyScalar(R * 0.95)); cam.lookAt(c);
+  r.render(s, cam); window.pret++;
+}
+</script></body></html>

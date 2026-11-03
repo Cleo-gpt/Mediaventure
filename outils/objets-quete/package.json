@@ -1,0 +1,7 @@
+{
+  "name": "mediaventure-objets-quete",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "node generer.js" },
+  "dependencies": { "three": "0.170.0" }
+}
