@@ -30,7 +30,7 @@
   #creation { position: fixed; inset: 0; pointer-events: none; color: #fff; }
   #creation > * { pointer-events: auto; }
   #panneau { position: absolute; top: 24px; left: 24px; bottom: 24px; width: min(560px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 18px; }
-  #onglets { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); background: rgba(16,24,70,.55); border: 2px solid rgba(160,185,255,.18); border-radius: 999px; padding: 5px; }
+  #onglets { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: rgba(16,24,70,.55); border: 2px solid rgba(160,185,255,.18); border-radius: 999px; padding: 5px; }
   #onglets button { position: relative; border: 0; background: transparent; border-radius: 999px; height: 52px; color: #dfe6ff; display: grid; place-items: center; }
   #onglets button svg { width: 34px; height: 34px; }
   #onglets button.actif { background: #fff; color: var(--marine); box-shadow: 0 0 0 3px rgba(160,190,255,.45); }

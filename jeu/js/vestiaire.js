@@ -1,5 +1,5 @@
 // Le Sas : vestiaire de création du personnage (onglets, catégories, cartes à étoiles, historique).
-import { OPTIONS, APPARENCE_DEFAUT } from './personnage.js';
+import { OPTIONS, APPARENCE_DEFAUT, CATEGORIES_DISPONIBLES } from './personnage.js';
 import { PALETTE } from './niveaux.js';
 
 const $ = (id) => document.getElementById(id);
@@ -99,8 +99,8 @@ function catalogue(a) {
 
 // ---------------------------------------------------------------- Vestiaire
 export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre }) {
-  let onglet = 'tenue';
-  let categorie = 'kimono';
+  let onglet = CATEGORIES_DISPONIBLES ? 'visage' : 'tenue';
+  let categorie = CATEGORIES_DISPONIBLES ? CATEGORIES_DISPONIBLES[0] : 'kimono';
   let tri = 'rarete';
   const passe = [], futur = [];
 
@@ -126,8 +126,15 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
 
   function rendre() {
     const cat = catalogue(a());
+    if (CATEGORIES_DISPONIBLES) {
+      // On ne propose que ce qui est déjà modélisé ; le reste reviendra au fil des étapes
+      for (const k of Object.keys(cat)) cat[k] = cat[k].filter((c) => CATEGORIES_DISPONIBLES.includes(c.id));
+    }
     // Onglets
-    for (const b of document.querySelectorAll('#onglets button')) b.classList.toggle('actif', b.dataset.onglet === onglet);
+    for (const b of document.querySelectorAll('#onglets button')) {
+      b.classList.toggle('actif', b.dataset.onglet === onglet);
+      b.hidden = !cat[b.dataset.onglet].length;
+    }
     $('badge-identite').hidden = !!partie.prenom;
     // Catégories
     const liste = cat[onglet];
