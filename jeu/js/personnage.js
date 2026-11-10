@@ -18,6 +18,7 @@ export const OPTIONS = {
   coiffure: [
     { id: 'aucune', nom: 'Au naturel' }, { id: 'tresses', nom: 'Franges et tresses' },
     { id: 'chignon', nom: 'Chignon et baguettes' }, { id: 'chonmage', nom: 'Chonmage moderne' },
+    { id: 'frange', nom: 'Courte à frange' },
   ],
   kimono: [PALETTE.corail, PALETTE.rose, PALETTE.bleu, PALETTE.marine, PALETTE.creme, '#3f8f7a'],
   cheveux: ['#2a2a2e', '#5a3a2a', '#a8643a', '#e8d2a6', '#f8a0ab'],
@@ -308,6 +309,26 @@ const coiffures = {
     d = smin(d, ellipsoide(x, y, z, [0, -0.05, -0.27], [0.12, 0.095, 0.085]), 0.04);           // chignon bas
     d = smin(d, ellipsoide(x, y, z, [0.04, -0.02, -0.325], [0.065, 0.055, 0.045]), 0.02);      // torsade
     d = smin(d, ellipsoide(x, y, z, [-0.045, -0.085, -0.322], [0.065, 0.05, 0.045]), 0.02);
+    return d;
+  },
+  // Coupe masculine courte et texturée : volume sur le dessus, côtés courts,
+  // frange en mèches pointues qui retombe sur le front en s'écartant de chaque côté de la raie
+  frange: (x, y, z) => {
+    let d = Math.max(CRANE(x, y, z) - 0.026, -0.08 + 0.2 * Math.max(0, z / 0.255) ** 1.5 - y);
+    d = smin(d, ellipsoide(x, y, z, [0, 0.16, -0.01], [0.28, 0.14, 0.26]), 0.05); // volume du dessus
+    for (let k = 0; k < 9; k++) {
+      // mèches texturées sur le sommet, ébouriffées vers l'arrière
+      const a = (k / 9) * Math.PI * 2, b = [Math.cos(a) * 0.12, 0.25, Math.sin(a) * 0.1 - 0.03];
+      d = smin(d, cone(x, y, z, b, [b[0] * 1.35, 0.31 + (k % 3) * 0.012, b[2] * 1.2 - 0.05], 0.045, 0.006), 0.02);
+    }
+    const raie = 0.035;
+    for (let i = 0; i < 9; i++) {
+      const x0 = -0.15 + i * 0.0375, cote = x0 < raie ? -1 : 1;
+      const milieu = [x0 + cote * 0.012, 0.17, 0.215];
+      const pointe = [x0 + cote * 0.035, 0.065 + Math.abs(x0 - raie) * 0.28 + (i % 2) * 0.016, 0.258];
+      d = smin(d, cone(x, y, z, [x0, 0.225, 0.13], milieu, 0.036, 0.03), 0.015);
+      d = smin(d, cone(x, y, z, milieu, pointe, 0.03, 0.004), 0.012);
+    }
     return d;
   },
   // Coupe dégradée : couches effilées, nuque longue, épis, petite queue, frange irrégulière

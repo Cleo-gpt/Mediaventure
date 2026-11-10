@@ -34,6 +34,7 @@ const ICONES = {
     const extra = {
       chonmage: `<path d="M12 40l2-14q4-12 18-12t18 12l2 14-5-6-1 8-4-9-3 7-3-9-3 7-3-9-4 9-1-8z" fill="${c}"/><path d="M40 16l12-6-4 8z" fill="${c}"/><path d="M26 14l2-8 3 7 3-8 2 9z" fill="${c}"/>`,
       chignon: `<path d="M13 32q2-18 19-18t19 18q-6-8-19-8t-19 8z" fill="${c}"/><circle cx="32" cy="58" r="7" fill="${c}"/><path d="M20 50l24 14M44 50L20 64" stroke="#c9a46a" stroke-width="2.4"/><circle cx="21" cy="51" r="2" fill="${PALETTE.corail}"/><circle cx="43" cy="51" r="2" fill="${PALETTE.corail}"/>`,
+      frange: `<path d="M13 32q0-20 19-21t19 21q-2-5-5-8l-2 9-3-10-3 11-3-11-3 11-3-11-2 10-3-9q-3 3-5 8z" fill="${c}"/><path d="M26 10l3-5 3 5 3-5 2 6z" fill="${c}"/>`,
       tresses: `<path d="M13 34q2-20 19-20t19 20h-4q0-8-15-8t-15 8z" fill="${c}"/><path d="M18 30h28v5H18z" fill="${c}"/><circle cx="10" cy="42" r="4" fill="${c}"/><circle cx="11" cy="50" r="3.6" fill="${c}"/><circle cx="12" cy="57" r="3" fill="${c}"/><circle cx="54" cy="42" r="4" fill="${c}"/><circle cx="53" cy="50" r="3.6" fill="${c}"/><circle cx="52" cy="57" r="3" fill="${c}"/><circle cx="48" cy="20" r="4" fill="#fbf8f2"/>`,
     }[coiffure] ?? '';
     return svg(base + extra);
@@ -88,7 +89,7 @@ function catalogue(a) {
       },
       {
         id: 'coiffure', titre: 'Coiffure – Coupe de cheveux', icone: ICONES.tete(a.cheveux, 'chignon', a.espece), champ: 'coiffure',
-        info: 'Franges et tresses, chignon et baguettes, ou chonmage moderne (coupe dégradée).',
+        info: 'Franges et tresses, chignon et baguettes, chonmage moderne ou coupe courte à frange.',
         cartes: (Array.isArray(OPTIONS.coiffure) ? OPTIONS.coiffure : OPTIONS.coiffure[a.genre]).map((c) => ({ valeur: c.id, nom: c.nom, etoiles: 3, visuel: ICONES.tete(a.cheveux, c.id, a.espece) })),
       },
       {
