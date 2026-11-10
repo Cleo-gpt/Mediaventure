@@ -776,17 +776,26 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   if (a.coiffure === 'tresses') {
     // liens corail au bout des tresses + fleur blanche sur le côté
     for (const s of [-1, 1]) touffe.add(piece(new THREE.SphereGeometry(0.02, 12, 10), corail, s * 0.28, -0.35, 0.075));
+    // fleur blanche posée sur la coiffure, tournée vers l'extérieur, avec deux feuilles
     const fleur = new THREE.Group();
-    const blancFleur = uni('#fbf8f2');
-    for (let i = 0; i < 14; i++) {
-      const an = (i / 14) * Math.PI * 2, r = i % 2 ? 0.03 : 0.022;
-      const petale = piece(new THREE.SphereGeometry(0.014, 8, 6), blancFleur, Math.cos(an) * r, Math.sin(an) * r, (i % 2) * -0.006);
-      petale.scale.z = 0.6;
+    const blancFleur = uni('#ffffff');
+    for (const [dx, dy, rz] of [[-0.035, -0.03, 0.9], [0.035, -0.035, -0.9]]) {
+      const feuille = piece(new THREE.SphereGeometry(0.03, 10, 8), uni('#6aa845'), dx, dy, -0.01);
+      feuille.scale.set(1.6, 0.6, 0.3);
+      feuille.rotation.z = rz;
+      fleur.add(feuille);
+    }
+    for (let i = 0; i < 16; i++) {
+      const an = (i / 16) * Math.PI * 2, r = i % 2 ? 0.042 : 0.03;
+      const petale = piece(new THREE.SphereGeometry(0.02, 10, 8), blancFleur, Math.cos(an) * r, Math.sin(an) * r, (i % 2) * -0.008);
+      petale.scale.set(1.25, 0.8, 0.5);
+      petale.rotation.z = an;
       fleur.add(petale);
     }
-    fleur.add(piece(new THREE.SphereGeometry(0.014, 10, 8), uni('#f3e2b8')));
-    fleur.position.set(0.2, 0.19, 0.08);
-    fleur.rotation.y = 0.9;
+    fleur.add(piece(new THREE.SphereGeometry(0.02, 12, 10), uni('#f3cf6a'), 0, 0, 0.01));
+    fleur.position.set(0.18, 0.195, 0.165); // sur le dessus de la frange, côté droit, bien visible de face
+    fleur.rotation.set(-0.6, 0.75, 0);
+    fleur.scale.setScalar(1.3);
     touffe.add(fleur);
   } else if (a.coiffure === 'chignon') {
     // deux baguettes en bois croisées dans le chignon, perles rouges au bout
