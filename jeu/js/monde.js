@@ -63,7 +63,8 @@ export function construireNiveau(scene, niveau, chargeurTexture) {
   const soleil = new THREE.DirectionalLight('#fff4e6', 2.4);
   soleil.position.set(18, 30, 12);
   soleil.castShadow = true;
-  soleil.shadow.mapSize.set(2048, 2048);
+  const mobile = matchMedia('(pointer: coarse)').matches;
+  soleil.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048); // ombres plus légères sur téléphone
   Object.assign(soleil.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 90 });
   soleil.shadow.bias = -0.0005;
   groupe.add(hemi, soleil);

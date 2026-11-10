@@ -7,6 +7,7 @@ import { creerPersonnage, animerPersonnage, APPARENCE_DEFAUT } from './personnag
 import { Combat } from './combat.js';
 import { epreuveVideo, epreuveDifferences, epreuveEtapes, epreuveCodeGaia } from './minijeux.js';
 import { creerVestiaire } from './vestiaire.js';
+import { ECRAN_TACTILE, joystick, installerCommandes, majBoutonAction } from './tactile.js';
 
 const $ = (id) => document.getElementById(id);
 const DOSSIER_OBJETS = '../objets-quete/';
@@ -25,7 +26,7 @@ partie.apparence = { ...APPARENCE_DEFAUT, ...partie.apparence };
 // ------------------------------------------------------------------ Rendu
 const canvas = $('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, ECRAN_TACTILE ? 1.5 : 2)); // plus léger sur téléphone
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -130,6 +131,7 @@ const etoilesFilantes = [];
 }
 let apercu = null;
 let rotationApercu = -0.35;
+let chargementTermine = false; // l'écran de chargement disparaît après la première image
 let rotationAuto = true; // le personnage du Sas tourne tout seul, sauf quand on le fait tourner à la main
 let apercuTenu = false;
 let zoomApercu = 0, zoomVoulu = 0; // 0 = en pied, 1 = gros plan sur le visage
@@ -286,7 +288,11 @@ async function lancerNiveau(id) {
   $('hud').hidden = false;
   mode = 'exploration';
   await fondu(false);
-  dialogue([{ nom: niveau.titre, texte: `${niveau.lieu}. Va au centre de l’île : le chemin commence là.` }]);
+  const lignes = [{ nom: niveau.titre, texte: `${niveau.lieu}. Va au centre de l’île : le chemin commence là.` }];
+  if (ECRAN_TACTILE && id === 'sas') {
+    lignes.push({ nom: niveau.titre, texte: 'Joystick en bas à gauche pour te déplacer (pousse-le à fond pour courir), glisse l’écran pour tourner la caméra, ⤒ pour sauter.' });
+  }
+  dialogue(lignes);
 }
 
 function lancerMiniJeu() {
@@ -392,12 +398,14 @@ function lancerQuiz() {
 // ------------------------------------------------------------------ Combat
 function lancerCombat() {
   mode = 'combat';
+  document.body.classList.add('en-combat');
   $('invite').hidden = true;
   $('aide').hidden = true;
   combat = new Combat({
     scene, camera, canvas, joueur, boss, def: niveau.boss, tutoriel: niveau.id === 'sas',
     onFin: (victoire) => {
       combat = null;
+      document.body.classList.remove('en-combat');
       mode = 'exploration';
       $('aide').hidden = false;
       joueur.position.copy(ARENE.centre).add(new THREE.Vector3(0, 0, ARENE.cases * ARENE.taille * 0.5 + 1));
@@ -570,7 +578,7 @@ $('dialogue').addEventListener('click', avancerDialogue);
 
 // ------------------------------------------------------------------ Fondu
 function fondu(noir) {
-  $('fondu').classList.toggle('visible', noir);
+  $('chargement').classList.toggle('visible', noir);
   return new Promise((r) => setTimeout(r, 450));
 }
 
@@ -589,10 +597,10 @@ addEventListener('keyup', (e) => touches.delete(e.code));
 addEventListener('blur', () => touches.clear());
 {
   let glisse = null;
-  canvas.addEventListener('pointerdown', (e) => { if (mode === 'exploration') glisse = { x: e.clientX, y: e.clientY }; });
-  addEventListener('pointerup', () => { glisse = null; });
+  canvas.addEventListener('pointerdown', (e) => { if (mode === 'exploration') glisse = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
+  addEventListener('pointerup', (e) => { if (e.pointerId === glisse?.id) glisse = null; });
   addEventListener('pointermove', (e) => {
-    if (!glisse || mode !== 'exploration') return;
+    if (!glisse || mode !== 'exploration' || e.pointerId !== glisse.id) return;
     cam.yaw -= (e.clientX - glisse.x) * 0.006;
     cam.pitch = THREE.MathUtils.clamp(cam.pitch + (e.clientY - glisse.y) * 0.004, -0.1, 1.2);
     glisse = { x: e.clientX, y: e.clientY };
@@ -601,6 +609,12 @@ addEventListener('blur', () => touches.clear());
     if (mode === 'exploration') cam.dist = THREE.MathUtils.clamp(cam.dist + e.deltaY * 0.01, 3.5, 14);
   }, { passive: true });
 }
+
+installerCommandes({
+  surSauter: () => { if (mode === 'exploration') sauter(); },
+  surAction: () => { if (mode === 'exploration') interagir(); },
+});
+if (ECRAN_TACTILE) document.querySelector('#dialogue small').textContent = 'Touche la bulle pour continuer';
 
 function sauter() {
   if (joueur.position.y <= 0.001) joueur.userData.vy = 6.2;
@@ -612,13 +626,15 @@ function interagir() { interactionProche?.action(); }
 const tmp = new THREE.Vector3();
 function majExploration(dt) {
   // Déplacement relatif à la caméra (ZQSD / WASD / flèches)
-  const av = (touches.has('KeyW') || touches.has('ArrowUp') ? 1 : 0) - (touches.has('KeyS') || touches.has('ArrowDown') ? 1 : 0);
-  const dr = (touches.has('KeyD') || touches.has('ArrowRight') ? 1 : 0) - (touches.has('KeyA') || touches.has('ArrowLeft') ? 1 : 0);
+  // + joystick tactile (on court quand on le pousse jusqu'au bord)
+  const av = (touches.has('KeyW') || touches.has('ArrowUp') ? 1 : 0) - (touches.has('KeyS') || touches.has('ArrowDown') ? 1 : 0) + joystick.y;
+  const dr = (touches.has('KeyD') || touches.has('ArrowRight') ? 1 : 0) - (touches.has('KeyA') || touches.has('ArrowLeft') ? 1 : 0) + joystick.x;
+  const pousse = Math.hypot(joystick.x, joystick.y);
   const dir = new THREE.Vector3(-Math.sin(cam.yaw) * av + Math.cos(cam.yaw) * dr, 0, -Math.cos(cam.yaw) * av - Math.sin(cam.yaw) * dr);
   let vitesse = 0;
   if (dir.lengthSq() > 0 && mode === 'exploration') {
     dir.normalize();
-    vitesse = touches.has('ShiftLeft') || touches.has('ShiftRight') ? 8 : 4.5;
+    vitesse = touches.has('ShiftLeft') || touches.has('ShiftRight') || pousse > 0.95 ? 8 : 4.5 * (joystick.actif ? Math.max(0.35, pousse) : 1);
     joueur.position.addScaledVector(dir, vitesse * dt);
     const cible = Math.atan2(dir.x, dir.z);
     let d = cible - joueur.rotation.y;
@@ -662,6 +678,7 @@ function majExploration(dt) {
   const invite = $('invite');
   invite.hidden = !interactionProche || mode !== 'exploration';
   if (interactionProche) invite.innerHTML = `<kbd>E</kbd> ${interactionProche.texte()}`;
+  majBoutonAction(interactionProche && mode === 'exploration' ? interactionProche.texte().split(' ')[0] : null);
 
   // Les PNJ regardent le joueur quand il approche
   for (const p of [pnj, boss]) {
@@ -707,12 +724,13 @@ function boucle() {
     }
     // Personnage cadré sur la droite de l'écran, comme dans le vestiaire de référence
     const large = innerWidth > 760;
-    camera.setViewOffset(innerWidth, innerHeight, large ? -innerWidth * 0.24 : 0, large ? 0 : innerHeight * 0.18, innerWidth, innerHeight);
+    camera.setViewOffset(innerWidth, innerHeight, large ? -innerWidth * 0.24 : 0, large ? 0 : innerHeight * 0.25, innerWidth, innerHeight);
     zoomApercu += (zoomVoulu - zoomApercu) * Math.min(1, dt * 8);
     const z = zoomApercu;
-    camera.position.set(0, THREE.MathUtils.lerp(0.75, 0.82, z), THREE.MathUtils.lerp(2.3, 1.05, z));
+    camera.position.set(0, THREE.MathUtils.lerp(0.75, 0.82, z), THREE.MathUtils.lerp(large ? 2.3 : 3.6, 1.05, z));
     camera.lookAt(0, THREE.MathUtils.lerp(0.55, 0.74, z), 0);
     renderer.render(sceneCreation, camera);
+    if (!chargementTermine && mode === 'creation') { chargementTermine = true; fondu(false); }
     return;
   }
   if (!monde) return;

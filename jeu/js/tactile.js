@@ -31,7 +31,7 @@ export function installerCommandes({ surSauter, surAction }) {
     doigt = e.pointerId;
     const r = zone.getBoundingClientRect();
     centre = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-    zone.setPointerCapture(e.pointerId);
+    try { zone.setPointerCapture(e.pointerId); } catch { /* le doigt a déjà été relâché */ }
     joystick.actif = true;
     bouger(e);
     e.stopPropagation();

@@ -406,8 +406,10 @@ export class Combat {
 
   // ---------------------------------------------------------------- Boucle
   cadrerCamera() {
-    this.camera.position.copy(ARENE.centre).add(new THREE.Vector3(0, 10.5, 9.5));
-    this.camera.lookAt(ARENE.centre.clone().add(new THREE.Vector3(0, 0, 0.6)));
+    // Écran en hauteur (téléphone) : on recule pour voir toute la grille, au-dessus de la barre de sorts
+    const portrait = this.camera.aspect < 1;
+    this.camera.position.copy(ARENE.centre).add(portrait ? new THREE.Vector3(0, 19, 13) : new THREE.Vector3(0, 10.5, 9.5));
+    this.camera.lookAt(ARENE.centre.clone().add(new THREE.Vector3(0, 0, portrait ? 2.6 : 0.6)));
   }
 
   update(dt) {
