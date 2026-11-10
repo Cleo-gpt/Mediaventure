@@ -314,20 +314,22 @@ const coiffures = {
   // Coupe masculine courte et texturée : volume sur le dessus, côtés courts,
   // frange en mèches pointues qui retombe sur le front en s'écartant de chaque côté de la raie
   frange: (x, y, z) => {
-    let d = Math.max(CRANE(x, y, z) - 0.026, -0.08 + 0.2 * Math.max(0, z / 0.255) ** 1.5 - y);
-    d = smin(d, ellipsoide(x, y, z, [0, 0.16, -0.01], [0.28, 0.14, 0.26]), 0.05); // volume du dessus
-    for (let k = 0; k < 9; k++) {
-      // mèches texturées sur le sommet, ébouriffées vers l'arrière
-      const a = (k / 9) * Math.PI * 2, b = [Math.cos(a) * 0.12, 0.25, Math.sin(a) * 0.1 - 0.03];
-      d = smin(d, cone(x, y, z, b, [b[0] * 1.35, 0.31 + (k % 3) * 0.012, b[2] * 1.2 - 0.05], 0.045, 0.006), 0.02);
+    let d = Math.max(CRANE(x, y, z) - 0.024, -0.08 + 0.2 * Math.max(0, z / 0.255) ** 1.5 - y);
+    d = smin(d, ellipsoide(x, y, z, [0, 0.17, -0.03], [0.26, 0.11, 0.24]), 0.05); // un peu de volume sur le dessus
+    for (let k = 0; k < 7; k++) {
+      // mèches souples sur le sommet, couchées vers l'arrière
+      const a = -0.4 + (k / 6) * 3.9, b = [Math.cos(a) * 0.11, 0.25, Math.sin(a) * 0.08 - 0.05];
+      d = smin(d, cone(x, y, z, b, [b[0] * 1.4, 0.275, b[2] - 0.08], 0.045, 0.008), 0.025);
     }
+    // frange longue jusqu'au ras des yeux, mèches bien séparées qui s'écartent de la raie
     const raie = 0.035;
     for (let i = 0; i < 9; i++) {
-      const x0 = -0.15 + i * 0.0375, cote = x0 < raie ? -1 : 1;
-      const milieu = [x0 + cote * 0.012, 0.17, 0.215];
-      const pointe = [x0 + cote * 0.035, 0.065 + Math.abs(x0 - raie) * 0.28 + (i % 2) * 0.016, 0.258];
-      d = smin(d, cone(x, y, z, [x0, 0.225, 0.13], milieu, 0.036, 0.03), 0.015);
-      d = smin(d, cone(x, y, z, milieu, pointe, 0.03, 0.004), 0.012);
+      const x0 = -0.15 + i * 0.0375, cote = x0 < raie ? -1 : 1, ecart = Math.abs(x0 - raie);
+      const haut = [x0, 0.23, 0.12];
+      const milieu = [x0 + cote * 0.015, 0.15, 0.228];
+      const pointe = [x0 + cote * (0.03 + ecart * 0.25), 0.04 + ecart * 0.15 + (i % 2) * 0.02, 0.262];
+      d = smin(d, cone(x, y, z, haut, milieu, 0.04, 0.032), 0.012);
+      d = smin(d, cone(x, y, z, milieu, pointe, 0.032, 0.004), 0.006);
     }
     return d;
   },
