@@ -54,13 +54,11 @@
   .carte-objet .nom { position: absolute; top: 6px; left: 8px; right: 8px; font-size: .68rem; font-weight: 700; text-align: left; opacity: 0; transition: opacity .15s; text-shadow: 0 1px 2px #000; }
   .carte-objet:hover .nom, .carte-objet.choisie .nom { opacity: 1; }
   .carte-objet.choisie { border-color: #fff; box-shadow: 0 0 0 3px #6fa8ff, 0 0 18px #6fa8ff, inset 0 -5px 0 #6aa8ff; }
+  .carte-libre { cursor: pointer; }
+  .carte-libre input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
   .carte-objet.choisie::after { content: '✓'; position: absolute; top: -2px; right: -2px; width: 30px; height: 30px; background: #59c96b; color: #fff; font-weight: 900; display: grid; place-items: center; border-radius: 0 6px 0 10px; }
   #champ-prenom { margin-top: 18px; }
   #prenom { width: 100%; padding: .8em 1.2em; border-radius: 999px; border: 2px solid rgba(160,185,255,.35); background: rgba(16,24,70,.6); color: #fff; font: inherit; font-weight: 700; font-size: 1.1rem; }
-  #pied-tri { display: flex; gap: 14px; align-items: center; margin-top: auto; padding-top: 16px; }
-  #pied-tri .rond { background: rgba(16,24,70,.7); color: #fff; border: 2px solid rgba(160,185,255,.3); }
-  #pied-tri .rond svg { width: 22px; height: 22px; }
-  #tri { flex: 1; max-width: 360px; appearance: none; border-radius: 999px; border: 2px solid rgba(160,185,255,.3); background: rgba(16,24,70,.7) url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8"><path d="M0 0h12L6 8z" fill="white"/></svg>') no-repeat right 18px center / 14px; color: #fff; font: inherit; font-weight: 700; font-size: 1.05rem; padding: .7em 1.4em; }
   #actions-sas { position: absolute; right: 24px; bottom: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
   #actions-sas .rond { width: 56px; height: 56px; background: rgba(255,255,255,.95); }
   #actions-sas .rond:disabled { background: rgba(255,255,255,.25); color: rgba(255,255,255,.6); cursor: default; }
@@ -89,13 +87,19 @@
   #aide { position: absolute; bottom: 12px; left: 16px; font-size: .8rem; color: var(--creme); text-shadow: 0 1px 3px rgba(0,0,0,.6); max-width: calc(100% - 32px); }
 
   /* Dialogue */
-  #dialogue { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); background: var(--creme); border-radius: 20px; padding: 16px 22px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); cursor: pointer; border: 3px solid var(--marine); }
+  /* Portrait du personnage qui parle (illustration détourée), à gauche de la bulle */
+  #dialogue-portrait { z-index: 20; position: fixed; bottom: 0; left: max(8px, calc(50% - 640px)); height: min(68vh, 620px); pointer-events: none; filter: drop-shadow(0 8px 18px rgba(36,52,71,.35)); animation: portrait-entree .35s ease-out; }
+  @keyframes portrait-entree { from { transform: translateY(24px); opacity: 0; } }
+  @media (max-width: 760px) { #dialogue-portrait { height: 38vh; left: 4px; } }
+  #dialogue { z-index: 21; position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); background: var(--creme); border-radius: 20px; padding: 16px 22px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); cursor: pointer; border: 3px solid var(--marine); }
   #dialogue-nom { position: absolute; top: -16px; left: 20px; background: var(--corail); color: #fff; padding: 4px 14px; border-radius: 999px; font-weight: 900; }
   #dialogue-texte { margin: 8px 0 4px; font-size: 1.08rem; line-height: 1.45; }
   #dialogue small { display: block; text-align: right; color: #6b7a8c; }
 
   /* Quiz & modale */
-  .modale { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(36,52,71,.55); padding: 16px; }
+  .modale { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(36,52,71,.55); padding: 16px; z-index: 10; }
+  /* quand un portrait est affiché, les fenêtres se décalent pour lui laisser la place */
+  @media (min-width: 900px) { body.avec-portrait .modale { padding-left: min(420px, 32vw); } }
   .carte { background: var(--creme); border-radius: 24px; padding: 24px; width: min(640px, 100%); border: 3px solid var(--marine); box-shadow: 0 6px 0 var(--marine); }
   #quiz-compteur { font-size: .85rem; color: #6b7a8c; margin: 0; }
   #quiz-question { font-size: 1.35rem; margin: 6px 0 16px; }
@@ -166,17 +170,10 @@
         <p id="info-texte" hidden></p>
         <div id="cartes"></div>
         <div id="champ-prenom" hidden><input id="prenom" maxlength="18" placeholder="Ton prénom" autocomplete="off"></div>
-        <div id="pied-tri">
-          <span class="rond" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 4h18l-7 8v7l-4 2v-9z" fill="currentColor"/></svg></span>
-          <select id="tri" aria-label="Trier"><option value="rarete">Trier par rareté</option><option value="nom">Trier par nom</option></select>
-        </div>
       </div>
     </div>
   </div>
   <div id="actions-sas">
-    <button class="rond" id="reinitialiser" title="Réinitialiser"><svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 1-7.4 5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M3 4v6h6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg></button>
-    <button class="rond" id="annuler" title="Annuler"><svg viewBox="0 0 24 24"><path d="M9 6L4 11l5 5M4 11h10a6 6 0 0 1 0 12h-2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 -3)"/></svg></button>
-    <button class="rond" id="retablir" title="Rétablir"><svg viewBox="0 0 24 24"><path d="M15 6l5 5-5 5M20 11H10a6 6 0 0 0 0 12h2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 -3)"/></svg></button>
     <button class="bouton secondaire" id="reprendre" hidden></button>
     <button class="bouton" id="commencer">Entrer dans le Sas</button>
   </div>
@@ -207,6 +204,7 @@
 </section>
 <div id="bulles"></div>
 
+<img id="dialogue-portrait" alt="" hidden>
 <section id="dialogue" hidden>
   <span id="dialogue-nom"></span>
   <p id="dialogue-texte"></p>

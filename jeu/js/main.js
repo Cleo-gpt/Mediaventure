@@ -122,6 +122,8 @@ const etoilesFilantes = [];
 }
 let apercu = null;
 let rotationApercu = -0.35;
+let rotationAuto = true; // le personnage du Sas tourne tout seul, sauf quand on le fait tourner à la main
+let apercuTenu = false;
 let zoomApercu = 0, zoomVoulu = 0; // 0 = en pied, 1 = gros plan sur le visage
 canvas.addEventListener('wheel', (e) => {
   if (mode === 'creation') zoomVoulu = THREE.MathUtils.clamp(zoomVoulu - e.deltaY * 0.0015, 0, 1);
@@ -136,8 +138,8 @@ function majApercu() {
 
 {
   let glisse = null;
-  canvas.addEventListener('pointerdown', (e) => { if (mode === 'creation') glisse = e.clientX; });
-  addEventListener('pointerup', () => { glisse = null; });
+  canvas.addEventListener('pointerdown', (e) => { if (mode === 'creation') { glisse = e.clientX; apercuTenu = true; } });
+  addEventListener('pointerup', () => { glisse = null; apercuTenu = false; });
   addEventListener('pointermove', (e) => {
     if (mode !== 'creation' || glisse === null) return;
     rotationApercu += (e.clientX - glisse) * 0.01;
@@ -199,7 +201,7 @@ function etiquette(texte, couleur = PALETTE.marine) {
   tex.colorSpace = THREE.SRGBColorSpace;
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
   s.scale.set(c.width / 160, c.height / 160, 1);
-  s.position.y = 2.1;
+  s.position.y = 1.4; // au-dessus des oreilles des personnages chibi
   s.renderOrder = 10;
   return s;
 }
@@ -321,6 +323,7 @@ function lancerQuiz() {
   let i = 0, score = 0;
   const el = $('quiz');
   el.hidden = false;
+  montrerPortrait(null);
   const afficher = () => {
     const q = QUESTIONS[i];
     $('quiz-compteur').textContent = `Question ${i + 1} / ${QUESTIONS.length} · ${score} bonne${score > 1 ? 's' : ''} réponse${score > 1 ? 's' : ''}`;
@@ -347,6 +350,7 @@ function lancerQuiz() {
   };
   const terminer = () => {
     el.hidden = true;
+    montrerPortrait(false);
     mode = 'exploration';
     if (score >= SEUIL) {
       dialogue([{ nom: 'Gardien·ne du Réseau', texte: `${score} / ${QUESTIONS.length} ! L’arène de ${niveau.boss.nom} est ouverte.` }], ouvrirArene);
@@ -425,9 +429,11 @@ function ramasser(def) {
   $('obtenu-icone').textContent = def?.icone ?? '✨';
   $('obtenu-nom').textContent = def?.nom ?? '';
   $('obtenu').hidden = false;
+  montrerPortrait(null);
   mode = 'dialogue';
   $('obtenu-ok').onclick = () => {
     $('obtenu').hidden = true;
+    montrerPortrait(false);
     mode = 'exploration';
     if (niveau.suivant) {
       monde.portail.visible = true;
@@ -465,6 +471,7 @@ function avancerDialogue() {
   const l = fileDialogue.shift();
   if (!l) {
     $('dialogue').hidden = true;
+    montrerPortrait(false);
     mode = modeAvantDialogue;
     const s = suiteDialogue;
     suiteDialogue = null;
@@ -473,6 +480,23 @@ function avancerDialogue() {
   }
   $('dialogue-nom').textContent = l.nom;
   $('dialogue-texte').textContent = l.texte;
+  montrerPortrait(l.nom === niveau?.boss?.nom ? niveau.boss.portrait : null);
+}
+
+// Portrait illustré à côté de chaque bloc de texte : celui du personnage qui parle s'il en a un,
+// sinon celui de Cléo, la guide. `null` → portrait de la guide ; `false` → aucun portrait.
+const PORTRAIT_GUIDE = '../portraits/cleo_miko.png';
+function montrerPortrait(portrait) {
+  const img = $('dialogue-portrait');
+  if (portrait === false) {
+    img.hidden = true;
+    document.body.classList.remove('avec-portrait');
+    return;
+  }
+  const src = portrait ?? PORTRAIT_GUIDE;
+  if (!img.src.endsWith(src.replace('../', ''))) img.src = src;
+  img.hidden = false;
+  document.body.classList.add('avec-portrait');
 }
 $('dialogue').addEventListener('click', avancerDialogue);
 
@@ -586,7 +610,7 @@ function majExploration(dt) {
   }
 
   // Caméra 3e personne
-  const cible = joueur.position.clone().add(new THREE.Vector3(0, 1.3, 0));
+  const cible = joueur.position.clone().add(new THREE.Vector3(0, 0.85, 0));
   const voulu = cible.clone().add(new THREE.Vector3(
     Math.sin(cam.yaw) * Math.cos(cam.pitch) * cam.dist,
     Math.sin(cam.pitch) * cam.dist,
@@ -605,6 +629,7 @@ function boucle() {
   const t = horloge.elapsedTime;
   if (mode === 'creation') {
     if (!apercu) majApercu();
+    if (rotationAuto && !apercuTenu) rotationApercu += dt * 0.6;
     apercu.rotation.y = rotationApercu;
     animerPersonnage(apercu, dt, 0);
     for (const e of etoilesFilantes) {
@@ -616,8 +641,8 @@ function boucle() {
     camera.setViewOffset(innerWidth, innerHeight, large ? -innerWidth * 0.24 : 0, large ? 0 : innerHeight * 0.18, innerWidth, innerHeight);
     zoomApercu += (zoomVoulu - zoomApercu) * Math.min(1, dt * 8);
     const z = zoomApercu;
-    camera.position.set(0, THREE.MathUtils.lerp(0.95, 1.45, z), THREE.MathUtils.lerp(2.45, 0.75, z));
-    camera.lookAt(0, THREE.MathUtils.lerp(0.82, 1.44, z), 0);
+    camera.position.set(0, THREE.MathUtils.lerp(0.75, 0.82, z), THREE.MathUtils.lerp(2.3, 1.05, z));
+    camera.lookAt(0, THREE.MathUtils.lerp(0.55, 0.74, z), 0);
     renderer.render(sceneCreation, camera);
     return;
   }
@@ -638,4 +663,4 @@ if (params.has('niveau') && NIVEAUX[params.get('niveau')]) {
 }
 
 // Pour le débogage depuis la console
-window.jeu = { partie, tourner: (r) => { rotationApercu = r; }, essayer: (ap) => { Object.assign(partie.apparence, ap); majApercu(); }, zoom: (v) => { zoomVoulu = zoomApercu = v; }, get mode() { return mode; }, get combat() { return combat; }, etatNiveau, lancerNiveau, ouvrirArene, lancerCombat, joueur: () => joueur, camera, cam };
+window.jeu = { partie, tourner: (r) => { rotationApercu = r; rotationAuto = false; }, essayer: (ap) => { Object.assign(partie.apparence, ap); majApercu(); }, zoom: (v) => { zoomVoulu = zoomApercu = v; }, get mode() { return mode; }, get combat() { return combat; }, etatNiveau, lancerNiveau, ouvrirArene, lancerCombat, joueur: () => joueur, camera, cam };

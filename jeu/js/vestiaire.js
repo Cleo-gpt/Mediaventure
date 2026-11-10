@@ -1,5 +1,5 @@
 // Le Sas : vestiaire de création du personnage (onglets, catégories, cartes à étoiles, historique).
-import { OPTIONS, APPARENCE_DEFAUT, CATEGORIES_DISPONIBLES } from './personnage.js';
+import { OPTIONS, CATEGORIES_DISPONIBLES } from './personnage.js';
 import { PALETTE } from './niveaux.js';
 
 const $ = (id) => document.getElementById(id);
@@ -26,16 +26,20 @@ const ICONES = {
   homme: svg('<circle cx="32" cy="18" r="9" fill="currentColor"/><path d="M18 56V38q0-10 14-10t14 10v18z" fill="currentColor"/>'),
   femme: svg('<circle cx="32" cy="18" r="9" fill="currentColor"/><path d="M32 28q-12 0-12 10l-4 18h32l-4-18q0-10-12-10z" fill="currentColor"/>'),
   neutre: svg('<circle cx="32" cy="18" r="9" fill="currentColor"/><path d="M19 56l2-18q1-10 11-10t11 10l2 18z" fill="currentColor"/>'),
-  tete: (c, coiffure) => {
-    const base = `<circle cx="32" cy="36" r="16" fill="#f4d2b8"/><path d="M15 34q0-20 17-20t17 20q-8-8-17-8t-17 8z" fill="${c}"/>`;
+  // Tête de l'animal choisi (shiba ou panda) + coiffure dessinée dans la couleur c
+  tete: (c, coiffure, espece = 'shiba') => {
+    const base = espece === 'panda'
+      ? '<circle cx="15" cy="20" r="7" fill="#1f1f24"/><circle cx="49" cy="20" r="7" fill="#1f1f24"/><ellipse cx="32" cy="38" rx="20" ry="17" fill="#fbfaf6"/><ellipse cx="24.5" cy="38" rx="4.5" ry="6" transform="rotate(25 24.5 38)" fill="#1f1f24"/><ellipse cx="39.5" cy="38" rx="4.5" ry="6" transform="rotate(-25 39.5 38)" fill="#1f1f24"/><circle cx="25" cy="37" r="1.4" fill="#fff"/><circle cx="39" cy="37" r="1.4" fill="#fff"/><ellipse cx="32" cy="44" rx="2.6" ry="1.8" fill="#1f1f24"/>'
+      : '<path d="M14 26l6-16 10 10M50 26l-6-16-10 10" fill="#eba04e"/><ellipse cx="32" cy="38" rx="20" ry="17" fill="#eba04e"/><ellipse cx="32" cy="45" rx="12" ry="8" fill="#fbf1e2"/><circle cx="25" cy="37" r="2.4" fill="#3a2a26"/><circle cx="39" cy="37" r="2.4" fill="#3a2a26"/><ellipse cx="32" cy="43" rx="2.6" ry="1.8" fill="#3a2a26"/>';
     const extra = {
-      chonmage: `<rect x="28" y="4" width="8" height="12" rx="4" fill="${c}"/>`,
-      tresses: `<circle cx="15" cy="44" r="4" fill="${c}"/><circle cx="15" cy="52" r="3.5" fill="${c}"/><circle cx="49" cy="44" r="4" fill="${c}"/><circle cx="49" cy="52" r="3.5" fill="${c}"/>`,
-      chignon: `<circle cx="32" cy="12" r="8" fill="${c}"/><path d="M18 8l28 10" stroke="${PALETTE.corail}" stroke-width="2.5"/>`,
-      courte: `<path d="M15 34v12h6V34zM43 34v12h6V34z" fill="${c}"/>`,
+      chonmage: `<path d="M12 40l2-14q4-12 18-12t18 12l2 14-5-6-1 8-4-9-3 7-3-9-3 7-3-9-4 9-1-8z" fill="${c}"/><path d="M40 16l12-6-4 8z" fill="${c}"/><path d="M26 14l2-8 3 7 3-8 2 9z" fill="${c}"/>`,
+      chignon: `<path d="M13 32q2-18 19-18t19 18q-6-8-19-8t-19 8z" fill="${c}"/><circle cx="32" cy="58" r="7" fill="${c}"/><path d="M20 50l24 14M44 50L20 64" stroke="#c9a46a" stroke-width="2.4"/><circle cx="21" cy="51" r="2" fill="${PALETTE.corail}"/><circle cx="43" cy="51" r="2" fill="${PALETTE.corail}"/>`,
+      tresses: `<path d="M13 34q2-20 19-20t19 20h-4q0-8-15-8t-15 8z" fill="${c}"/><path d="M18 30h28v5H18z" fill="${c}"/><circle cx="10" cy="42" r="4" fill="${c}"/><circle cx="11" cy="50" r="3.6" fill="${c}"/><circle cx="12" cy="57" r="3" fill="${c}"/><circle cx="54" cy="42" r="4" fill="${c}"/><circle cx="53" cy="50" r="3.6" fill="${c}"/><circle cx="52" cy="57" r="3" fill="${c}"/><circle cx="48" cy="20" r="4" fill="#fbf8f2"/>`,
     }[coiffure] ?? '';
     return svg(base + extra);
   },
+  shiba: svg('<path d="M14 8l12 14M50 8L38 22" stroke="#e48a3c" stroke-width="10" stroke-linecap="round"/><circle cx="32" cy="34" r="22" fill="#e48a3c"/><path d="M14 40q18 22 36 0q-6 14-18 14t-18-14z" fill="#f7ead8"/><ellipse cx="32" cy="44" rx="10" ry="8" fill="#f7ead8"/><circle cx="24" cy="32" r="4" fill="#2b2224"/><circle cx="40" cy="32" r="4" fill="#2b2224"/><ellipse cx="32" cy="40" rx="4" ry="2.6" fill="#2b2224"/><circle cx="23" cy="31" r="1.4" fill="#fff"/><circle cx="39" cy="31" r="1.4" fill="#fff"/>'),
+  panda: svg('<circle cx="15" cy="14" r="8" fill="#2a2a30"/><circle cx="49" cy="14" r="8" fill="#2a2a30"/><circle cx="32" cy="34" r="22" fill="#f6f5f0"/><ellipse cx="23" cy="33" rx="6" ry="8" transform="rotate(25 23 33)" fill="#2a2a30"/><ellipse cx="41" cy="33" rx="6" ry="8" transform="rotate(-25 41 33)" fill="#2a2a30"/><circle cx="24" cy="32" r="3" fill="#fff"/><circle cx="40" cy="32" r="3" fill="#fff"/><circle cx="24" cy="32" r="2" fill="#1f1f24"/><circle cx="40" cy="32" r="2" fill="#1f1f24"/><ellipse cx="32" cy="42" rx="4" ry="2.6" fill="#1f1f24"/>'),
   oeil: (c) => svg(`<path d="M8 34q24-26 48 0q-24 22-48 0z" fill="#fff" stroke="#2b2333" stroke-width="3"/><ellipse cx="32" cy="33" rx="10" ry="12" fill="${c}"/><ellipse cx="32" cy="32" rx="4" ry="6" fill="#1d1830"/><circle cx="28" cy="28" r="3" fill="#fff"/><path d="M6 30q26-30 52 0" fill="none" stroke="#2b2333" stroke-width="5" stroke-linecap="round"/>`),
 };
 
@@ -48,12 +52,14 @@ function catalogue(a) {
       {
         id: 'kimono', titre: 'Haut – Kimono', icone: ICONES.kimono('currentColor'), champ: 'kimono',
         info: 'Kimono traditionnel. Sa couleur peut changer à tout moment dans le Sas.',
-        cartes: OPTIONS.kimono.map((c, i) => ({ valeur: c, nom: NOMS_COULEURS[c], etoiles: COULEURS_KIMONO[i], visuel: ICONES.kimono(c) })),
+        cartes: [{ valeur: null, nom: 'Sans kimono', etoiles: 1, visuel: ICONES.aucun },
+          ...OPTIONS.kimono.map((c, i) => ({ valeur: c, nom: NOMS_COULEURS[c], etoiles: COULEURS_KIMONO[i], visuel: ICONES.kimono(c) }))],
       },
       {
         id: 'geta', titre: 'Chaussures – Geta', icone: ICONES.geta('currentColor'), champ: 'geta',
         info: 'Sandales japonaises en bois à deux dents. Choisis la couleur de la lanière.',
-        cartes: OPTIONS.geta.map((c, i) => ({ valeur: c, nom: `Lanière ${NOMS_COULEURS[c].toLowerCase()}`, etoiles: 2 - (i > 1), visuel: ICONES.geta(c) })),
+        cartes: [{ valeur: null, nom: 'Pieds nus', etoiles: 1, visuel: ICONES.aucun },
+          ...OPTIONS.geta.map((c, i) => ({ valeur: c, nom: `Lanière ${NOMS_COULEURS[c].toLowerCase()}`, etoiles: 2 - (i > 1), visuel: ICONES.geta(c) }))],
       },
       {
         id: 'accessoire', titre: 'Accessoire – Sac', icone: ICONES.sac, champ: 'accessoire',
@@ -71,19 +77,24 @@ function catalogue(a) {
     ],
     visage: [
       {
+        id: 'espece', titre: 'Silhouette – Espèce', icone: ICONES[a.espece] ?? ICONES.shiba, champ: 'espece',
+        info: 'Shiba roux au ventre crème, ou panda noir et blanc.',
+        cartes: OPTIONS.espece.map((e) => ({ valeur: e.id, nom: e.nom, etoiles: 3, visuel: ICONES[e.id] })),
+      },
+      {
         id: 'genre', titre: 'Silhouette – Genre', icone: ICONES.neutre, champ: 'genre',
         info: 'Homme, femme ou neutre : change la silhouette et les coupes proposées.',
         cartes: OPTIONS.genre.map((g) => ({ valeur: g.id, nom: g.nom, etoiles: 2, visuel: ICONES[g.id] })),
       },
       {
-        id: 'coiffure', titre: 'Coiffure – Coupe de cheveux', icone: ICONES.tete('currentColor', 'chignon'), champ: 'coiffure',
-        info: 'Les coupes dépendent du genre choisi.',
-        cartes: OPTIONS.coiffure[a.genre].map((c) => ({ valeur: c.id, nom: c.nom, etoiles: 3, visuel: ICONES.tete(a.cheveux, c.id) })),
+        id: 'coiffure', titre: 'Coiffure – Coupe de cheveux', icone: ICONES.tete(a.cheveux, 'chignon', a.espece), champ: 'coiffure',
+        info: 'Franges et tresses, chignon et baguettes, ou chonmage moderne (coupe dégradée).',
+        cartes: (Array.isArray(OPTIONS.coiffure) ? OPTIONS.coiffure : OPTIONS.coiffure[a.genre]).map((c) => ({ valeur: c.id, nom: c.nom, etoiles: 3, visuel: ICONES.tete(a.cheveux, c.id, a.espece) })),
       },
       {
-        id: 'cheveux', titre: 'Coiffure – Couleur', icone: ICONES.tete('currentColor', 'courte'), champ: 'cheveux',
-        info: 'Couleur des cheveux.',
-        cartes: OPTIONS.cheveux.map((c, i) => ({ valeur: c, nom: NOMS_COULEURS[c], etoiles: i < 2 ? 1 : i < 4 ? 2 : 3, visuel: ICONES.tete(c, a.coiffure) })),
+        id: 'cheveux', titre: 'Coiffure – Couleur', icone: ICONES.tete(a.cheveux, 'tresses', a.espece), champ: 'cheveux',
+        info: 'Couleur de la touffe coiffée.',
+        cartes: OPTIONS.cheveux.map((c, i) => ({ valeur: c, nom: NOMS_COULEURS[c], etoiles: i < 2 ? 1 : i < 4 ? 2 : 3, visuel: ICONES.tete(c, a.coiffure === 'aucune' ? 'tresses' : a.coiffure, a.espece) })),
       },
       {
         id: 'yeux', titre: 'Visage – Yeux', icone: ICONES.oeil('currentColor'), champ: 'yeux',
@@ -101,25 +112,12 @@ function catalogue(a) {
 export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre }) {
   let onglet = CATEGORIES_DISPONIBLES ? 'visage' : 'tenue';
   let categorie = CATEGORIES_DISPONIBLES ? CATEGORIES_DISPONIBLES[0] : 'kimono';
-  let tri = 'rarete';
-  const passe = [], futur = [];
 
   const a = () => partie.apparence;
 
   function appliquer(champ, valeur) {
     if (a()[champ] === valeur) return;
-    passe.push(JSON.stringify(a()));
-    futur.length = 0;
     a()[champ] = valeur;
-    if (champ === 'genre') a().coiffure = OPTIONS.coiffure[valeur][0].id;
-    surChangement();
-    rendre();
-  }
-
-  function restaurer(depuis, vers) {
-    if (!depuis.length) return;
-    vers.push(JSON.stringify(a()));
-    partie.apparence = JSON.parse(depuis.pop());
     surChangement();
     rendre();
   }
@@ -132,6 +130,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
     }
     // Onglets
     for (const b of document.querySelectorAll('#onglets button')) {
+      if (b.dataset.onglet === 'visage') b.innerHTML = ICONES[a().espece] ?? ICONES.visage;
       b.classList.toggle('actif', b.dataset.onglet === onglet);
       b.hidden = !cat[b.dataset.onglet].length;
     }
@@ -156,12 +155,8 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
     const grille = $('cartes');
     grille.innerHTML = '';
     $('champ-prenom').hidden = c.id !== 'prenom';
-    $('pied-tri').hidden = c.id === 'prenom';
     if (c.cartes) {
-      const cartes = [...c.cartes];
-      if (tri === 'rarete') cartes.sort((x, y) => y.etoiles - x.etoiles);
-      else cartes.sort((x, y) => x.nom.localeCompare(y.nom, 'fr'));
-      for (const carte of cartes) {
+      for (const carte of c.cartes) {
         const b = document.createElement('button');
         const choisie = a()[c.champ] === carte.valeur;
         b.className = `carte-objet etoiles-${carte.etoiles}${choisie ? ' choisie' : ''}`;
@@ -170,9 +165,22 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
         b.onclick = () => appliquer(c.champ, carte.valeur);
         grille.append(b);
       }
+      if (c.id === 'kimono') {
+        // Couleur libre : n'importe quelle teinte en plus de celles de la charte
+        const libre = !!a().kimono && !OPTIONS.kimono.includes(a().kimono);
+        const carte = document.createElement('label');
+        carte.className = `carte-objet etoiles-3 carte-libre${libre ? ' choisie' : ''}`;
+        carte.title = 'Couleur libre';
+        const valeur = a().kimono ?? PALETTE.corail;
+        carte.innerHTML = `${ICONES.kimono(valeur)}<span class="nom">Couleur libre</span><span class="etoiles">🎨</span>`;
+        const champ = document.createElement('input');
+        champ.type = 'color';
+        champ.value = valeur.length === 7 ? valeur.toLowerCase() : '#ff696a';
+        champ.oninput = (e) => appliquer('kimono', e.target.value);
+        carte.append(champ);
+        grille.append(carte);
+      }
     }
-    $('annuler').disabled = !passe.length;
-    $('retablir').disabled = !futur.length;
   }
 
   for (const b of document.querySelectorAll('#onglets button')) {
@@ -180,16 +188,6 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
     b.onclick = () => { onglet = b.dataset.onglet; $('info-texte').hidden = true; rendre(); };
   }
   $('info').onclick = () => { $('info-texte').hidden = !$('info-texte').hidden; };
-  $('tri').onchange = (e) => { tri = e.target.value; rendre(); };
-  $('annuler').onclick = () => restaurer(passe, futur);
-  $('retablir').onclick = () => restaurer(futur, passe);
-  $('reinitialiser').onclick = () => {
-    passe.push(JSON.stringify(a()));
-    futur.length = 0;
-    partie.apparence = { ...APPARENCE_DEFAUT };
-    surChangement();
-    rendre();
-  };
   $('prenom').value = partie.prenom;
   $('prenom').oninput = (e) => { partie.prenom = e.target.value.trim(); $('badge-identite').hidden = !!partie.prenom; };
   $('commencer').onclick = surEntrer;

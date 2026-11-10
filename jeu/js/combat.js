@@ -44,6 +44,7 @@ export class Combat {
     if (tutoriel) {
       this.log('Cases bleues : clique pour te déplacer (PM). Choisis un sort puis clique sur la cible (PA).');
       this.log('Touches 1, 2, 3 pour les sorts, Entrée pour finir le tour.');
+      this.log('Abrite-toi derrière les pierres : elles arrêtent les shurikens et les sorts à distance.');
     }
     this.debutTourJoueur();
   }
@@ -82,13 +83,29 @@ export class Combat {
     }
   }
 
+  // Ligne de vue : aucune pierre entre les deux cases (les cases de départ et d'arrivée ne comptent pas)
+  vue(a, b) {
+    const n = Math.max(Math.abs(b.i - a.i), Math.abs(b.j - a.j)) * 4;
+    for (let k = 1; k < n; k++) {
+      const c = { i: Math.round(a.i + ((b.i - a.i) * k) / n), j: Math.round(a.j + ((b.j - a.j) * k) / n) };
+      if (cle(c) !== cle(a) && cle(c) !== cle(b) && this.obstacles.has(cle(c))) return false;
+    }
+    return true;
+  }
+
+  // Un sort peut-il atteindre cette case ? (portée + ligne de vue pour les sorts à distance)
+  atteint(s, de, vers) {
+    const d = dist(de, vers);
+    return d >= s.portee[0] && d <= s.portee[1] && (s.portee[1] <= 1 || this.vue(de, vers));
+  }
+
   colorer() {
     const actif = this.etat === 'joueur';
     const zone = new Map();
     if (actif && this.sort) {
       for (const m of this.cases) {
-        const d = dist(m.userData.c, this.j.c);
-        if (d >= this.sort.portee[0] && d <= this.sort.portee[1] && !this.obstacles.has(cle(m.userData.c))) zone.set(cle(m.userData.c), PALETTE.corail);
+        const c = m.userData.c;
+        if (!this.obstacles.has(cle(c)) && this.atteint(this.sort, this.j.c, c)) zone.set(cle(c), PALETTE.corail);
       }
     } else if (actif) {
       for (const k of this.accessibles().keys()) zone.set(k, PALETTE.bleu);
@@ -235,6 +252,7 @@ export class Combat {
     if (this.sort) {
       const d = dist(c, this.j.c);
       if (d < this.sort.portee[0] || d > this.sort.portee[1]) return;
+      if (!this.atteint(this.sort, this.j.c, c)) { this.log('🪨 Une pierre bloque la ligne de vue.'); return; }
       const cible = cle(c) === cle(this.b.c) ? this.b : null;
       const s = this.sort;
       this.sort = null;
@@ -359,7 +377,7 @@ export class Combat {
     await attendre(500);
     const sorts = this.def.sorts ?? [];
     const lancable = () => sorts
-      .filter((s) => s.pa <= b.pa && dist(b.c, this.j.c) >= s.portee[0] && dist(b.c, this.j.c) <= s.portee[1])
+      .filter((s) => s.pa <= b.pa && this.atteint(s, b.c, this.j.c))
       .sort((x, y) => y.degats[1] - x.degats[1])[0];
 
     for (let essais = 0; essais < 4 && this.etat === 'boss'; essais++) {
@@ -371,7 +389,7 @@ export class Combat {
       let meilleure = null;
       for (const n of carte.values()) {
         const d = dist(n.c, this.j.c);
-        const utile = sorts.some((x) => x.pa <= b.pa && d >= x.portee[0] && d <= x.portee[1]);
+        const utile = sorts.some((x) => x.pa <= b.pa && this.atteint(x, n.c, this.j.c));
         const score = utile ? n.d : 100 + d;
         if (!meilleure || score < meilleure.score) meilleure = { c: n.c, score };
       }

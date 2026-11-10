@@ -18,11 +18,13 @@ export const OBJETS = {
 export const NIVEAUX = {
   sas: {
     titre: 'Le Sas', lieu: 'Forêt de bambous — Kyoto', biome: 'bambou', jouable: true,
-    ciel: '#cfe3d2', brume: '#cfe3d2', sol: '#7fae6b', chemin: PALETTE.creme, accent: PALETTE.corail,
-    fond: null, miniJeu: 'demo', suivant: 'informatique',
+    ciel: '#628d34', brume: '#628d34', sol: '#bd8a4c', chemin: PALETTE.creme, accent: PALETTE.corail,
+    fond: '../fonds/sas_bambous.jpg', miniJeu: 'demo', suivant: 'informatique',
     boss: {
       nom: 'Cléo Forclaz', titre: 'Gardienne du Sas (démo)', pv: 45, pa: 6, pm: 3,
-      apparence: { genre: 'femme', coiffure: 'chignon', cheveux: '#3b2a24', kimono: PALETTE.rose },
+      // Miko au masque de renard
+      apparence: { espece: 'humain', coiffure: 'carre', cheveux: '#4a3226', tenue: 'miko', masque: 'kitsune' },
+      portrait: '../portraits/cleo_miko.png', // illustration détourée, affichée à côté de ses dialogues
       sorts: [
         { nom: 'Pichenette', pa: 3, portee: [1, 1], degats: [5, 8] },
         { nom: 'Feuille de bambou', pa: 4, portee: [2, 4], degats: [4, 7] },
@@ -43,11 +45,11 @@ export const NIVEAUX = {
   },
   informatique: {
     titre: 'Informatique', lieu: 'Le Ciel — îles flottantes', biome: 'ciel', jouable: true,
-    ciel: '#8fa0b7', brume: '#a9bbd2', sol: '#86a2cc', chemin: PALETTE.creme, accent: PALETTE.corail,
+    ciel: '#92a3b7', brume: '#a8b8cb', sol: '#bccad8', chemin: PALETTE.creme, accent: PALETTE.corail,
     fond: '../fonds/informatique_fuji.jpg', miniJeu: 'quiz', suivant: 'marketing',
     boss: {
       nom: 'M. Kiner', titre: 'Boss Informatique', pv: 90, pa: 6, pm: 3,
-      apparence: { genre: 'homme', coiffure: 'chonmage', cheveux: '#2a2a2e', kimono: PALETTE.marine },
+      apparence: { espece: 'panda', genre: 'homme', coiffure: 'chonmage', cheveux: '#2a2a2e', kimono: PALETTE.marine },
       sorts: [
         { nom: 'Erreur 404', pa: 3, portee: [1, 2], degats: [9, 13] },
         { nom: 'Écran bleu', pa: 4, portee: [2, 5], degats: [7, 11] },

@@ -1,6 +1,7 @@
 // Construction des îles / biomes. Chaque niveau suit la même disposition :
 // arrivée (sud) → mini-jeu au milieu → arène du boss (nord) → portail (tout au nord).
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PALETTE } from './niveaux.js';
 
 export const RAYON_ILE = 22;
@@ -11,7 +12,37 @@ export const POS = {
   portail: new THREE.Vector3(0, 0, -19),
 };
 
-const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.8, ...o });
+// Style « dessin » commun à tous les décors : ombrage doux en aplats + léger grain de papier,
+// pour que la 3D se fonde dans les illustrations de fond.
+const degradeDoux = (() => {
+  const t = new THREE.DataTexture(new Uint8Array([175, 222, 255]), 3, 1, THREE.RedFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter;
+  t.needsUpdate = true;
+  return t;
+})();
+const grainPapier = (sh) => {
+  sh.vertexShader = sh.vertexShader
+    .replace('#include <common>', '#include <common>\nvarying vec3 vPosMonde;')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPosMonde = (modelMatrix * vec4(position, 1.0)).xyz;');
+  sh.fragmentShader = sh.fragmentShader
+    .replace('#include <common>', `#include <common>
+      varying vec3 vPosMonde;
+      float hashP(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+      float bruitP(vec3 x) {
+        vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(hashP(i), hashP(i + vec3(1,0,0)), f.x), mix(hashP(i + vec3(0,1,0)), hashP(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(hashP(i + vec3(0,0,1)), hashP(i + vec3(1,0,1)), f.x), mix(hashP(i + vec3(0,1,1)), hashP(i + vec3(1,1,1)), f.x), f.y), f.z);
+      }`)
+    .replace('#include <color_fragment>', `#include <color_fragment>
+      diffuseColor.rgb *= 0.93 + 0.07 * bruitP(vPosMonde * 9.0) + 0.05 * bruitP(vPosMonde * 55.0);`);
+};
+const mat = (color, o = {}) => {
+  const { roughness, metalness, ...reste } = o; // pas de reflets métalliques dans un dessin
+  const m = new THREE.MeshToonMaterial({ color, gradientMap: degradeDoux, ...reste });
+  m.onBeforeCompile = grainPapier;
+  m.customProgramCacheKey = () => 'dessin';
+  return m;
+};
 
 function ombre(obj) {
   obj.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -168,6 +199,22 @@ function creerPortail(couleur) {
   return g;
 }
 
+// Décor dessiné collé à l'intérieur d'un grand cylindre, répété en miroir pour ne pas voir de raccord.
+// `bas` = hauteur du bas de l'image ; le centre de l'image tombe face à l'arrivée (-z).
+function fondPanoramique(groupe, url, chargeurTexture, { rayon, repetitions, bas }) {
+  const tex = chargeurTexture.load(url);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.MirroredRepeatWrapping;
+  tex.repeat.x = repetitions;
+  const H = ((2 * Math.PI * rayon) / repetitions) * 0.75; // images au format 4:3
+  const fond = new THREE.Mesh(new THREE.CylinderGeometry(rayon, rayon, H, 96, 1, true),
+    new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false }));
+  fond.position.y = bas + H / 2;
+  if (repetitions % 2 === 0) fond.rotation.y = Math.PI / repetitions; // garde le centre de l'image face à l'arrivée
+  groupe.add(fond);
+  return fond;
+}
+
 function nuage(taille = 1, opacite = 0.95) {
   const g = new THREE.Group();
   const m = new THREE.MeshLambertMaterial({ color: '#ffffff', transparent: opacite < 1, opacity: opacite });
@@ -202,42 +249,50 @@ function koi() {
 }
 
 // ------------------------------------------------------------------ Sas : forêt de bambous
-function decorBambou({ groupe, colliders, animations }) {
-  // Sol extérieur (la forêt continue au-delà de l'île)
-  const foret = new THREE.Mesh(new THREE.CircleGeometry(160, 48), mat('#6e9c5c'));
+function decorBambou({ groupe, scene, niveau, colliders, animations, chargeurTexture }) {
+  // Fond dessiné de la forêt de bambous, tout autour de l'île
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 75, repetitions: 4, bas: -9 });
+  // Brume verte : les bambous lointains se fondent dans le dessin
+  scene.fog = new THREE.Fog('#628d34', 30, 105);
+
+  // Sol extérieur : terre beige qui fonce vers le bord, pour rejoindre le pied des bambous du dessin
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  g.addColorStop(0, '#bd8a4c'); g.addColorStop(0.45, '#b37f45'); g.addColorStop(0.85, '#8a5732'); g.addColorStop(1, '#6e4226');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 256, 256);
+  const texSol = new THREE.CanvasTexture(c);
+  texSol.colorSpace = THREE.SRGBColorSpace;
+  const foret = new THREE.Mesh(new THREE.CircleGeometry(76, 64), mat('#ffffff', { map: texSol, fog: false }));
   foret.rotation.x = -Math.PI / 2;
   foret.position.y = -0.05;
   foret.receiveShadow = true;
   groupe.add(foret);
 
-  const vert = [mat('#7fb069'), mat('#94c27a'), mat('#6a9a58')];
-  const noeud = mat('#5d8a4c');
-  const tige = new THREE.CylinderGeometry(0.12, 0.14, 1, 8);
-  const anneau = new THREE.CylinderGeometry(0.15, 0.15, 0.06, 8);
-  const feuilles = mat('#8cc06e', { side: THREE.DoubleSide });
-  const feuille = new THREE.ConeGeometry(0.5, 1.6, 4);
-
+  // Bambous comme sur le dessin : tiges vert plat, nœuds foncés, petit reflet clair en arc sous chaque nœud.
+  // Chaque bambou est fusionné en une seule géométrie colorée (beaucoup moins d'appels de dessin).
+  const VERTS = ['#81b14d', '#709d40', '#628d34', '#7aaa45'];
+  const colorer = (geo, couleur) => {
+    const col = new THREE.Color(couleur), n = geo.attributes.position.count, a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) a.set([col.r, col.g, col.b], i * 3);
+    geo.setAttribute('color', new THREE.BufferAttribute(a, 3));
+    return geo;
+  };
+  const matBambou = mat('#ffffff', { vertexColors: true });
   const bambou = (x, z) => {
-    const h = 9 + Math.random() * 7;
-    const b = new THREE.Group();
-    const t = new THREE.Mesh(tige, vert[Math.floor(Math.random() * 3)]);
-    t.scale.y = h;
-    t.position.y = h / 2;
-    b.add(t);
-    for (let y = 1.2; y < h; y += 1.4) {
-      const a = new THREE.Mesh(anneau, noeud);
-      a.position.y = y;
-      b.add(a);
+    const h = 10 + Math.random() * 8, r = 0.1 + Math.random() * 0.13;
+    const morceaux = [colorer(new THREE.CylinderGeometry(r, r * 1.06, h, 12).translate(0, h / 2, 0), VERTS[Math.floor(Math.random() * VERTS.length)])];
+    const pas = 1.1 + r * 3;
+    for (let y = 0.6 + Math.random() * pas; y < h; y += pas) {
+      morceaux.push(colorer(new THREE.CylinderGeometry(r * 1.04, r * 1.04, 0.035, 12).translate(0, y, 0), '#53782e'));
+      morceaux.push(colorer(new THREE.TorusGeometry(r * 1.03, 0.012, 3, 12, Math.PI * 0.75).rotateX(Math.PI / 2).rotateY(Math.random() * 6.28).translate(0, y - 0.16, 0), '#c6ef8e'));
     }
-    for (let i = 0; i < 4; i++) {
-      const f = new THREE.Mesh(feuille, feuilles);
-      f.position.set(0, h - i * 1.2, 0);
-      f.rotation.set(1.2, Math.random() * 6.28, 0);
-      f.translateY(0.7);
-      b.add(f);
-    }
+    const b = new THREE.Mesh(mergeGeometries(morceaux), matBambou);
+    morceaux.forEach((m) => m.dispose());
     b.position.set(x, 0, z);
-    b.rotation.z = (Math.random() - 0.5) * 0.08;
+    b.rotation.z = (Math.random() - 0.5) * 0.1;
     b.userData.phase = Math.random() * 6;
     groupe.add(ombre(b));
     return b;
@@ -245,16 +300,28 @@ function decorBambou({ groupe, colliders, animations }) {
 
   // Mur de bambous autour de la clairière + bosquets intérieurs
   const balancent = [];
-  for (let i = 0; i < 260; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const r = RAYON_ILE + 1 + Math.random() * 26;
-    balancent.push(bambou(Math.cos(a) * r, Math.sin(a) * r));
+  // Cases à laisser libres : le chemin (x ≈ 0), l'arène du boss et l'arrivée
+  const libre = (x, z) => Math.abs(x) > 4.5 && !(Math.abs(x) < 8 && z > -17 && z < -3);
+  const planter = (x, z, solide) => {
+    balancent.push(bambou(x, z));
+    if (solide) colliders.push({ x, z, r: 0.35 });
+  };
+  // Forêt dense tout autour de la clairière
+  for (let i = 0; i < 560; i++) {
+    const a = Math.random() * Math.PI * 2, r = RAYON_ILE + 0.5 + Math.random() ** 0.8 * 30;
+    planter(Math.cos(a) * r, Math.sin(a) * r, false);
   }
-  for (const [cx, cz] of [[-11, 6], [12, 4], [-13, -6], [13, -13], [-9, 16], [10, 15]]) {
-    for (let i = 0; i < 5; i++) {
-      const x = cx + (Math.random() - 0.5) * 3, z = cz + (Math.random() - 0.5) * 3;
-      balancent.push(bambou(x, z));
-      colliders.push({ x, z, r: 0.35 });
+  // Lisière : bambous qui débordent dans la clairière
+  for (let i = 0; i < 90; i++) {
+    const a = Math.random() * Math.PI * 2, r = 16.5 + Math.random() * 5;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (libre(x, z)) planter(x, z, true);
+  }
+  // Bosquets dans la clairière
+  for (const [cx, cz] of [[-11, 6], [12, 4], [-13, -6], [13, -13], [-9, 16], [10, 15], [-8, -1], [9, -3], [-14, 11], [15, 9], [-10, -19], [11, -19]]) {
+    for (let i = 0; i < 7; i++) {
+      const x = cx + (Math.random() - 0.5) * 3.4, z = cz + (Math.random() - 0.5) * 3.4;
+      if (libre(x, z)) planter(x, z, true);
     }
   }
   animations.push((dt, t) => {
@@ -291,27 +358,18 @@ function decorBambou({ groupe, colliders, animations }) {
 }
 
 // --------------------------------------------------- Informatique : le ciel, îles flottantes
-function decorCiel({ groupe, niveau, colliders, animations, chargeurTexture }) {
+function decorCiel({ groupe, scene, niveau, colliders, animations, chargeurTexture }) {
+  scene.fog = new THREE.Fog('#a8b8cb', 70, 290); // couleur du ciel et des nuages du dessin
   // Fond : le mont Fuji, répété en miroir sur 360° pour ne pas avoir de raccord visible
-  if (niveau.fond) {
-    const tex = chargeurTexture.load(niveau.fond);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = THREE.MirroredRepeatWrapping;
-    tex.repeat.x = 3;
-    const R = 300, H = ((2 * Math.PI * R) / 3) * 0.75;
-    const ciel = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, 96, 1, true),
-      new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false }));
-    ciel.position.y = H * 0.12 - 4;
-    // u = 0,5 (centre de l'image) tombe à θ = 180°, soit -z : le Fuji fait face à l'arrivée
-    groupe.add(ciel);
-  }
+  // Le mont Fuji : le haut des nuages de l'image arrive à hauteur d'horizon
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 300, repetitions: 3, bas: (((2 * Math.PI * 300) / 3) * 0.75) * -0.38 - 4 });
   const merNuages = new THREE.Mesh(new THREE.CircleGeometry(300, 64), new THREE.MeshBasicMaterial({ color: '#e9eef5', fog: false }));
   merNuages.rotation.x = -Math.PI / 2;
   merNuages.position.y = -60;
   groupe.add(merNuages);
 
   // Dessous rocheux de l'île
-  const roche = new THREE.Mesh(new THREE.ConeGeometry(RAYON_ILE + 1.5, 16, 24, 3), mat('#6f7f98', { flatShading: true }));
+  const roche = new THREE.Mesh(new THREE.ConeGeometry(RAYON_ILE + 1.5, 16, 32, 3), mat('#4f7295')); // bleu du Fuji
   roche.rotation.x = Math.PI;
   roche.position.y = -9.2;
   groupe.add(roche);
@@ -338,7 +396,7 @@ function decorCiel({ groupe, niveau, colliders, animations, chargeurTexture }) {
   for (const [x, y, z, r] of [[-34, 4, -18, 4], [32, 7, -26, 5], [-28, -2, 22, 3.5], [36, 1, 14, 3], [0, 12, -52, 7], [-48, 9, -40, 5]]) {
     const ile = new THREE.Group();
     const dessus = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.9, 0.8, 20), mat(niveau.sol));
-    const dessous = new THREE.Mesh(new THREE.ConeGeometry(r * 0.9, r * 1.8, 10), mat('#6f7f98', { flatShading: true }));
+    const dessous = new THREE.Mesh(new THREE.ConeGeometry(r * 0.9, r * 1.8, 10), mat('#4f7295'));
     dessous.rotation.x = Math.PI;
     dessous.position.y = -r * 0.9 - 0.4;
     ile.add(dessus, dessous);
