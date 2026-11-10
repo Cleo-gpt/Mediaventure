@@ -127,7 +127,8 @@ export function construireNiveau(scene, niveau, chargeurTexture) {
   });
 
   // Décor propre au biome
-  const decor = { bambou: decorBambou, ciel: decorCiel }[niveau.biome] ?? decorGenerique;
+  const decor = { bambou: decorBambou, ciel: decorCiel, tournesol: decorTournesols, automne: decorAutomne,
+    glycine: decorGlycines, sakura: decorSakura, final: decorMatsue }[niveau.biome] ?? decorGenerique;
   decor({ groupe, scene, niveau, colliders, animations, chargeurTexture });
 
   return {
@@ -215,6 +216,46 @@ function fondPanoramique(groupe, url, chargeurTexture, { rayon, repetitions, bas
   return fond;
 }
 
+// ---- Outils communs aux décors
+// Colore une géométrie d'une seule teinte (pour fusionner plusieurs pièces en un seul maillage)
+function colorer(geo, couleur) {
+  const col = new THREE.Color(couleur), n = geo.attributes.position.count, a = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) a.set([col.r, col.g, col.b], i * 3);
+  geo.setAttribute('color', new THREE.BufferAttribute(a, 3));
+  return geo;
+}
+// Fusionne des morceaux colorés en un seul maillage (bien moins d'appels de dessin)
+let matCouleurs = null;
+function fusionner(morceaux) {
+  matCouleurs ??= mat('#ffffff', { vertexColors: true });
+  const geos = morceaux.map((g) => (g.index ? g.toNonIndexed() : g));
+  const m = new THREE.Mesh(mergeGeometries(geos), matCouleurs);
+  morceaux.forEach((g) => g.dispose());
+  return ombre(m);
+}
+// Sol qui prolonge l'île jusqu'à l'horizon, en dégradé du centre vers le bord
+function solExterieur(groupe, centre, bord, rayon = 140) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  g.addColorStop(0, centre); g.addColorStop(0.3, centre); g.addColorStop(1, bord);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 256, 256);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sol = new THREE.Mesh(new THREE.CircleGeometry(rayon, 64), mat('#ffffff', { map: tex }));
+  sol.rotation.x = -Math.PI / 2;
+  sol.position.y = -0.05;
+  sol.receiveShadow = true;
+  groupe.add(sol);
+}
+// Position aléatoire hors du chemin, de l'arène et de l'arrivée
+const horsChemin = (x, z) => Math.abs(x) > 4.5 && !(Math.abs(x) < 8 && z > -17 && z < -3);
+const auHasard = (min, max) => min + Math.random() * (max - min);
+// Couloir derrière l'arrivée, où se trouve la caméra au début : pas d'arbre dedans
+const horsCouloirCamera = (x, z) => !(z > 12 && Math.abs(x) < 13);
+
 function nuage(taille = 1, opacite = 0.95) {
   const g = new THREE.Group();
   const m = new THREE.MeshLambertMaterial({ color: '#ffffff', transparent: opacite < 1, opacity: opacite });
@@ -274,13 +315,8 @@ function decorBambou({ groupe, scene, niveau, colliders, animations, chargeurTex
   // Bambous comme sur le dessin : tiges vert plat, nœuds foncés, petit reflet clair en arc sous chaque nœud.
   // Chaque bambou est fusionné en une seule géométrie colorée (beaucoup moins d'appels de dessin).
   const VERTS = ['#81b14d', '#709d40', '#628d34', '#7aaa45'];
-  const colorer = (geo, couleur) => {
-    const col = new THREE.Color(couleur), n = geo.attributes.position.count, a = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) a.set([col.r, col.g, col.b], i * 3);
-    geo.setAttribute('color', new THREE.BufferAttribute(a, 3));
-    return geo;
-  };
   const matBambou = mat('#ffffff', { vertexColors: true });
+
   const bambou = (x, z) => {
     const h = 10 + Math.random() * 8, r = 0.1 + Math.random() * 0.13;
     const morceaux = [colorer(new THREE.CylinderGeometry(r, r * 1.06, h, 12).translate(0, h / 2, 0), VERTS[Math.floor(Math.random() * VERTS.length)])];
@@ -486,4 +522,319 @@ function decorGenerique({ groupe, niveau, colliders }) {
   dessous.rotation.x = Math.PI;
   dessous.position.y = -8.2;
   groupe.add(dessous);
+}
+
+// ------------------------------------------------------------------ Multimédia : Sayo, champs de tournesols
+function decorTournesols({ groupe, scene, niveau, colliders, animations, chargeurTexture }) {
+  // Fond dessiné de Sayo tout autour ; brume et sol aux couleurs de son herbe
+  // 8 répétitions : les grands tournesols du dessin restent sur l'horizon et le ciel reste visible
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 8, bas: -11 });
+  scene.fog = new THREE.Fog('#7aa852', 30, 115);
+  solExterieur(groupe, '#77ab52', '#5f9244', 91);
+  const tournesol = (x, z) => {
+    const h = auHasard(1.4, 2.6), m = [];
+    m.push(colorer(new THREE.CylinderGeometry(0.05, 0.07, h, 6).translate(0, h / 2, 0), '#5f9244'));
+    for (const s of [-1, 1]) {
+      m.push(colorer(new THREE.SphereGeometry(0.22, 8, 6).scale(1, 0.25, 0.55).rotateZ(s * 0.6).translate(s * 0.2, h * 0.45, 0), '#679b4c'));
+    }
+    const tete = [colorer(new THREE.CylinderGeometry(0.2, 0.22, 0.08, 16).rotateX(Math.PI / 2), '#733b0d')];
+    for (let k = 0; k < 14; k++) {
+      const an = (k / 14) * Math.PI * 2;
+      tete.push(colorer(new THREE.SphereGeometry(0.11, 6, 4).scale(1, 2.2, 0.35).translate(0, 0.3, 0).rotateZ(an), k % 2 ? '#fed76b' : '#ffdd80'));
+    }
+    const g = mergeGeometries(tete.map((t) => t.toNonIndexed()));
+    g.rotateY(Math.atan2(-x, -z)).translate(0, h + 0.05, 0); // regardent le centre de l'île
+    m.push(g);
+    const f = fusionner(m);
+    f.position.set(x, 0, z);
+    f.userData.phase = Math.random() * 6;
+    groupe.add(f);
+    return f;
+  };
+  const fleurs = [];
+  for (let i = 0; i < 420; i++) {
+    const a = Math.random() * Math.PI * 2, r = RAYON_ILE + 1 + Math.random() ** 0.7 * 26;
+    fleurs.push(tournesol(Math.cos(a) * r, Math.sin(a) * r));
+  }
+  for (const [cx, cz] of [[-11, 6], [12, 4], [-13, -6], [13, -12], [-10, 15], [10, 15]]) {
+    for (let i = 0; i < 9; i++) {
+      const x = cx + auHasard(-2, 2), z = cz + auHasard(-2, 2);
+      if (!horsChemin(x, z)) continue;
+      fleurs.push(tournesol(x, z));
+      colliders.push({ x, z, r: 0.25 });
+    }
+  }
+  animations.push((dt, t) => { for (const f of fleurs) f.rotation.z = Math.sin(t * 1.2 + f.userData.phase) * 0.03; });
+}
+
+// ------------------------------------------------------------------ Design : Daisetsuzan en automne
+function decorAutomne({ groupe, scene, colliders, animations }) {
+  scene.fog = new THREE.Fog('#f2c29a', 40, 170);
+  solExterieur(groupe, '#c9884e', '#9a6a44');
+  // Montagnes au loin, versants orangés et sommets clairs
+  for (let i = 0; i < 11; i++) {
+    const a = (i / 11) * Math.PI * 2 + 0.3, h = auHasard(25, 45);
+    const mont = fusionner([
+      colorer(new THREE.ConeGeometry(h * 0.9, h, 7).translate(0, h / 2, 0), i % 2 ? '#b8714a' : '#9f6a52'),
+      colorer(new THREE.ConeGeometry(h * 0.25, h * 0.28, 7).translate(0, h * 0.86, 0), '#f3e6d6'),
+    ]);
+    mont.position.set(Math.cos(a) * 120, -2, Math.sin(a) * 120);
+    groupe.add(mont);
+  }
+  const TEINTES = ['#e8672c', '#d9482b', '#f2a33a', '#c9542f', '#f0b54a'];
+  const erable = (x, z, echelle = 1) => {
+    const h = auHasard(2.2, 3.4) * echelle, m = [colorer(new THREE.CylinderGeometry(0.15 * echelle, 0.25 * echelle, h, 7).translate(0, h / 2, 0), '#6b4a33')];
+    const t = TEINTES[Math.floor(Math.random() * TEINTES.length)];
+    for (let k = 0; k < 6; k++) {
+      const r = auHasard(0.9, 1.4) * echelle;
+      m.push(colorer(new THREE.IcosahedronGeometry(r, 2).translate(auHasard(-1, 1) * echelle, h + auHasard(-0.3, 0.9) * echelle, auHasard(-1, 1) * echelle), k % 3 ? t : TEINTES[(k + 2) % TEINTES.length]));
+    }
+    const a = fusionner(m);
+    a.position.set(x, 0, z);
+    groupe.add(a);
+    return a;
+  };
+  for (let i = 0; i < 150; i++) {
+    const a = Math.random() * Math.PI * 2, r = RAYON_ILE + 2 + Math.random() * 40;
+    if (horsCouloirCamera(Math.cos(a) * r, Math.sin(a) * r)) erable(Math.cos(a) * r, Math.sin(a) * r, auHasard(1, 1.6));
+  }
+  for (const [cx, cz] of [[-12, 6], [12, 3], [-13, -7], [13, -13], [-15, 13], [15, 12]]) {
+    if (!horsChemin(cx, cz)) continue;
+    erable(cx, cz, 1.1);
+    colliders.push({ x: cx, z: cz, r: 0.6 });
+  }
+  // Feuilles tombées sur le sol et feuilles qui virevoltent
+  const sol = [];
+  for (let i = 0; i < 260; i++) {
+    const a = Math.random() * Math.PI * 2, r = Math.random() * 30;
+    sol.push(colorer(new THREE.CircleGeometry(0.12, 5).rotateX(-Math.PI / 2).rotateY(Math.random() * 6).translate(Math.cos(a) * r, 0.02, Math.sin(a) * r), TEINTES[i % TEINTES.length]));
+  }
+  groupe.add(fusionner(sol));
+  feuillesQuiTombent(groupe, animations, ['#e8672c', '#f2a33a', '#d9482b'], 140);
+}
+
+// ------------------------------------------------------------------ Marketing : Nara, glycines et cerfs
+function decorGlycines({ groupe, scene, colliders, animations }) {
+  scene.fog = new THREE.Fog('#dcbde3', 35, 150);
+  solExterieur(groupe, '#8fa860', '#7c9a56');
+  const bois = '#6b4a33', TEINTES = ['#a44c94', '#b56bc4', '#c99ad8', '#8f4fa8'];
+  // Grappe de glycine : cônes empilés qui pendent, du violet au lavande
+  const grappe = (x, y, z) => {
+    const l = auHasard(0.6, 1.1), m = [];
+    for (let k = 0; k < 4; k++) {
+      m.push(colorer(new THREE.ConeGeometry(0.16 - k * 0.03, l / 3, 7).rotateX(Math.PI).translate(x, y - k * l * 0.22, z), TEINTES[(k + Math.floor(x * 7)) % TEINTES.length]));
+    }
+    return m;
+  };
+  // Pergolas le long du chemin
+  const pergolas = [];
+  for (const z0 of [14, 6, -2]) {
+    const m = [];
+    for (const s of [-1, 1]) for (const dz of [-2, 2]) m.push(colorer(new THREE.BoxGeometry(0.2, 3, 0.2).translate(s * 2.4, 1.5, dz), bois));
+    for (const dz of [-2, 2]) m.push(colorer(new THREE.BoxGeometry(5.4, 0.2, 0.25).translate(0, 3.05, dz), bois));
+    for (let i = -2; i <= 2; i++) m.push(colorer(new THREE.BoxGeometry(0.15, 0.15, 4.6).translate(i * 1.1, 3.2, 0), bois));
+    for (let i = 0; i < 26; i++) m.push(...grappe(auHasard(-2.4, 2.4), 3.1, auHasard(-2.2, 2.2)));
+    const p = fusionner(m);
+    p.position.z = z0;
+    groupe.add(p);
+    pergolas.push(p);
+    for (const s of [-1, 1]) for (const dz of [-2, 2]) colliders.push({ x: s * 2.4, z: z0 + dz, r: 0.25 });
+  }
+  // Arbres à glycine tout autour
+  for (let i = 0; i < 120; i++) {
+    const a = Math.random() * Math.PI * 2, r = RAYON_ILE + 2 + Math.random() * 35;
+    if (!horsCouloirCamera(Math.cos(a) * r, Math.sin(a) * r)) continue;
+    const h = auHasard(2.5, 4), m = [colorer(new THREE.CylinderGeometry(0.15, 0.25, h, 7).translate(0, h / 2, 0), bois)];
+    for (let k = 0; k < 4; k++) m.push(colorer(new THREE.IcosahedronGeometry(auHasard(0.8, 1.2), 1).translate(auHasard(-1, 1), h + auHasard(-0.2, 0.6), auHasard(-1, 1)), '#7a9a55'));
+    for (let k = 0; k < 10; k++) m.push(...grappe(auHasard(-1.4, 1.4), h - 0.2, auHasard(-1.4, 1.4)));
+    const arbre = fusionner(m);
+    arbre.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    groupe.add(arbre);
+  }
+  // Pagode à cinq toits au loin
+  const pagode = [];
+  for (let k = 0; k < 5; k++) {
+    const l = 7 - k * 0.9, y = k * 3.2;
+    pagode.push(colorer(new THREE.BoxGeometry(l * 0.6, 2.4, l * 0.6).translate(0, y + 1.2, 0), '#c9583a'));
+    pagode.push(colorer(new THREE.ConeGeometry(l * 0.8, 1.2, 4).rotateY(Math.PI / 4).translate(0, y + 2.9, 0), '#3a3a44'));
+  }
+  pagode.push(colorer(new THREE.CylinderGeometry(0.15, 0.15, 4, 6).translate(0, 18, 0), '#e2b552'));
+  const p = fusionner(pagode);
+  p.position.set(-35, 0, -70);
+  groupe.add(p);
+  // Cerfs de Nara qui broutent
+  const cerfs = [];
+  for (const [x, z, r] of [[-10, 3, 0.8], [11, -2, -2.2], [-12, 13, 2.4], [13, 11, -0.6]]) {
+    const pelage = '#b9834f', clair = '#f1dcc0';
+    const m = [colorer(new THREE.SphereGeometry(0.5, 12, 10).scale(1.4, 0.8, 0.8).translate(0, 1, 0), pelage)];
+    for (const [dx, dz] of [[-0.45, -0.25], [-0.45, 0.25], [0.45, -0.25], [0.45, 0.25]]) m.push(colorer(new THREE.CylinderGeometry(0.06, 0.05, 0.8, 6).translate(dx, 0.4, dz), pelage));
+    for (let k = 0; k < 10; k++) m.push(colorer(new THREE.SphereGeometry(0.05, 6, 4).translate(auHasard(-0.5, 0.4), 1.15 + auHasard(0, 0.15), auHasard(-0.3, 0.3)), clair));
+    m.push(colorer(new THREE.SphereGeometry(0.12, 8, 6).translate(-0.72, 1.05, 0), clair));
+    const corps = fusionner(m);
+    const tete = fusionner([
+      colorer(new THREE.CylinderGeometry(0.13, 0.16, 0.6, 8).rotateZ(0.6).translate(0.18, 0.15, 0), pelage),
+      colorer(new THREE.SphereGeometry(0.22, 10, 8).scale(1.3, 0.9, 0.9).translate(0.4, 0.42, 0), pelage),
+      colorer(new THREE.SphereGeometry(0.06, 6, 5).translate(0.65, 0.4, 0), '#2b2222'),
+      colorer(new THREE.ConeGeometry(0.07, 0.22, 6).rotateZ(-0.5).translate(0.32, 0.62, 0.15), pelage),
+      colorer(new THREE.ConeGeometry(0.07, 0.22, 6).rotateZ(-0.5).translate(0.32, 0.62, -0.15), pelage),
+    ]);
+    tete.position.set(0.55, 1.05, 0);
+    const cerf = new THREE.Group();
+    cerf.add(corps, tete);
+    cerf.position.set(x, 0, z);
+    cerf.rotation.y = r;
+    cerf.userData = { tete, phase: Math.random() * 6 };
+    groupe.add(cerf);
+    cerfs.push(cerf);
+    colliders.push({ x, z, r: 0.8 });
+  }
+  animations.push((dt, t) => {
+    for (const c of cerfs) c.userData.tete.rotation.z = -0.6 + Math.max(0, Math.sin(t * 0.6 + c.userData.phase)) * 0.9; // broute puis relève la tête
+  });
+  feuillesQuiTombent(groupe, animations, ['#c99ad8', '#b56bc4'], 90);
+}
+
+// ------------------------------------------------------------------ Admin : Tokyo, sakura et stand Gaïa
+function decorSakura({ groupe, scene, colliders, animations }) {
+  scene.fog = new THREE.Fog('#e6d0ef', 40, 170);
+  solExterieur(groupe, '#a99bb8', '#8f8aa4');
+  const ROSES = ['#f8b7c9', '#f5cacc', '#f39cb6', '#fbd7e2'];
+  const cerisier = (x, z, echelle = 1) => {
+    const h = auHasard(2.2, 3) * echelle, m = [];
+    m.push(colorer(new THREE.CylinderGeometry(0.14 * echelle, 0.26 * echelle, h, 7).translate(0, h / 2, 0), '#5a3a34'));
+    for (const s of [-1, 1]) m.push(colorer(new THREE.CylinderGeometry(0.06, 0.1, 1.4 * echelle, 6).rotateZ(s * 0.8).translate(s * 0.45 * echelle, h * 0.9, 0), '#5a3a34'));
+    for (let k = 0; k < 8; k++) {
+      m.push(colorer(new THREE.IcosahedronGeometry(auHasard(0.7, 1.1) * echelle, 2).translate(auHasard(-1.3, 1.3) * echelle, h + auHasard(-0.2, 1) * echelle, auHasard(-1.3, 1.3) * echelle), ROSES[k % ROSES.length]));
+    }
+    const a = fusionner(m);
+    a.position.set(x, 0, z);
+    groupe.add(a);
+  };
+  for (let i = 0; i < 140; i++) {
+    const a = Math.random() * Math.PI * 2, r = RAYON_ILE + 2 + Math.random() * 38;
+    if (horsCouloirCamera(Math.cos(a) * r, Math.sin(a) * r)) cerisier(Math.cos(a) * r, Math.sin(a) * r, auHasard(1, 1.5));
+  }
+  for (const [cx, cz] of [[-12, 6], [-13, -7], [13, -13], [-15, 12]]) {
+    cerisier(cx, cz, 1.1);
+    colliders.push({ x: cx, z: cz, r: 0.5 });
+  }
+  // Parterres de fleurs violettes
+  const fleurs = [];
+  for (let i = 0; i < 300; i++) {
+    const a = Math.random() * Math.PI * 2, r = auHasard(9, 21);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (!horsChemin(x, z)) continue;
+    fleurs.push(colorer(new THREE.SphereGeometry(0.12, 6, 4).translate(x, 0.12, z), i % 3 ? '#8a5fb4' : '#b48ad6'));
+  }
+  groupe.add(fusionner(fleurs));
+  // Silhouette de Tokyo au loin + tour rouge et blanche
+  const ville = [];
+  for (let i = 0; i < 60; i++) {
+    const a = auHasard(-2.6, -0.5), r = auHasard(95, 120), h = auHasard(8, 30), l = auHasard(4, 9);
+    ville.push(colorer(new THREE.BoxGeometry(l, h, l).translate(Math.cos(a) * r, h / 2, Math.sin(a) * r), i % 3 ? '#9d8fb8' : '#b3a6cc'));
+  }
+  for (let k = 0; k < 6; k++) {
+    const y = k * 7, rb = 6 - k * 0.95;
+    ville.push(colorer(new THREE.CylinderGeometry(rb - 0.9, rb, 7, 4).rotateY(Math.PI / 4).translate(-20, y + 3.5, -100), k % 2 ? '#ffffff' : '#ff6a3d'));
+  }
+  groupe.add(fusionner(ville));
+  // Stand Gaïa : petite échoppe à l'auvent rayé, bouteilles sur le comptoir
+  const stand = fusionner([
+    colorer(new THREE.BoxGeometry(3, 1.1, 1.2).translate(0, 0.55, 0), '#c98a4b'),
+    colorer(new THREE.BoxGeometry(3.2, 0.12, 1.4).translate(0, 1.15, 0), '#8a5a32'),
+    ...[-1.45, 1.45].map((x) => colorer(new THREE.BoxGeometry(0.12, 2.6, 0.12).translate(x, 1.3, -0.5), '#8a5a32')),
+    ...Array.from({ length: 6 }, (_, i) => colorer(new THREE.BoxGeometry(0.55, 0.08, 1.7).rotateX(0.35).translate(-1.375 + i * 0.55, 2.6, 0), i % 2 ? '#fbf8f2' : '#f28a2e')),
+    ...Array.from({ length: 5 }, (_, i) => colorer(new THREE.CylinderGeometry(0.09, 0.1, 0.32, 10).translate(-0.9 + i * 0.4, 1.38, 0.1), i % 2 ? '#f28a2e' : '#f7c948')),
+  ]);
+  stand.position.set(9, 0, 7);
+  stand.rotation.y = -0.6;
+  groupe.add(stand);
+  colliders.push({ x: 9, z: 7, r: 1.7 });
+  feuillesQuiTombent(groupe, animations, ROSES, 220);
+}
+
+// ------------------------------------------------------------------ Boss final : Matsue, château au bord du lac
+function decorMatsue({ groupe, scene, colliders, animations }) {
+  scene.fog = new THREE.Fog('#cfe6f5', 50, 230);
+  // Lac tout autour de l'île
+  const lac = new THREE.Mesh(new THREE.CircleGeometry(200, 64), mat('#8fc3e3'));
+  lac.rotation.x = -Math.PI / 2;
+  lac.position.y = -0.4;
+  groupe.add(lac);
+  const reflets = [];
+  for (let i = 0; i < 120; i++) {
+    const a = Math.random() * Math.PI * 2, r = auHasard(26, 90);
+    reflets.push(colorer(new THREE.PlaneGeometry(auHasard(1, 3), 0.12).rotateX(-Math.PI / 2).translate(Math.cos(a) * r, -0.35, Math.sin(a) * r), '#e4f2fb'));
+  }
+  const vagues = fusionner(reflets);
+  groupe.add(vagues);
+  animations.push((dt, t) => { vagues.position.x = Math.sin(t * 0.3) * 0.6; });
+  // Château noir aux murs blancs, sur un socle de pierre
+  const chateau = [colorer(new THREE.CylinderGeometry(16, 20, 8, 4).rotateY(Math.PI / 4).translate(0, 4, 0), '#8f8f96')];
+  for (let k = 0; k < 4; k++) {
+    const l = 18 - k * 3.6, y = 8 + k * 6;
+    chateau.push(colorer(new THREE.BoxGeometry(l, 4.2, l * 0.75).translate(0, y + 2.1, 0), '#f3efe6'));
+    chateau.push(colorer(new THREE.BoxGeometry(l, 2.2, l * 0.75).translate(0, y + 1.1, 0.02), '#2b2b33'));
+    chateau.push(colorer(new THREE.ConeGeometry(l * 0.85, 2.6, 4).rotateY(Math.PI / 4).scale(1, 1, 0.78).translate(0, y + 5.2, 0), '#2b2b33'));
+  }
+  chateau.push(colorer(new THREE.BoxGeometry(1.4, 1.2, 0.4).translate(0, 33.5, 0), '#e2b552'));
+  const c = fusionner(chateau);
+  c.position.set(0, -0.4, -95);
+  groupe.add(c);
+  // Pins sur l'île et sur les rives
+  const pin = (x, z, echelle = 1) => {
+    const m = [colorer(new THREE.CylinderGeometry(0.15 * echelle, 0.25 * echelle, 2.5 * echelle, 7).translate(0, 1.25 * echelle, 0), '#6b4a33')];
+    for (let k = 0; k < 3; k++) m.push(colorer(new THREE.SphereGeometry((1.3 - k * 0.3) * echelle, 10, 6).scale(1, 0.35, 1).translate(auHasard(-0.3, 0.3), (2.2 + k * 0.8) * echelle, 0), k % 2 ? '#2f5d4a' : '#3d6e56'));
+    const p = fusionner(m);
+    p.position.set(x, 0, z);
+    groupe.add(p);
+  };
+  for (const [x, z] of [[-13, 6], [13, 4], [-14, -8], [14, -12], [-11, 16], [11, 16], [-17, -2], [17, 9]]) {
+    pin(x, z, 1.2);
+    colliders.push({ x, z, r: 0.5 });
+  }
+  for (let i = 0; i < 60; i++) {
+    const a = Math.random() * Math.PI * 2, r = auHasard(60, 110);
+    pin(Math.cos(a) * r, Math.sin(a) * r, auHasard(1.5, 2.5));
+  }
+  // Dessous de l'île (posée sur le lac)
+  const rive = new THREE.Mesh(new THREE.CylinderGeometry(RAYON_ILE + 2.5, RAYON_ILE + 4, 1, 48), mat('#8f8f96'));
+  rive.position.y = -0.9;
+  groupe.add(rive);
+  for (let i = 0; i < 20; i++) groupe.add(nuage(auHasard(3, 6)).translateX(auHasard(-150, 150)).translateY(auHasard(30, 55)).translateZ(auHasard(-150, -60)));
+}
+
+// Feuilles ou pétales qui tombent en tournoyant au-dessus de l'île
+function feuillesQuiTombent(groupe, animations, teintes, n) {
+  const geo = new THREE.PlaneGeometry(0.16, 0.1);
+  // Une feuille trop près de la caméra n'est pas dessinée (sinon elle masque tout l'écran)
+  const loinDeLaCamera = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vDistance;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvDistance = -mvPosition.z;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vDistance;')
+      .replace('void main() {', 'void main() {\n  if (vDistance < 2.5) discard;');
+  };
+  const mats = teintes.map((c) => {
+    const m = new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide });
+    m.onBeforeCompile = loinDeLaCamera;
+    m.customProgramCacheKey = () => 'feuille';
+    return m;
+  });
+  const feuilles = [];
+  for (let i = 0; i < n; i++) {
+    const f = new THREE.Mesh(geo, mats[i % mats.length]);
+    f.position.set(auHasard(-24, 24), auHasard(0, 10), auHasard(-24, 24));
+    f.userData = { v: auHasard(0.4, 0.9), phase: Math.random() * 6 };
+    groupe.add(f);
+    feuilles.push(f);
+  }
+  animations.push((dt, t) => {
+    for (const f of feuilles) {
+      const u = f.userData;
+      f.position.y -= u.v * dt;
+      f.position.x += Math.sin(t + u.phase) * dt * 0.4;
+      f.rotation.set(t * 1.3 + u.phase, t * 0.8, u.phase);
+      if (f.position.y < 0) f.position.y = 10;
+    }
+  });
 }

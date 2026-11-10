@@ -266,6 +266,15 @@ const ligneCheveux = (z) => -0.1 + 0.26 * Math.max(0, z / 0.255) ** 1.5;
 const calotte = (x, y, z, epaisseur = 0.022) => Math.max(CRANE(x, y, z) - epaisseur, ligneCheveux(z) - y);
 
 const coiffures = {
+  // Longs cheveux ondulés jusqu'aux épaules, visage dégagé devant (sous le masque)
+  longs: (x, y, z) => {
+    const onde = 0.012 * Math.sin(y * 28 + Math.atan2(x, -z) * 3);
+    let d = Math.max(CRANE(x, y, z) - 0.026, -0.12 - y);
+    d = smin(d, Math.max(ellipsoide(x, y, z, [0, -0.13, -0.05], [0.31, 0.3, 0.25]) - onde, -0.44 - y, z - 0.12), 0.05);
+    for (const s of [-1, 1]) d = smin(d, cone(x, y, z, [s * 0.25, -0.02, 0.06], [s * 0.3, -0.4, 0.07], 0.055, 0.035) - onde, 0.03);
+    const visage = Math.max(0.1 - z, y - 0.12, (Math.hypot(x / 0.21, Math.max(0, y) / 0.14) - 1) * 0.15);
+    return Math.max(d, -visage);
+  },
   // Carré au menton, frange droite ; le visage est dégagé devant
   carre: (x, y, z) => {
     let d = Math.max(CRANE(x, y, z) - 0.024, -0.15 - y);
@@ -325,7 +334,20 @@ const coiffures = {
 const cacheCoiffures = new Map();
 function geometrieCoiffure(id) {
   if (!coiffures[id]) return null;
-  if (!cacheCoiffures.has(id)) cacheCoiffures.set(id, extraire(coiffures[id], [-0.37, -0.42, -0.4], [0.37, 0.36, 0.33], 0.0055));
+  if (!cacheCoiffures.has(id)) {
+    const geo = extraire(coiffures[id], [-0.4, id === 'longs' ? -0.5 : -0.42, -0.4], [0.4, 0.36, 0.33], 0.0055);
+    // Dégradé des longs cheveux : châtain foncé en haut, caramel aux pointes
+    if (id === 'longs') {
+      const p = geo.attributes.position, col = new Float32Array(p.count * 3);
+      const haut = new THREE.Color('#5a2f14'), bas = new THREE.Color('#c48a52'), c = new THREE.Color();
+      for (let i = 0; i < p.count; i++) {
+        c.copy(haut).lerp(bas, Math.min(1, Math.max(0, (0.1 - p.getY(i)) / 0.5)));
+        col.set([c.r, c.g, c.b], i * 3);
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    }
+    cacheCoiffures.set(id, geo);
+  }
   return cacheCoiffures.get(id);
 }
 
@@ -462,22 +484,28 @@ function textureKitsune() {
   ctx.save();
   ctx.clip();
   ctx.lineCap = 'round';
-  // flamme rouge sur le front
-  ctx.strokeStyle = '#c8383d';
-  ctx.lineWidth = 11;
-  for (const [dx, h] of [[-28, 80], [0, 104], [28, 80]]) {
-    ctx.beginPath(); ctx.moveTo(256 + dx * 0.4, 175); ctx.quadraticCurveTo(256 + dx, 175 - h * 0.6, 256 + dx * 1.3, 175 - h); ctx.stroke();
+  // volutes rouges sur le front (comme sur le dessin de Cléo)
+  ctx.strokeStyle = '#d9474b';
+  ctx.lineWidth = 14;
+  for (const [dx, h, c] of [[-36, 70, -26], [0, 96, 0], [36, 70, 26]]) {
+    ctx.beginPath(); ctx.moveTo(256 + dx * 0.5, 185); ctx.bezierCurveTo(256 + dx - c, 185 - h * 0.4, 256 + dx + c, 185 - h * 0.7, 256 + dx * 0.8, 185 - h); ctx.stroke();
   }
   for (const s of [-1, 1]) {
-    // ombre rouge au-dessus de l'œil, œil fermé souriant
-    ctx.strokeStyle = '#d75a4a'; ctx.lineWidth = 16;
-    ctx.beginPath(); ctx.moveTo(256 + s * 58, 202); ctx.quadraticCurveTo(256 + s * 105, 180, 256 + s * 152, 202); ctx.stroke();
-    ctx.strokeStyle = '#2b2333'; ctx.lineWidth = 9;
-    ctx.beginPath(); ctx.moveTo(256 + s * 60, 240); ctx.quadraticCurveTo(256 + s * 105, 206, 256 + s * 150, 240); ctx.stroke();
-    // moustaches rouges
-    ctx.strokeStyle = '#c8383d'; ctx.lineWidth = 9;
-    for (let k = 0; k < 3; k++) {
-      ctx.beginPath(); ctx.moveTo(256 + s * 118, 290 + k * 24); ctx.lineTo(256 + s * 190, 274 + k * 28); ctx.stroke();
+    const x = 256 + s * 100, y = 238;
+    // grands yeux anime ouverts : iris noir, deux reflets, trait de cils
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.ellipse(x, y, 30, 34, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#1f1a24';
+    ctx.beginPath(); ctx.ellipse(x + s * 2, y + 4, 24, 30, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(x - s * 6, y - 6, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + s * 9, y + 14, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1f1a24'; ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.moveTo(x - s * 36, y - 14); ctx.quadraticCurveTo(x, y - 46, x + s * 40, y - 24); ctx.lineTo(x + s * 52, y - 34); ctx.stroke();
+    // marques rouges sous l'œil et sur la joue
+    ctx.strokeStyle = '#d9474b'; ctx.lineWidth = 12;
+    for (let k = 0; k < 2; k++) {
+      ctx.beginPath(); ctx.moveTo(x + s * (18 + k * 10), y + 50 + k * 26); ctx.quadraticCurveTo(x + s * (52 + k * 8), y + 40 + k * 26, x + s * (82 + k * 4), y + 54 + k * 26); ctx.stroke();
     }
   }
   // sourire sous le museau
@@ -499,7 +527,7 @@ function masqueKitsune(uni) {
   plaque.scale.set(1, 1.02, 1);
   const museau = piece(new THREE.SphereGeometry(0.062, 20, 14), uni('#fbf8f2'), 0, -0.05, 0.3);
   museau.scale.set(1, 0.72, 0.85);
-  const truffe = piece(new THREE.SphereGeometry(0.017, 12, 8), uni('#2b2333'), 0, -0.03, 0.352);
+  const truffe = piece(new THREE.SphereGeometry(0.017, 12, 8), uni('#ec7b86'), 0, -0.03, 0.352); // petite truffe rose
   truffe.scale.set(1.3, 0.8, 0.7);
   m.add(plaque, museau, truffe);
   for (const s of [-1, 1]) {
@@ -743,7 +771,8 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   const cheveux = materiau(a.cheveux, { motif: MOTIF_FOURRURE, liseré: 0.25, cle: 'cheveux' });
   const touffe = new THREE.Group();
   const geoCoiffure = geometrieCoiffure(a.coiffure);
-  if (geoCoiffure) touffe.add(new THREE.Mesh(geoCoiffure, cheveux));
+  if (geoCoiffure) touffe.add(new THREE.Mesh(geoCoiffure, geoCoiffure.attributes.color
+    ? materiau('#ffffff', { vertexColors: true, motif: MOTIF_FOURRURE, liseré: 0.25, cle: 'cheveux-degrade' }) : cheveux));
   if (a.coiffure === 'tresses') {
     // liens corail au bout des tresses + fleur blanche sur le côté
     for (const s of [-1, 1]) touffe.add(piece(new THREE.SphereGeometry(0.02, 12, 10), corail, s * 0.28, -0.35, 0.075));
@@ -770,9 +799,13 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       baguette.rotation.set(0.25, 0, s * 0.75);
       touffe.add(baguette);
     }
-  } else if (a.coiffure === 'carre') {
+  } else if (a.coiffure === 'carre' || a.coiffure === 'longs') {
     for (const s of [-1, 1]) {
-      const attache = piece(new THREE.CylinderGeometry(0.03, 0.03, 0.03, 14), uni('#3a2a24'), s * 0.255, -0.09, 0.04);
+      // attaches sombres sur les mèches de côté (plus bas et plus larges sur les cheveux longs)
+      const longs = a.coiffure === 'longs';
+      const attache = piece(new THREE.CylinderGeometry(longs ? 0.06 : 0.03, longs ? 0.058 : 0.03, 0.04, 16), uni('#3a2a24'),
+        s * (longs ? 0.268 : 0.255), longs ? -0.13 : -0.09, longs ? 0.064 : 0.04);
+      attache.rotation.z = longs ? s * 0.12 : 0;
       touffe.add(attache);
     }
   } else if (a.coiffure === 'chonmage') {

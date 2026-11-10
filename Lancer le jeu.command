@@ -7,4 +7,4 @@ while lsof -i :$PORT >/dev/null 2>&1; do PORT=$((PORT + 1)); done
 echo "Médiaventure : http://localhost:$PORT/jeu/"
 echo "Laisse cette fenêtre ouverte pendant que tu joues. Ferme-la pour arrêter le jeu."
 (sleep 1 && open "http://localhost:$PORT/jeu/") &
-python3 -m http.server $PORT
+python3 outils/serveur.py $PORT  # sans cache : toujours la dernière version du jeu

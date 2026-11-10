@@ -5,6 +5,7 @@ import { QUESTIONS, SEUIL } from './quiz.js';
 import { construireNiveau, RAYON_ILE, ARENE, POS } from './monde.js';
 import { creerPersonnage, animerPersonnage, APPARENCE_DEFAUT } from './personnage.js';
 import { Combat } from './combat.js';
+import { epreuveVideo, epreuveDifferences, epreuveEtapes, epreuveCodeGaia } from './minijeux.js';
 import { creerVestiaire } from './vestiaire.js';
 
 const $ = (id) => document.getElementById(id);
@@ -42,7 +43,14 @@ function redimensionner() {
 addEventListener('resize', redimensionner);
 redimensionner();
 
-let mode = 'creation'; // creation | exploration | dialogue | quiz | combat | transition
+let mode = 'creation'; // creation | exploration | dialogue | quiz | epreuve | combat | transition
+
+// Gardien·ne du milieu de chaque île, selon son épreuve
+const NOMS_PNJ = {
+  quiz: 'Gardien·ne du Réseau', video: 'Projectionniste', '7-differences': 'Esprit des couleurs',
+  'etapes-projet': 'Stratège de Nara', 'stand-gaia': 'Gardien·ne du stand', 'combat-final': 'Esprit du château',
+};
+const nomPnj = () => NOMS_PNJ[niveau.miniJeu] ?? 'Esprit du biome';
 let scene = new THREE.Scene();
 
 // ------------------------------------------------------------------ Le Sas : vestiaire sous un ciel étoilé
@@ -249,7 +257,7 @@ async function lancerNiveau(id) {
     boss.position.copy(POS.pnj);
   } else {
     pnj = creerPersonnage({ genre: 'neutre', coiffure: 'courte', kimono: PALETTE.bleu, cheveux: '#e8d2a6', accessoire: 'sacoche', katana: false });
-    pnj.add(etiquette(niveau.miniJeu === 'quiz' ? 'Gardien·ne du Réseau' : 'Esprit du biome'));
+    pnj.add(etiquette(nomPnj()));
     pnj.position.copy(POS.pnj);
     scene.add(pnj);
     boss.position.copy(ARENE.centre).add(new THREE.Vector3(0, 0, -2));
@@ -262,7 +270,7 @@ async function lancerNiveau(id) {
   interactions.push({
     objet: pnj, rayon: 2.6,
     actif: () => !etatNiveau.miniJeuReussi,
-    texte: () => `Parler à ${pnj === boss ? niveau.boss.nom : niveau.miniJeu === 'quiz' ? 'Gardien·ne du Réseau' : 'l’esprit du biome'}`,
+    texte: () => `Parler à ${pnj === boss ? niveau.boss.nom : nomPnj()}`,
     action: lancerMiniJeu,
   });
   interactions.push({
@@ -300,16 +308,36 @@ function lancerMiniJeu() {
   } else if (niveau.miniJeu === 'combat-final') {
     const manquants = ORDRE.slice(0, -1).filter((id) => !partie.objets.includes(id));
     if (manquants.length) {
-      dialogue([{ nom: 'Esprit du biome', texte: `Il te manque encore : ${manquants.map((id) => OBJETS[id].nom).join(', ')}.` }]);
+      dialogue([{ nom: nomPnj(), texte: `Il te manque encore : ${manquants.map((id) => OBJETS[id].nom).join(', ')}.` }]);
     } else {
-      dialogue([{ nom: 'Esprit du biome', texte: 'Tu as réuni les six objets de quête. Le boss final t’attend !' }], ouvrirArene);
+      dialogue([{ nom: nomPnj(), texte: 'Tu as réuni les six objets de quête. Le boss final t’attend !' }], ouvrirArene);
     }
-  } else {
-    dialogue([
-      { nom: 'Esprit du biome', texte: `L’épreuve de ce niveau (« ${niveau.miniJeu} ») est encore en construction.` },
-      { nom: 'Esprit du biome', texte: `Je t’ouvre l’arène : ${nomBoss} t’attend.` },
-    ], ouvrirArene);
+  } else if (niveau.miniJeu === 'video') {
+    epreuve('Bienvenue au cinéma des tournesols ! Choisis une vidéo dans la bibliothèque et regarde-la jusqu’au bout.',
+      () => epreuveVideo(niveau.videos), `Belle séance ! ${nomBoss} t’attend dans l’arène.`, 'Reviens quand tu veux finir ta vidéo.');
+  } else if (niveau.miniJeu === '7-differences') {
+    epreuve('Un bon designer a l’œil : trouve les 7 différences entre ces deux paysages.',
+      epreuveDifferences, `Quel regard ! ${nomBoss} t’attend dans l’arène.`, 'Reviens me voir pour réessayer.');
+  } else if (niveau.miniJeu === 'etapes-projet') {
+    epreuve('Un projet marketing se construit dans l’ordre. Remets ses étapes dans le bon ordre.',
+      () => epreuveEtapes(niveau.etapes), `Stratégie validée ! ${nomBoss} t’attend dans l’arène.`, 'Reviens quand ton plan sera prêt.');
+  } else if (niveau.miniJeu === 'stand-gaia') {
+    epreuve('Passe au stand Gaïa des portes ouvertes : la vendeuse te donnera un code. Entre-le ici pour ouvrir l’arène.',
+      () => epreuveCodeGaia(niveau.codeGaia), `Le code est bon ! ${nomBoss} t’attend dans l’arène.`, 'Reviens avec le code du stand Gaïa.');
   }
+}
+
+// Déroulé commun : explication du gardien → épreuve → arène ouverte (ou retour plus tard)
+function epreuve(intro, lancer, succes, echec) {
+  dialogue([{ nom: nomPnj(), texte: intro }], async () => {
+    mode = 'epreuve';
+    montrerPortrait(null);
+    const reussie = await lancer();
+    montrerPortrait(false);
+    mode = 'exploration';
+    if (reussie) dialogue([{ nom: nomPnj(), texte: succes }], ouvrirArene);
+    else dialogue([{ nom: nomPnj(), texte: echec }]);
+  });
 }
 
 function ouvrirArene() {
@@ -379,7 +407,8 @@ function lancerCombat() {
         etatNiveau.bossVaincu = true;
         boss.visible = false;
         monde.colliders.splice(monde.colliders.findIndex((c) => c.objet === boss), 1);
-        apparaitreObjet();
+        if (niveau.id === 'final') victoireFinale();
+        else apparaitreObjet();
         dialogue([{ nom: niveau.boss.nom, texte: 'Bien joué… Prends cet objet de quête, tu l’as mérité.' }]);
       } else {
         boss.rotation.set(0, 0, 0);
@@ -388,6 +417,45 @@ function lancerCombat() {
       }
     },
   });
+}
+
+// ------------------------------------------------------------------ Carte des îles
+// Permet d'aller directement sur n'importe quelle île (pratique aux portes ouvertes et pour tester)
+function ouvrirCarte() {
+  if (mode !== 'exploration') return;
+  mode = 'carte';
+  const liste = $('liste-iles');
+  liste.innerHTML = '';
+  for (const id of ORDRE) {
+    const n = NIVEAUX[id];
+    const b = document.createElement('button');
+    b.className = `ile${id === niveau.id ? ' actuelle' : ''}`;
+    const objet = OBJETS[id];
+    const etat = objet ? (partie.objets.includes(id) ? `${objet.icone} obtenu` : 'objet à gagner') : 'boss final';
+    b.innerHTML = `<strong>${n.titre}</strong><span>${n.lieu}</span><small>${etat}</small>`;
+    b.onclick = () => { $('carte-iles').hidden = true; mode = 'exploration'; if (id !== niveau.id) lancerNiveau(id); };
+    liste.append(b);
+  }
+  $('carte-iles').hidden = false;
+}
+$('ouvrir-carte').onclick = ouvrirCarte;
+$('fermer-carte').onclick = () => { $('carte-iles').hidden = true; mode = 'exploration'; };
+
+// ------------------------------------------------------------------ Fin du jeu
+function victoireFinale() {
+  $('obtenu-icone').textContent = '🏆';
+  $('obtenu-nom').textContent = 'Médiaventure terminée !';
+  $('obtenu-texte').textContent = niveau.gain;
+  $('obtenu').hidden = false;
+  montrerPortrait(null);
+  mode = 'dialogue';
+  $('obtenu-ok').onclick = () => {
+    $('obtenu').hidden = true;
+    $('obtenu-texte').textContent = 'Il rejoint ton inventaire, en haut à droite.';
+    montrerPortrait(false);
+    mode = 'exploration';
+    dialogue([{ nom: 'Cléo Forclaz', texte: `Bravo ${partie.prenom}, tu as vaincu le boss final et terminé Médiaventure !` }]);
+  };
 }
 
 // ------------------------------------------------------------------ Objet de quête
@@ -514,6 +582,7 @@ addEventListener('keydown', (e) => {
   touches.add(e.code);
   if (mode === 'dialogue' && ['Space', 'Enter', 'KeyE'].includes(e.code) && !$('dialogue').hidden) { e.preventDefault(); avancerDialogue(); return; }
   if (mode === 'exploration' && e.code === 'KeyE') interagir();
+  if (e.key === 'm' || e.key === 'M') { if (mode === 'carte') $('fermer-carte').click(); else ouvrirCarte(); }
   if (mode === 'exploration' && e.code === 'Space') { e.preventDefault(); sauter(); }
 });
 addEventListener('keyup', (e) => touches.delete(e.code));

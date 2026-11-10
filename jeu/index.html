@@ -77,6 +77,13 @@
 
   /* HUD */
   #hud { position: fixed; inset: 0; pointer-events: none; }
+  #ouvrir-carte { position: absolute; top: 96px; left: 16px; pointer-events: auto; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--marine); color: var(--creme); font-weight: 900; }
+  .carte-iles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .ile { border: 2px solid var(--marine); background: #fff; border-radius: 14px; padding: 12px; text-align: left; color: var(--marine); display: grid; gap: 4px; }
+  .ile:hover { background: var(--rose-pale); }
+  .ile.actuelle { border-color: var(--corail); box-shadow: 0 0 0 3px var(--corail); }
+  .ile strong { font-size: 1.05rem; }
+  .ile small { color: #6b7a8c; }
   #hud-niveau { position: absolute; top: 16px; left: 16px; background: rgba(241,230,208,.9); padding: 10px 18px; border-radius: 16px; border-left: 6px solid var(--corail); }
   #hud-titre { font-family: var(--titre); font-size: 1.3rem; display: block; }
   #hud-lieu { font-size: .85rem; }
@@ -110,6 +117,32 @@
   #quiz-reponses .faux { background: var(--rose) !important; }
   @media (max-width: 560px) { #quiz-reponses { grid-template-columns: 1fr; } }
   #obtenu .carte { text-align: center; }
+  /* Épreuves des îles */
+  .carte-large { width: min(860px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  #minijeu-titre { font-family: var(--titre); margin: 0; color: var(--corail); }
+  #minijeu-sous-titre { margin: 4px 0 14px; }
+  .mj-videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .mj-video { border: 2px solid var(--marine); background: #fff; border-radius: 14px; padding: 14px; display: grid; gap: 6px; justify-items: center; font-weight: 700; color: var(--marine); }
+  .mj-video:hover { background: var(--rose-pale); }
+  .mj-video-icone { font-size: 2.2rem; }
+  .mj-ecran { aspect-ratio: 16 / 9; background: var(--marine); border-radius: 14px; overflow: hidden; display: grid; place-items: center; color: var(--creme); }
+  .mj-ecran video { width: 100%; height: 100%; }
+  .mj-lecture { display: grid; gap: 8px; justify-items: center; text-align: center; }
+  .mj-lecture span { font-size: 4rem; animation: mj-pulse 1.2s ease-in-out infinite; }
+  @keyframes mj-pulse { 50% { transform: scale(1.12); } }
+  .mj-progression { height: 10px; background: rgba(36,52,71,.15); border-radius: 999px; margin: 12px 0; overflow: hidden; }
+  .mj-progression div { height: 100%; width: 0; background: var(--corail); }
+  .mj-images { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mj-images canvas { width: 100%; border-radius: 12px; border: 3px solid var(--marine); cursor: crosshair; }
+  @media (max-width: 600px) { .mj-images { grid-template-columns: 1fr; } }
+  .mj-compteur { font-weight: 700; margin: 10px 0; }
+  .mj-ordre { min-height: 40px; margin: 0 0 12px; padding-left: 24px; }
+  .mj-ordre li { background: var(--rose-pale); border-radius: 10px; padding: 8px 12px; margin: 6px 0; cursor: pointer; font-weight: 700; }
+  .mj-reserve { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mj-etape { border: 2px solid var(--marine); background: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 700; color: var(--marine); }
+  .mj-etape:hover { background: var(--bleu); }
+  .mj-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px; }
+  .mj-code { width: 100%; font: inherit; font-size: 1.6rem; letter-spacing: .2em; text-transform: uppercase; text-align: center; padding: 12px; border-radius: 14px; border: 3px solid var(--marine); }
   #obtenu-icone { font-size: 4rem; }
   #obtenu h2 { font-family: var(--titre); margin: 0; color: var(--corail); }
 
@@ -181,6 +214,7 @@
 
 <section id="hud" hidden>
   <div id="hud-niveau"><span id="hud-titre"></span><span id="hud-lieu"></span></div>
+  <button id="ouvrir-carte" title="Carte des îles (touche M)">🗺️ Îles</button>
   <div id="inventaire"></div>
   <div id="invite" hidden></div>
   <div id="aide"><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> / flèches : bouger · <kbd>Espace</kbd> sauter · <kbd>Maj</kbd> courir · <kbd>E</kbd> interagir · glisser la souris : caméra · molette : zoom</div>
@@ -219,12 +253,29 @@
   </div>
 </section>
 
+<section id="minijeu" class="modale" hidden>
+  <div class="carte carte-large">
+    <h2 id="minijeu-titre"></h2>
+    <p id="minijeu-sous-titre"></p>
+    <div id="minijeu-contenu"></div>
+  </div>
+</section>
+
+<section id="carte-iles" class="modale" hidden>
+  <div class="carte carte-large">
+    <h2 id="minijeu-titre-carte" style="font-family:var(--titre);margin:0;color:var(--corail)">Les îles de Médiaventure</h2>
+    <p>Choisis une île pour t’y rendre directement.</p>
+    <div class="carte-iles" id="liste-iles"></div>
+    <div class="mj-actions"><button class="bouton secondaire" id="fermer-carte">Fermer</button></div>
+  </div>
+</section>
+
 <section id="obtenu" class="modale" hidden>
   <div class="carte">
     <p>Objet de quête obtenu</p>
     <div id="obtenu-icone"></div>
     <h2 id="obtenu-nom"></h2>
-    <p>Il rejoint ton inventaire, en haut à droite.</p>
+    <p id="obtenu-texte">Il rejoint ton inventaire, en haut à droite.</p>
     <button class="bouton" id="obtenu-ok">Continuer</button>
   </div>
 </section>

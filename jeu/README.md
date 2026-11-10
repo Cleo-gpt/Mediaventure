@@ -19,17 +19,29 @@ Accès direct à un niveau pour tester : `http://localhost:8000/jeu/?niveau=info
 - Combat (tour par tour) : clic sur une case bleue = déplacement (PM), 1/2/3 ou clic = sort (PA), Entrée = fin du tour
 
 ## Ce qui est jouable
-- **Sas** : le jeu s'ouvre directement sur le vestiaire (inspiré de `références/personnage-tenue.jpg`) : onglets Tenue / Visage / Identité, cartes à étoiles, tri, annuler / rétablir / réinitialiser.
-  Puis la forêt de bambous : dialogue avec Cléo Forclaz → combat d'entraînement → Clé → portail
-- **Informatique** (le Ciel, fond mont Fuji) : quiz 10 questions (7 bonnes réponses obligatoires) → boss M. Kiner → Raspberry Pi → portail
-- Les autres niveaux ont leur biome (couleurs), leur boss et leur objet, mais leur mini-jeu reste à construire.
-- Le boss final vérifie que les six objets de quête ont été récupérés.
+Les sept îles de la mindmap, dans l'ordre des portails :
+
+| Île | Décor | Épreuve du milieu | Boss | Objet |
+|---|---|---|---|---|
+| Sas | Forêt de bambous (fond dessiné) | Présentation par Cléo + combat d'entraînement | Cléo Forclaz | Clé |
+| Multimédia | Champs de tournesols de Sayo | Regarder une vidéo de la bibliothèque | M. Graber | Caméra |
+| Design | Daisetsuzan en automne | Jeu des 7 différences | Mme Nicolier | Règle-cutter |
+| Informatique | Îles flottantes, fond mont Fuji | Quiz (7 bonnes réponses sur 10) | M. Kiner | Raspberry Pi |
+| Marketing | Nara : glycines, cerfs, pagode | Remettre les étapes d'un projet dans l'ordre | M. Droz | Parchemin |
+| Admin | Tokyo : sakura, stand Gaïa | Code donné au vrai stand Gaïa | M. Forestier | Bouteille Gaïa |
+| Boss final | Matsue : château au bord du lac | Les 6 objets sont obligatoires | M. Denervaud ou M. Haensler | Gain au stand |
+
+À régler avant les portes ouvertes, dans `js/niveaux.js` :
+- `codeGaia` (île Admin) : le code que donnera la vendeuse du stand Gaïa ;
+- `videos` (île Multimédia) : ajouter `src: '../videos/fichier.mp4'` pour lire de vraies vidéos ;
+- `gain` (boss final) : le texte du gain.
 
 ## Où modifier quoi
 | Fichier | Contenu |
 |---|---|
 | `js/niveaux.js` | Données des niveaux (biome, boss, sorts, objet, niveau suivant) |
 | `js/quiz.js` | Questions du quiz Informatique |
+| `js/minijeux.js` | Épreuves : vidéo, 7 différences, étapes marketing, code Gaïa |
 | `js/vestiaire.js` | Écran du Sas : catégories, cartes, rareté, historique |
 | `js/personnage.js` | Options de personnage (genre, coiffures, kimono, accessoires) |
 | `js/monde.js` | Construction des îles et décors par biome |
