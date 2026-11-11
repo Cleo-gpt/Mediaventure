@@ -321,6 +321,24 @@ const coiffures = {
       const a = -0.4 + (k / 6) * 3.9, b = [Math.cos(a) * 0.11, 0.25, Math.sin(a) * 0.08 - 0.05];
       d = smin(d, cone(x, y, z, b, [b[0] * 1.4, 0.275, b[2] - 0.08], 0.045, 0.008), 0.025);
     }
+    // arrière : deux rangées de mèches pointues étagées, la seconde effile la nuque
+    for (const [y0, long, n] of [[0.13, 0.12, 11], [0.02, 0.12, 10]]) {
+      for (let k = 0; k < n; k++) {
+        const th = 1.75 + (k / (n - 1)) * 2.8 + (y0 < 0.1 ? 0.12 : 0); // de l'oreille gauche à l'oreille droite, par l'arrière
+        const sx = Math.sin(th), cz = Math.cos(th);
+        const pointe = [sx * 0.29, y0 - long - (k % 2) * 0.02, cz * 0.27];
+        d = smin(d, cone(x, y, z, [sx * 0.265, y0, cz * 0.245], pointe, 0.046, 0.006), 0.01);
+      }
+    }
+    // épi en spirale au sommet de l'arrière du crâne
+    for (let k = 0; k < 6; k++) {
+      const a = (k / 6) * Math.PI * 2;
+      d = smin(d, cone(x, y, z, [0, 0.245, -0.11], [Math.cos(a) * 0.1, 0.235 - Math.abs(Math.sin(a)) * 0.02, -0.11 + Math.sin(a) * 0.08 - 0.02], 0.03, 0.006), 0.015);
+    }
+    // côtés : quelques mèches qui descendent devant les oreilles
+    for (const s of [-1, 1]) {
+      for (const dz of [0.0, 0.06]) d = smin(d, cone(x, y, z, [s * 0.27, 0.08, dz], [s * 0.285, -0.03 - dz * 0.3, dz + 0.02], 0.035, 0.005), 0.01);
+    }
     // frange longue jusqu'au ras des yeux, mèches bien séparées qui s'écartent de la raie
     const raie = 0.035;
     for (let i = 0; i < 9; i++) {
@@ -341,6 +359,10 @@ const coiffures = {
       if (Math.abs(th) < 0.75) continue;
       const sx = Math.sin(th), cz = Math.cos(th), dos = Math.max(0, -cz);
       d = smin(d, cone(x, y, z, [sx * 0.265, 0.1, cz * 0.23], [sx * 0.345, -0.03 - dos * 0.08, cz * 0.3], 0.05, 0.006), 0.015);
+      if (Math.abs(th) > 1.6) {
+        // couche intermédiaire sur l'arrière : plus d'épaisseur et d'étagement
+        d = smin(d, cone(x, y, z, [sx * 0.255, 0.19, cz * 0.225], [sx * 0.31, 0.06 - (k % 2) * 0.02, cz * 0.285], 0.048, 0.007), 0.012);
+      }
       if (Math.abs(th) > 1.9) {
         d = smin(d, cone(x, y, z, [sx * 0.24, -0.02, cz * 0.22], [sx * 0.29, -0.22 + (k % 2) * 0.03, cz * 0.275], 0.045, 0.008), 0.015);
       }

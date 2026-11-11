@@ -220,15 +220,44 @@ export class Combat {
       const c = this.caseSous(e);
       if (cle(c ?? {}) !== cle(this.survol ?? {})) { this.survol = c; this.colorer(); }
     };
-    this.surClic = (e) => { if (e.button === 0) this.cliquer(this.caseSous(e)); };
+    // Glisser = tourner la caméra autour de l'arène ; toucher sans glisser = jouer sur la case
+    this.surAppui = (e) => {
+      if (e.button > 0) return;
+      this.appui = { x: e.clientX, y: e.clientY, id: e.pointerId, glisse: false };
+    };
+    this.surGlisse = (e) => {
+      const a = this.appui;
+      if (!a || e.pointerId !== a.id) return;
+      const dx = e.clientX - a.x, dy = e.clientY - a.y;
+      if (!a.glisse && Math.hypot(dx, dy) < 8) return;
+      a.glisse = true;
+      this.orbite.yaw -= dx * 0.008;
+      this.orbite.pitch = THREE.MathUtils.clamp(this.orbite.pitch + dy * 0.005, 0.45, 1.4);
+      a.x = e.clientX; a.y = e.clientY;
+      this.cadrerCamera();
+    };
+    this.surLacher = (e) => {
+      const a = this.appui;
+      if (!a || e.pointerId !== a.id) return;
+      this.appui = null;
+      if (!a.glisse) this.cliquer(this.caseSous(e));
+    };
+    this.surMolette = (e) => {
+      this.orbite.dist = THREE.MathUtils.clamp(this.orbite.dist + e.deltaY * 0.02, 9, 30);
+      this.cadrerCamera();
+    };
     this.surTouche = (e) => {
       const s = SORTS_JOUEUR.find((x) => x.touche === e.key);
       if (s) this.choisirSort(s);
       if (e.key === 'Enter') this.finTourJoueur();
       if (e.key === 'Escape') { this.sort = null; this.majUI(); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { this.orbite.yaw += e.key === 'ArrowLeft' ? 0.4 : -0.4; this.cadrerCamera(); }
     };
     this.canvas.addEventListener('pointermove', this.surMouvement);
-    this.canvas.addEventListener('pointerdown', this.surClic);
+    this.canvas.addEventListener('pointerdown', this.surAppui);
+    addEventListener('pointermove', this.surGlisse);
+    addEventListener('pointerup', this.surLacher);
+    this.canvas.addEventListener('wheel', this.surMolette, { passive: true });
     addEventListener('keydown', this.surTouche);
   }
 
@@ -344,7 +373,10 @@ export class Combat {
 
   terminer(victoire) {
     this.canvas.removeEventListener('pointermove', this.surMouvement);
-    this.canvas.removeEventListener('pointerdown', this.surClic);
+    this.canvas.removeEventListener('pointerdown', this.surAppui);
+    removeEventListener('pointermove', this.surGlisse);
+    removeEventListener('pointerup', this.surLacher);
+    this.canvas.removeEventListener('wheel', this.surMolette);
     removeEventListener('keydown', this.surTouche);
     this.ui.racine.hidden = true;
     this.ui.journal.innerHTML = '';
@@ -405,11 +437,18 @@ export class Combat {
   }
 
   // ---------------------------------------------------------------- Boucle
+  // Caméra en orbite autour de l'arène (yaw = rotation, pitch = inclinaison, dist = recul)
   cadrerCamera() {
-    // Écran en hauteur (téléphone) : on recule pour voir toute la grille, au-dessus de la barre de sorts
-    const portrait = this.camera.aspect < 1;
-    this.camera.position.copy(ARENE.centre).add(portrait ? new THREE.Vector3(0, 19, 13) : new THREE.Vector3(0, 10.5, 9.5));
-    this.camera.lookAt(ARENE.centre.clone().add(new THREE.Vector3(0, 0, portrait ? 2.6 : 0.6)));
+    if (!this.orbite) {
+      // Écran en hauteur (téléphone) : on recule pour voir toute la grille au-dessus de la barre de sorts
+      const portrait = this.camera.aspect < 1;
+      this.orbite = portrait ? { yaw: 0, pitch: 0.97, dist: 23, decale: 2.6 } : { yaw: 0, pitch: 0.84, dist: 14.2, decale: 0.6 };
+    }
+    const v = this.orbite;
+    const cible = ARENE.centre.clone().add(new THREE.Vector3(Math.sin(v.yaw) * v.decale, 0, Math.cos(v.yaw) * v.decale));
+    this.camera.position.copy(cible).add(new THREE.Vector3(
+      Math.sin(v.yaw) * Math.cos(v.pitch) * v.dist, Math.sin(v.pitch) * v.dist, Math.cos(v.yaw) * Math.cos(v.pitch) * v.dist));
+    this.camera.lookAt(cible);
   }
 
   update(dt) {
