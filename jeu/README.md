@@ -37,7 +37,7 @@ Les sept îles de la mindmap, dans l'ordre des portails :
 | Boss final | Matsue : château au bord du lac | Les 6 objets sont obligatoires | Christophe Haenssler | Gain au stand |
 
 À régler avant les portes ouvertes, dans `js/niveaux.js` :
-- code du stand Gaïa (île Admin) : il change toutes les heures. La vendeuse imprime la liste du jour avec **`jeu/codes-gaia.html`** (double-clic, choisir la date, imprimer). Le jeu accepte le code de l'heure en cours et celui de l'heure précédente. Avant les portes ouvertes, changer `SECRET_GAIA` dans `js/code-gaia.js` (puis relancer `construire.mjs`) : tous les codes changent ;
+- code du stand Gaïa (île Admin) : il change toutes les heures. La vendeuse imprime la liste du jour avec **`jeu/codes-gaia.html`** (double-clic, choisir la date, imprimer). Le jeu accepte le code de l'heure en cours et celui de l'heure précédente. Les codes ont 6 chiffres. Le PDF des codes des 27 et 28 novembre 2026 a été fait avec le `SECRET_GAIA` actuel de `js/code-gaia.js` : ne plus le changer, sinon tous les codes changent et il faut refaire le PDF ;
 - `videos` (île Multimédia) : ajouter `src: '../videos/fichier.mp4'` pour lire de vraies vidéos ;
 - `gain` (boss final) : le texte du gain.
 

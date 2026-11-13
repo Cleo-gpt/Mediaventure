@@ -15,14 +15,15 @@ function afficher() {
   const [a, m, j] = champDate.value.split('-').map(Number);
   if (!a) return;
   const jour = new Date(a, m - 1, j);
-  titre.textContent = jour.toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const texte = jour.toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  titre.textContent = texte[0].toUpperCase() + texte.slice(1);
   const maintenant = new Date();
   const memeJour = jour.toDateString() === maintenant.toDateString();
   corps.innerHTML = '';
   for (let h = +debut.value; h <= +fin.value; h++) {
     const ligne = document.createElement('tr');
     if (memeJour && h === maintenant.getHours()) ligne.className = 'actuel';
-    ligne.innerHTML = `<td>${deux(h)} h 00 – ${deux(h)} h 59</td><td class="code">${codeGaia(jour, h)}</td>`;
+    ligne.innerHTML = `<td>${deux(h)} h 00 – ${deux(h)} h 59</td><td class="code">${codeGaia(jour, h).replace(/^(...)(...)$/, "$1 $2")}</td>`;
     corps.append(ligne);
   }
 }

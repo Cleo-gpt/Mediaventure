@@ -281,13 +281,85 @@ const CARPES = [
 ];
 const texturesCarpes = new Map();
 let numeroCarpe = 0;
-// Une carpe = un dessin posé à plat, la tête orientée vers +z ; la queue ondule dans le shader.
+
+// Volume d'une carpe : la silhouette du dessin est « gonflée » des deux côtés (dos et ventre).
+// L'épaisseur suit la distance au contour : corps bien rond, nageoires et queue fines.
+function volumeCarpe(image) {
+  const asp = image.width / image.height;
+  const max = 96;
+  const W = Math.max(8, Math.round(asp >= 1 ? max : max * asp));
+  const H = Math.max(8, Math.round(asp >= 1 ? max / asp : max));
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(image, 0, 0, W, H);
+  const px = ctx.getImageData(0, 0, W, H).data;
+  // Distance au contour (chanfrein 3-4, deux passes)
+  const INF = 1e9;
+  const d = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) d[i] = px[i * 4 + 3] > 110 ? INF : 0;
+  const v = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? 0 : d[y * W + x]);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x; if (!d[i]) continue;
+    d[i] = Math.min(d[i], v(x - 1, y) + 1, v(x, y - 1) + 1, v(x - 1, y - 1) + 1.4, v(x + 1, y - 1) + 1.4);
+  }
+  for (let y = H - 1; y >= 0; y--) for (let x = W - 1; x >= 0; x--) {
+    const i = y * W + x; if (!d[i]) continue;
+    d[i] = Math.min(d[i], v(x + 1, y) + 1, v(x, y + 1) + 1, v(x + 1, y + 1) + 1.4, v(x - 1, y + 1) + 1.4);
+  }
+  // Léger lissage pour éviter les arêtes du chanfrein
+  const lisse = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!d[y * W + x]) continue;
+    let s = 0;
+    for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) s += v(x + k, y + j);
+    lisse[y * W + x] = s / 9;
+  }
+  let dmax = 1;
+  for (let i = 0; i < W * H; i++) dmax = Math.max(dmax, lisse[i]);
+  // Demi-épaisseur maximale (en hauteur d'image ; la largeur sera étirée par scale.x)
+  const epaisseur = 0.075 * Math.max(asp, 1 / asp);
+  const nv = W * H;
+  const pos = new Float32Array(nv * 2 * 3);
+  const uv = new Float32Array(nv * 2 * 2);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    const u = x / (W - 1), w = 1 - y / (H - 1);
+    const z = epaisseur * Math.sqrt(Math.max(lisse[i] - 0.5, 0) / dmax);
+    for (const [face, sz] of [[0, 1], [1, -1]]) {
+      const n = face * nv + i;
+      pos.set([u - 0.5, w - 0.5, z * sz], n * 3);
+      uv.set([u, w], n * 2);
+    }
+  }
+  const index = [];
+  for (let y = 0; y < H - 1; y++) for (let x = 0; x < W - 1; x++) {
+    const a = y * W + x, b = a + 1, c2 = a + W, e = c2 + 1;
+    // On saute les carrés entièrement hors du poisson
+    if (!d[a] && !d[b] && !d[c2] && !d[e]) continue;
+    index.push(a, c2, b, b, c2, e); // dos (face vers +z)
+    index.push(nv + a, nv + b, nv + c2, nv + b, nv + e, nv + c2); // ventre (face vers −z)
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  return g;
+}
+
+// Une carpe = le dessin en volume, posé à plat, la tête orientée vers +z ; la queue ondule dans le shader.
 function koi(chargeurTexture, longueur = 1.3) {
   const [nom, tx, ty] = CARPES[numeroCarpe++ % CARPES.length];
   if (!texturesCarpes.has(nom)) {
     const t = chargeurTexture.load(`../carpes/koi_${nom}.png`, (tex) => {
-      // Proportions réelles du dessin une fois chargé
-      for (const m of tex.userData.maillages) m.scale.x = tex.image.width / tex.image.height;
+      // Proportions réelles du dessin et volume, une fois chargé
+      tex.userData.volume = volumeCarpe(tex.image);
+      for (const m of tex.userData.maillages) {
+        m.scale.x = tex.image.width / tex.image.height;
+        m.geometry.dispose();
+        m.geometry = tex.userData.volume;
+      }
     });
     t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 4;
@@ -297,7 +369,8 @@ function koi(chargeurTexture, longueur = 1.3) {
   const tex = texturesCarpes.get(nom);
   const tete = new THREE.Vector2(tx, -ty).normalize(); // dans le plan du dessin (y vers le haut)
   const uniforms = { temps: { value: 0 }, phase: { value: Math.random() * 6.28 }, tete: { value: tete } };
-  const m = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide });
+  // Ombrage doux : le volume se lit (dos éclairé, flancs plus sombres) sans perdre les couleurs du dessin
+  const m = new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.45 });
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, uniforms);
     sh.vertexShader = sh.vertexShader
@@ -308,7 +381,7 @@ function koi(chargeurTexture, longueur = 1.3) {
         transformed.xy += vec2(-tete.y, tete.x) * ampl * sin(temps * 6.0 + phase + le * 5.0);`);
   };
   m.customProgramCacheKey = () => 'carpe';
-  const plan = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 12, 12), m);
+  const plan = new THREE.Mesh(tex.userData.volume ?? new THREE.PlaneGeometry(1, 1), m);
   tex.userData.maillages.push(plan);
   if (tex.image) plan.scale.x = tex.image.width / tex.image.height;
   const g = new THREE.Group();

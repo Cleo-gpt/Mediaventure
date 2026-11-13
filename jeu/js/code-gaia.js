@@ -1,9 +1,9 @@
 // Code du stand Gaïa : il change toutes les heures.
 // Il est calculé à partir d'un secret, de la date et de l'heure : le jeu et la liste imprimée
 // pour la vendeuse (jeu/codes-gaia.html) donnent toujours le même code, sans internet.
-export const SECRET_GAIA = 'mediaventure-po-2026'; // à changer avant les portes ouvertes : tous les codes changent avec
-export const LETTRES = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans O/0, I/1 : rien à confondre
-const LONGUEUR = 4;
+export const SECRET_GAIA = 'vxzxXmo2ur8O9iZi'; // ne plus changer : le PDF des codes du 27-28.11.2026 a été fait avec (sinon le refaire)
+export const LETTRES = '0123456789'; // code à 6 chiffres
+const LONGUEUR = 6;
 
 const deux = (n) => String(n).padStart(2, '0');
 const jourDe = (d) => `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}`;

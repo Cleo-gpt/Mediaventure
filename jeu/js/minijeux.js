@@ -329,7 +329,7 @@ export function epreuveEtapes(etapes) {
 export function epreuveCodeGaia() {
   return new Promise((fin) => {
     const zone = ouvrir('Le stand Gaïa', 'Va au stand Gaïa des portes ouvertes : la vendeuse te donnera un code.');
-    const champ = Object.assign(document.createElement('input'), { className: 'mj-code', placeholder: 'Code du stand', maxLength: 16, autocomplete: 'off' });
+    const champ = Object.assign(document.createElement('input'), { className: 'mj-code', placeholder: 'Code à 6 chiffres', maxLength: 16, autocomplete: 'off', inputMode: 'numeric' });
     const message = document.createElement('p');
     message.className = 'mj-compteur';
     const valider = bouton('Valider');
