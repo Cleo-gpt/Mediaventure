@@ -605,8 +605,10 @@ addEventListener('blur', () => touches.clear());
   addEventListener('pointermove', (e) => {
     if (!glisse || mode !== 'exploration' || e.pointerId !== glisse.id) return;
     cam.yaw -= (e.clientX - glisse.x) * 0.006;
-    cam.pitch = THREE.MathUtils.clamp(cam.pitch + (e.clientY - glisse.y) * 0.004, -0.1, 1.2);
-    glisse = { x: e.clientX, y: e.clientY };
+    // un peu sous l'horizontale pour lever les yeux vers le décor
+    cam.pitch = THREE.MathUtils.clamp(cam.pitch + (e.clientY - glisse.y) * 0.004, -0.3, 1.2);
+    glisse.x = e.clientX; glisse.y = e.clientY; // garder l'identifiant du doigt / de la souris, sinon la rotation s'arrête net
+
   });
   canvas.addEventListener('wheel', (e) => {
     if (mode === 'exploration') cam.dist = THREE.MathUtils.clamp(cam.dist + e.deltaY * 0.01, 3.5, 14);
