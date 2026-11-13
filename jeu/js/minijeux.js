@@ -173,11 +173,12 @@ export function epreuveDifferences() {
 // ---------------------------------------------------------------- Marketing : remettre les étapes d'un projet dans l'ordre
 export function epreuveEtapes(etapes) {
   return new Promise((fin) => {
-    const zone = ouvrir('Le projet marketing', 'Clique sur les étapes dans le bon ordre, de la première à la dernière.');
+    const zone = ouvrir('Le projet marketing', 'Glisse chaque étape sur son numéro, de 1 (la première) à ' + etapes.length + ' (la dernière).');
     const melange = [...etapes].sort(() => Math.random() - 0.5);
-    const choisies = [];
-    const ordre = document.createElement('ol');
-    ordre.className = 'mj-ordre';
+    const cases = etapes.map(() => null); // étape posée sur chaque numéro
+    let choisie = null; // étape sélectionnée d'un simple toucher (alternative au glisser)
+    const liste = document.createElement('ol');
+    liste.className = 'mj-cases';
     const reserve = document.createElement('div');
     reserve.className = 'mj-reserve';
     const message = document.createElement('p');
@@ -187,26 +188,104 @@ export function epreuveEtapes(etapes) {
     const verifier = bouton('Vérifier');
     const recommencer = bouton('Recommencer', 'bouton secondaire');
     actions.append(recommencer, verifier);
+    let corrige = false;
+
+    // Pose l'étape e sur le numéro i (ou la remet dans la réserve si i === null) ; échange si la case est occupée
+    const poser = (e, i) => {
+      const depuis = cases.indexOf(e);
+      if (depuis >= 0) cases[depuis] = null;
+      if (i !== null) {
+        if (cases[i] && depuis >= 0) cases[depuis] = cases[i];
+        cases[i] = e;
+      }
+      choisie = null;
+      corrige = false;
+      message.textContent = '';
+      rendre();
+    };
+
+    const carte = (e) => {
+      const c = document.createElement('div');
+      c.className = 'mj-etape' + (choisie === e ? ' choisie' : '');
+      c.textContent = e;
+      c.addEventListener('pointerdown', (ev) => glisser(ev, c, e));
+      return c;
+    };
 
     const rendre = () => {
-      ordre.innerHTML = '';
-      choisies.forEach((e, i) => {
+      liste.innerHTML = '';
+      cases.forEach((e, i) => {
         const li = document.createElement('li');
-        li.textContent = e;
-        li.title = 'Retirer cette étape';
-        li.onclick = () => { choisies.splice(i, 1); rendre(); };
-        ordre.append(li);
+        li.className = 'mj-case' + (corrige && e ? (e === etapes[i] ? ' juste' : ' faux') : '');
+        li.dataset.numero = i;
+        const n = document.createElement('span');
+        n.className = 'mj-numero';
+        n.textContent = i + 1;
+        li.append(n);
+        if (e) li.append(carte(e));
+        else li.append(Object.assign(document.createElement('span'), { className: 'mj-vide', textContent: 'Glisse une étape ici' }));
+        li.onclick = (ev) => { if (choisie && !ev.target.closest('.mj-etape')) poser(choisie, i); };
+        liste.append(li);
       });
       reserve.innerHTML = '';
-      for (const e of melange.filter((x) => !choisies.includes(x))) {
-        const b = bouton(e, 'mj-etape');
-        b.onclick = () => { choisies.push(e); rendre(); };
-        reserve.append(b);
-      }
-      verifier.disabled = choisies.length !== etapes.length;
+      for (const e of melange.filter((x) => !cases.includes(x))) reserve.append(carte(e));
+      reserve.hidden = !reserve.children.length;
+      verifier.disabled = cases.includes(null);
     };
+
+    // Glisser-déposer au doigt ou à la souris ; un toucher sans glisser sélectionne l'étape
+    function glisser(ev, el, e) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const r = el.getBoundingClientRect(), dx = ev.clientX - r.left, dy = ev.clientY - r.top;
+      const x0 = ev.clientX, y0 = ev.clientY;
+      let fantome = null;
+      const bouger = (m) => {
+        if (m.pointerId !== ev.pointerId) return;
+        if (!fantome && Math.hypot(m.clientX - x0, m.clientY - y0) < 6) return;
+        if (!fantome) {
+          fantome = el.cloneNode(true);
+          fantome.classList.add('mj-glisse');
+          fantome.style.width = r.width + 'px';
+          document.body.append(fantome);
+          el.style.opacity = 0.3;
+        }
+        fantome.style.left = m.clientX - dx + 'px';
+        fantome.style.top = m.clientY - dy + 'px';
+        document.querySelectorAll('.mj-case.survol').forEach((c) => c.classList.remove('survol'));
+        fantome.hidden = true;
+        document.elementFromPoint(m.clientX, m.clientY)?.closest('.mj-case')?.classList.add('survol');
+        fantome.hidden = false;
+      };
+      const lacher = (u) => {
+        if (u.pointerId !== ev.pointerId) return;
+        removeEventListener('pointermove', bouger);
+        removeEventListener('pointerup', lacher);
+        removeEventListener('pointercancel', lacher);
+        if (!fantome) { // simple toucher : sélectionner / désélectionner, ou échanger avec l'étape déjà choisie
+          const ici = cases.indexOf(e);
+          if (choisie && choisie !== e && ici >= 0) { poser(choisie, ici); return; }
+          choisie = choisie === e ? null : e;
+          rendre();
+          return;
+        }
+        fantome.hidden = true;
+        const sous = document.elementFromPoint(u.clientX, u.clientY);
+        fantome.remove();
+        const c = sous?.closest('.mj-case');
+        if (c) poser(e, +c.dataset.numero);
+        else if (sous?.closest('.mj-reserve') || !sous?.closest('.mj-cases')) poser(e, null);
+        else rendre();
+      };
+      addEventListener('pointermove', bouger);
+      addEventListener('pointerup', lacher);
+      addEventListener('pointercancel', lacher);
+    }
+
     verifier.onclick = () => {
-      const justes = choisies.filter((e, i) => e === etapes[i]).length;
+      const justes = cases.filter((e, i) => e === etapes[i]).length;
+      corrige = true;
+      rendre();
       if (justes === etapes.length) {
         message.textContent = 'Parfait : ton projet est bien construit !';
         actions.innerHTML = '';
@@ -214,11 +293,11 @@ export function epreuveEtapes(etapes) {
         ok.onclick = () => { fermer(); fin(true); };
         actions.append(ok);
       } else {
-        message.textContent = `${justes} étape${justes > 1 ? 's' : ''} sur ${etapes.length} à la bonne place. Retire les autres et réessaie.`;
+        message.textContent = `${justes} étape${justes > 1 ? 's' : ''} sur ${etapes.length} au bon numéro. Déplace les étapes en rouge et réessaie.`;
       }
     };
-    recommencer.onclick = () => { choisies.length = 0; message.textContent = ''; rendre(); };
-    zone.append(ordre, reserve, message, actions);
+    recommencer.onclick = () => { cases.fill(null); choisie = null; corrige = false; message.textContent = ''; rendre(); };
+    zone.append(liste, reserve, message, actions);
     rendre();
   });
 }

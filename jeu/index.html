@@ -139,11 +139,20 @@
   .mj-images canvas { width: 100%; border-radius: 12px; border: 3px solid var(--marine); cursor: crosshair; }
   @media (max-width: 600px) { .mj-images { grid-template-columns: 1fr; } }
   .mj-compteur { font-weight: 700; margin: 10px 0; }
-  .mj-ordre { min-height: 40px; margin: 0 0 12px; padding-left: 24px; }
-  .mj-ordre li { background: var(--rose-pale); border-radius: 10px; padding: 8px 12px; margin: 6px 0; cursor: pointer; font-weight: 700; }
-  .mj-reserve { display: flex; flex-wrap: wrap; gap: 8px; }
-  .mj-etape { border: 2px solid var(--marine); background: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 700; color: var(--marine); }
+  /* Marketing : cases numérotées où l'on glisse les étapes */
+  .mj-cases { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+  .mj-case { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 4px; border-radius: 14px; border: 2px dashed rgba(36,52,71,.3); background: rgba(255,255,255,.5); transition: background .15s, border-color .15s; }
+  .mj-case.survol { border-color: var(--corail); background: var(--rose-pale); }
+  .mj-case.juste { border: 2px solid #3f9b5f; background: #dff1e4; }
+  .mj-case.faux { border: 2px solid var(--corail); background: #fde3e3; }
+  .mj-numero { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--marine); color: var(--creme); font-weight: 800; font-size: 1.1rem; }
+  .mj-vide { color: rgba(36,52,71,.45); font-style: italic; }
+  .mj-case .mj-etape { flex: 1; }
+  .mj-reserve { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-radius: 14px; background: rgba(155,179,214,.25); }
+  .mj-etape { border: 2px solid var(--marine); background: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 700; color: var(--marine); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
   .mj-etape:hover { background: var(--bleu); }
+  .mj-etape.choisie { background: var(--corail); color: #fff; }
+  .mj-glisse { position: fixed; z-index: 1000; pointer-events: none; cursor: grabbing; box-shadow: 0 10px 24px rgba(0,0,0,.25); transform: rotate(-2deg); }
   .mj-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px; }
   .mj-code { width: 100%; font: inherit; font-size: 1.6rem; letter-spacing: .2em; text-transform: uppercase; text-align: center; padding: 12px; border-radius: 14px; border: 3px solid var(--marine); }
   #obtenu-icone { font-size: 4rem; }
