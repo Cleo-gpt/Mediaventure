@@ -272,21 +272,53 @@ function nuage(taille = 1, opacite = 0.95) {
   return g;
 }
 
-function koi() {
+// Carpes koï dessinées (découpées des illustrations par outils/carpes.py).
+// tete : direction de la tête dans l'image (x vers la droite, y vers le bas).
+const CARPES = [
+  ['39_1', 1, 0.1], ['39_2', -0.6, 1], ['39_3', -0.2, -1], ['40_1', -0.4, -1], ['40_2', 0.4, -1],
+  ['41_1', -0.3, -1], ['41_2', 1, 0.3], ['41_3', -0.8, 0.8], ['42_1', 0.5, -1], ['42_2', -0.5, 1],
+  ['43_1', 0.5, -1], ['43_2', -0.6, 1], ['44_1', 0, 1], ['44_2', 1, -0.1], ['44_3', -0.6, -1],
+];
+const texturesCarpes = new Map();
+let numeroCarpe = 0;
+// Une carpe = un dessin posé à plat, la tête orientée vers +z ; la queue ondule dans le shader.
+function koi(chargeurTexture, longueur = 1.3) {
+  const [nom, tx, ty] = CARPES[numeroCarpe++ % CARPES.length];
+  if (!texturesCarpes.has(nom)) {
+    const t = chargeurTexture.load(`../carpes/koi_${nom}.png`, (tex) => {
+      // Proportions réelles du dessin une fois chargé
+      for (const m of tex.userData.maillages) m.scale.x = tex.image.width / tex.image.height;
+    });
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 4;
+    t.userData.maillages = [];
+    texturesCarpes.set(nom, t);
+  }
+  const tex = texturesCarpes.get(nom);
+  const tete = new THREE.Vector2(tx, -ty).normalize(); // dans le plan du dessin (y vers le haut)
+  const uniforms = { temps: { value: 0 }, phase: { value: Math.random() * 6.28 }, tete: { value: tete } };
+  const m = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide });
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, uniforms);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform float temps, phase; uniform vec2 tete;')
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+        float le = dot(transformed.xy, tete);              // > 0 vers la tête, < 0 vers la queue
+        float ampl = 0.03 + 0.22 * smoothstep(0.1, -0.5, le) * (-le + 0.1);
+        transformed.xy += vec2(-tete.y, tete.x) * ampl * sin(temps * 6.0 + phase + le * 5.0);`);
+  };
+  m.customProgramCacheKey = () => 'carpe';
+  const plan = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 12, 12), m);
+  tex.userData.maillages.push(plan);
+  if (tex.image) plan.scale.x = tex.image.width / tex.image.height;
   const g = new THREE.Group();
-  const blanc = mat('#fbf7f0', { roughness: 0.4 });
-  const orange = mat(PALETTE.corail, { roughness: 0.4 });
-  const corps = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), blanc);
-  corps.scale.set(0.55, 0.5, 1.4);
-  const tache = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), orange);
-  tache.scale.set(0.5, 0.42, 0.7);
-  tache.position.set(0, 0.05, 0.12);
-  const queue = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.35, 4), orange);
-  queue.rotation.x = -Math.PI / 2;
-  queue.scale.x = 0.25;
-  queue.position.z = -0.5;
-  g.add(corps, tache, queue);
-  g.userData.queue = queue;
+  const corps = new THREE.Group(); // à plat, tête vers +z
+  corps.rotation.y = Math.atan2(-tete.x, -tete.y); // amène la tête du dessin sur +z
+  plan.rotation.x = -Math.PI / 2;
+  corps.add(plan);
+  corps.scale.setScalar(longueur);
+  g.add(corps);
+  g.userData.uniforms = uniforms;
   return g;
 }
 
@@ -459,7 +491,7 @@ function decorCiel({ groupe, scene, niveau, colliders, animations, chargeurTextu
     groupe.add(b);
     petites.push(b);
     for (let i = 0; i < 2; i++) {
-      const k = koi();
+      const k = koi(chargeurTexture, s * 0.32);
       k.userData = { ...k.userData, bloc: b, rayon: s * 0.28, vitesse: 0.6 + Math.random() * 0.5, phase: i * Math.PI, dy: (i - 0.5) * s * 0.25 };
       groupe.add(k);
       kois.push(k);
@@ -470,8 +502,8 @@ function decorCiel({ groupe, scene, niveau, colliders, animations, chargeurTextu
 
   // Carpes qui nagent dans le ciel autour de l'île
   for (let i = 0; i < 6; i++) {
-    const k = koi();
-    k.scale.setScalar(2.2);
+    const k = koi(chargeurTexture, 3);
+    k.rotation.z = 0.5; // inclinée dans le virage : on la voit d'en bas comme d'en haut
     k.userData = { ...k.userData, centre: new THREE.Vector3(0, 7 + i * 1.6, -6), rayon: 26 + i * 4, vitesse: 0.12 + i * 0.02, phase: i };
     groupe.add(k);
     kois.push(k);
@@ -485,7 +517,7 @@ function decorCiel({ groupe, scene, niveau, colliders, animations, chargeurTextu
       const c = u.bloc ? u.bloc.position : u.centre;
       k.position.set(c.x + Math.cos(a) * u.rayon, c.y + (u.dy ?? 0) + Math.sin(a * 2) * 0.1, c.z + Math.sin(a) * u.rayon);
       k.rotation.y = -a; // tangent au cercle
-      u.queue.rotation.y = Math.sin(t * 8 + u.phase) * 0.5;
+      u.uniforms.temps.value = t;
     }
   });
 

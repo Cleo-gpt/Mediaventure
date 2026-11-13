@@ -31,7 +31,7 @@ await build({
 
 const TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.glb': 'model/gltf-binary' };
 const ressources = {};
-for (const dossier of ['fonds', 'objets-quete', 'portraits']) {
+for (const dossier of ['fonds', 'objets-quete', 'portraits', 'carpes']) {
   for (const f of readdirSync(join(racine, dossier))) {
     const type = TYPES[extname(f).toLowerCase()];
     if (!type) continue;
