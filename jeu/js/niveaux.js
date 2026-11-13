@@ -44,7 +44,15 @@ export const NIVEAUX = {
     ],
     boss: {
       nom: 'M. Graber', titre: 'Boss Multimédia', pv: 85, pa: 6, pm: 3,
-      apparence: { espece: 'humain', coiffure: 'rejetes', cheveux: '#c29a6b', tenue: 'veste', lunettes: true },
+      apparence: {
+        espece: 'humain', tenue: 'veste', lunettes: true,
+        // vraie tête tirée de la photo (texture préparée par outils/tete_photo.py)
+        tetePhoto: {
+          texture: '../portraits/graber_tete.png', cadre: [95, 75, 415, 455], nez: 285, cheveux: '#b39a7c', hauteur: 0.6, decalage: 0.07,
+          contour: [[193, 84], [250, 82], [293, 92], [358, 108], [390, 135], [400, 185], [398, 250], [390, 310], [372, 360], [335, 405],
+            [295, 435], [258, 442], [215, 428], [170, 400], [132, 350], [110, 300], [105, 240], [113, 195], [150, 122], [172, 96]],
+        },
+      },
       portrait: '../portraits/graber.png',
       defi: 'Ah, te voilà ! Silence sur le plateau… moteur… action ! Voyons si tu tiens la lumière.',
       sorts: [

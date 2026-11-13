@@ -308,6 +308,81 @@ const tetes = {
   },
 };
 
+// ---------------------------------------------------------------- Tête photo (réaliste)
+// La photo (recadrée par outils/tete_photo.py) est projetée de face sur une tête qui reprend exactement
+// sa silhouette, ligne par ligne ; l'arrière et les côtés passent progressivement à la couleur des cheveux.
+// def : { texture, cadre: [x0, y0, x1, y1], contour: [[x, y]…], nez: x du nez, cheveux, hauteur, decalage }
+const cacheTetesPhoto = new Map();
+function geometrieTetePhoto(def) {
+  const [x0, y0, x1, y1] = def.cadre, c = def.contour;
+  const yHaut = Math.min(...c.map((p) => p[1])), yBas = Math.max(...c.map((p) => p[1]));
+  const xMilieu = (Math.min(...c.map((p) => p[0])) + Math.max(...c.map((p) => p[0]))) / 2;
+  const s = def.hauteur / (yBas - yHaut), yMilieu = (yHaut + yBas) / 2;
+  // bords gauche et droit de la silhouette à la hauteur y
+  const bords = (y) => {
+    const xs = [];
+    for (let i = 0; i < c.length; i++) {
+      const [ax, ay] = c[i], [bx, by] = c[(i + 1) % c.length];
+      if ((ay <= y && by > y) || (by <= y && ay > y)) xs.push(ax + ((y - ay) / (by - ay)) * (bx - ax));
+    }
+    return xs.length ? [Math.min(...xs), Math.max(...xs)] : null;
+  };
+  const LIGNES = 56, COLONNES = 72, pos = [], uv = [], avant = [], index = [];
+  for (let r = 0; r <= LIGNES; r++) {
+    const t = r / LIGNES, y = yHaut + (yBas - yHaut) * (1 - Math.cos(Math.PI * t)) / 2;
+    let b = r === 0 || r === LIGNES ? null : bords(y);
+    const xn = b ? Math.min(Math.max(def.nez, b[0] + 1), b[1] - 1) : def.nez;
+    const gauche = b ? xn - b[0] : 0, droite = b ? b[1] - xn : 0;
+    const prof = ((gauche + droite) / 2) * 1.08; // une tête est un peu plus profonde que large
+    for (let k = 0; k <= COLONNES; k++) {
+      const th = -Math.PI + (2 * Math.PI * k) / COLONNES, sn = Math.sin(th);
+      const xp = xn + (sn < 0 ? gauche : droite) * sn;
+      pos.push((xp - xMilieu) * s, (yMilieu - y) * s, (Math.cos(th) * prof - prof * 0.12) * s);
+      uv.push((xp - x0) / (x1 - x0), 1 - (y - y0) / (y1 - y0));
+      avant.push(Math.cos(th));
+    }
+  }
+  for (let r = 0; r < LIGNES; r++) for (let k = 0; k < COLONNES; k++) {
+    const a = r * (COLONNES + 1) + k, b = a + COLONNES + 1;
+    index.push(a, b, a + 1, a + 1, b, b + 1);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setAttribute('avant', new THREE.Float32BufferAttribute(avant, 1));
+  geo.setIndex(index);
+  geo.computeVertexNormals();
+  return geo;
+}
+function tetePhoto(def) {
+  if (!cacheTetesPhoto.has(def.texture)) {
+    const tex = new THREE.TextureLoader().load(def.texture);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const mat = new THREE.MeshBasicMaterial({ map: tex });
+    const cheveux = new THREE.Color(def.cheveux);
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.couleurCheveux = { value: cheveux };
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nattribute float avant;\nvarying float vAvant;\nvarying vec3 vPosObj;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvAvant = avant;\nvPosObj = position;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform vec3 couleurCheveux;\nvarying float vAvant;\nvarying vec3 vPosObj;' + BRUIT)
+        .replace('#include <map_fragment>', `#include <map_fragment>
+          // mèches sur l'arrière du crâne, un peu plus sombres vers la nuque
+          float meches = fbm(vPosObj * vec3(150.0, 30.0, 150.0));
+          vec3 dos = couleurCheveux * (0.8 + 0.3 * meches) * (0.85 + 0.25 * smoothstep(-0.25, 0.25, vPosObj.y));
+          diffuseColor.rgb = mix(dos, diffuseColor.rgb, smoothstep(0.05, 0.45, vAvant));`);
+    };
+    mat.customProgramCacheKey = () => 'tete-photo';
+    cacheTetesPhoto.set(def.texture, { geo: geometrieTetePhoto(def), mat });
+  }
+  const { geo, mat } = cacheTetesPhoto.get(def.texture);
+  const m = new THREE.Mesh(geo, mat);
+  m.position.y = def.decalage ?? 0;
+  return m;
+}
+
 // ---------------------------------------------------------------- Coiffures (coordonnées locales de la tête)
 // Le crâne commun aux deux espèces ; la calotte suit la ligne des cheveux (haute devant, basse derrière).
 const CRANE = (x, y, z) => ellipsoide(x, y, z, [0, 0.015, 0], [0.295, 0.24, 0.255]);
@@ -848,10 +923,11 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   const tete = new THREE.Group();
   tete.position.set(TETE[0] - J.tete[0], TETE[1] - J.tete[1], TETE[2] - J.tete[2]);
   os.tete.add(tete);
-  tete.add(new THREE.Mesh(g.tete, fourrure));
+  const photo = !!a.tetePhoto; // tête réaliste tirée d'une photo (M. Graber) : pas de traits dessinés
+  tete.add(photo ? tetePhoto(a.tetePhoto) : new THREE.Mesh(g.tete, fourrure));
   const yeux = [];
   if (a.masque === 'kitsune') tete.add(masqueKitsune(uni));
-  else for (const s of [-1, 1]) {
+  else if (!photo) for (const s of [-1, 1]) {
     const oeil = new THREE.Group();
     oeil.rotation.y = s * 0.42;
     if (espece === 'shiba') {
@@ -900,7 +976,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     tete.add(joue);
   }
   // Visage humain : petit nez et grand sourire
-  if (!a.masque && espece === 'humain') {
+  if (!a.masque && espece === 'humain' && !photo) {
     const nez = piece(new THREE.SphereGeometry(0.012, 10, 8), toon('#e9b89c'), 0, -0.05, 0.262);
     nez.scale.set(1, 0.8, 0.6);
     tete.add(sans(nez));

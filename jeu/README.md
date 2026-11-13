@@ -1,16 +1,18 @@
 # Médiaventure — prototype jouable
 
 ## Lancer le jeu
-Le plus simple : double-cliquer sur **« Lancer le jeu.command »** à la racine du dépôt.
-(Ouvrir `index.html` directement depuis le Finder ne marche pas : le navigateur bloque le code du jeu.)
+Double-cliquer sur **`jeu/index.html`** : le jeu s'ouvre directement dans le navigateur, sans serveur.
 
-Ou à la main, Depuis la racine du dépôt (le jeu charge `../objets-quete` et `../fonds`) :
+### Après une modification du code
+Le navigateur lit `jeu/jeu.js` et `jeu/ressources.js`, deux fichiers **générés** à partir de `jeu/js/`, `fonds/` et `objets-quete/`.
+Après avoir modifié l'un de ces dossiers, relancer depuis la racine du dépôt :
 
 ```
-python3 -m http.server 8000
+npm install        # une seule fois (installe esbuild)
+node outils/construire.mjs
 ```
-puis ouvrir http://localhost:8000/jeu/
 
+On peut aussi passer par un serveur local (« Lancer le jeu.command »), par exemple pour tester un niveau précis.
 Accès direct à un niveau pour tester : `http://localhost:8000/jeu/?niveau=informatique`
 (identifiants : `sas`, `multimedia`, `design`, `informatique`, `marketing`, `admin`, `final`).
 
