@@ -239,7 +239,17 @@ export function epreuveEtapes(etapes) {
       ev.stopPropagation();
       const r = el.getBoundingClientRect(), dx = ev.clientX - r.left, dy = ev.clientY - r.top;
       const x0 = ev.clientX, y0 = ev.clientY;
-      let fantome = null;
+      let fantome = null, dernier = null, boucle = 0;
+      // près du haut ou du bas de la fenêtre, elle défile toute seule (cases cachées sur téléphone)
+      const fenetre = el.closest('.carte-large');
+      const defiler = () => {
+        if (dernier && fenetre) {
+          const b = fenetre.getBoundingClientRect(), marge = 70;
+          const v = dernier.y < b.top + marge ? -(b.top + marge - dernier.y) : dernier.y > b.bottom - marge ? dernier.y - (b.bottom - marge) : 0;
+          if (v) fenetre.scrollTop += v * 0.25;
+        }
+        boucle = requestAnimationFrame(defiler);
+      };
       const bouger = (m) => {
         if (m.pointerId !== ev.pointerId) return;
         if (!fantome && Math.hypot(m.clientX - x0, m.clientY - y0) < 6) return;
@@ -249,7 +259,9 @@ export function epreuveEtapes(etapes) {
           fantome.style.width = r.width + 'px';
           document.body.append(fantome);
           el.style.opacity = 0.3;
+          defiler();
         }
+        dernier = { x: m.clientX, y: m.clientY };
         fantome.style.left = m.clientX - dx + 'px';
         fantome.style.top = m.clientY - dy + 'px';
         document.querySelectorAll('.mj-case.survol').forEach((c) => c.classList.remove('survol'));
@@ -262,6 +274,7 @@ export function epreuveEtapes(etapes) {
         removeEventListener('pointermove', bouger);
         removeEventListener('pointerup', lacher);
         removeEventListener('pointercancel', lacher);
+        cancelAnimationFrame(boucle);
         if (!fantome) { // simple toucher : sélectionner / désélectionner, ou échanger avec l'étape déjà choisie
           const ici = cases.indexOf(e);
           if (choisie && choisie !== e && ici >= 0) { poser(choisie, ici); return; }
