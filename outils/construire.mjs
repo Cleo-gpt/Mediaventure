@@ -29,6 +29,15 @@ await build({
   logLevel: 'info',
 });
 
+// Page imprimable des codes horaires du stand Gaïa (même calcul que dans le jeu)
+await build({
+  entryPoints: [join(jeu, 'js/page-codes-gaia.js')],
+  bundle: true, format: 'iife', minify: true, target: 'es2020',
+  outfile: join(jeu, 'codes-gaia.js'),
+  banner: { js: '// Fichier généré par outils/construire.mjs — ne pas modifier à la main.' },
+  logLevel: 'info',
+});
+
 const TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.glb': 'model/gltf-binary' };
 const ressources = {};
 for (const dossier of ['fonds', 'objets-quete', 'portraits', 'carpes']) {

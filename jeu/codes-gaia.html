@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Codes du stand Gaïa</title>
+<style>
+  :root { --corail: #ff696a; --rose: #f8a0ab; --creme: #F1E6D0; --marine: #243447; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px; background: var(--creme); color: var(--marine); font: 16px/1.4 system-ui, sans-serif; }
+  main { max-width: 520px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 1.6rem; }
+  .sous-titre { margin: 0 0 20px; text-transform: capitalize; font-weight: 600; color: var(--corail); }
+  .reglages { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 18px; }
+  label { display: grid; gap: 4px; font-size: .85rem; font-weight: 600; }
+  input, button { font: inherit; padding: 8px 10px; border-radius: 10px; border: 2px solid var(--marine); background: #fff; color: var(--marine); }
+  input[type=number] { width: 5em; }
+  button { background: var(--corail); border-color: var(--corail); color: #fff; font-weight: 700; cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; }
+  td { padding: 10px 14px; border-bottom: 1px solid #eadfcd; }
+  td.code { text-align: right; font: 700 1.5rem/1 ui-monospace, Menlo, monospace; letter-spacing: .25em; }
+  tr.actuel { background: var(--rose); }
+  .aide { font-size: .85rem; margin-top: 14px; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .reglages, .aide-ecran { display: none; }
+    tr.actuel { background: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Codes du stand Gaïa</h1>
+  <p class="sous-titre" id="titre-date"></p>
+  <div class="reglages">
+    <label>Date <input type="date" id="date"></label>
+    <label>De <input type="number" id="debut" min="0" max="23" value="8"></label>
+    <label>à <input type="number" id="fin" min="0" max="23" value="18"></label>
+    <button id="imprimer" type="button">Imprimer</button>
+  </div>
+  <table><tbody id="codes"></tbody></table>
+  <p class="aide">Donner aux joueurs le code de l'heure en cours. Le jeu accepte aussi celui de l'heure précédente.</p>
+  <p class="aide aide-ecran">L'heure en cours est surlignée en rose.</p>
+</main>
+<script src="./codes-gaia.js"></script>
+</body>
+</html>

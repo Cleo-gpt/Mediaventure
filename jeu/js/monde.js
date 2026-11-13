@@ -492,6 +492,7 @@ function decorCiel({ groupe, scene, niveau, colliders, animations, chargeurTextu
     petites.push(b);
     for (let i = 0; i < 2; i++) {
       const k = koi(chargeurTexture, s * 0.42);
+      k.rotation.z = 0.75; // inclinée vers l'extérieur du bloc : on voit le dessin depuis le sol
       k.userData = { ...k.userData, bloc: b, rayon: s * 0.28, vitesse: 0.6 + Math.random() * 0.5, phase: i * Math.PI, dy: (i - 0.5) * s * 0.25 };
       groupe.add(k);
       kois.push(k);
@@ -503,7 +504,7 @@ function decorCiel({ groupe, scene, niveau, colliders, animations, chargeurTextu
   // Carpes qui nagent dans le ciel autour de l'île
   for (let i = 0; i < 6; i++) {
     const k = koi(chargeurTexture, 4);
-    k.rotation.z = 0.5; // inclinée dans le virage : on la voit d'en bas comme d'en haut
+    k.rotation.z = 0.7; // inclinée dans le virage : on la voit d'en bas comme d'en haut
     k.userData = { ...k.userData, centre: new THREE.Vector3(0, 7 + i * 1.6, -6), rayon: 26 + i * 4, vitesse: 0.12 + i * 0.02, phase: i };
     groupe.add(k);
     kois.push(k);

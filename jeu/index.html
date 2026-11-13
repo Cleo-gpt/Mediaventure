@@ -78,6 +78,51 @@
     #actions-sas { right: 16px; bottom: 16px; left: 16px; }
   }
 
+  /* Cléo guide le joueur dans le Sas */
+  #guide-sas { position: absolute; right: 24px; bottom: 96px; display: flex; align-items: flex-end; gap: 8px; pointer-events: none; }
+  #guide-sas > * { pointer-events: auto; }
+  #guide-bulle { position: relative; width: min(330px, calc(100vw - 140px)); margin-bottom: 40px; background: var(--creme); color: var(--marine); border: 3px solid var(--marine); border-radius: 18px; padding: 14px 16px 12px; box-shadow: 0 8px 22px rgba(0,0,0,.3); animation: portrait-entree .35s ease-out; }
+  #guide-bulle::after { content: ''; position: absolute; right: -12px; bottom: 26px; border: 10px solid transparent; border-left-color: var(--marine); border-right: 0; }
+  #guide-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  #guide-tete strong { background: var(--corail); color: #fff; padding: 2px 12px; border-radius: 999px; font-weight: 900; }
+  #guide-etape { font-size: .8rem; color: #6b7a8c; font-weight: 700; }
+  #guide-texte { margin: 8px 0 10px; line-height: 1.4; font-size: .98rem; }
+  #guide-boutons { display: flex; gap: 8px; justify-content: flex-end; }
+  #guide-boutons button { border: 0; border-radius: 999px; padding: .45em 1.1em; font-weight: 900; font-size: .88rem; }
+  #guide-suivant { background: var(--corail); color: #fff; box-shadow: 0 3px 0 #c94a4b; }
+  #guide-reduire { background: transparent; color: var(--marine); text-decoration: underline; }
+  #guide-avatar { border: 0; background: none; padding: 0; }
+  #guide-avatar img { display: block; height: min(46vh, 420px); filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); animation: flotte 2.4s ease-in-out infinite; }
+  #guide-sas.reduit #guide-avatar img { height: 120px; }
+  @media (max-width: 1100px) {
+    #guide-sas { bottom: auto; top: 96px; right: 16px; align-items: flex-start; flex-direction: row; }
+    #guide-bulle { margin: 0; width: min(330px, calc(100vw - 110px)); padding: 10px 12px; }
+    #guide-bulle::after { bottom: auto; top: 18px; }
+    #guide-texte { font-size: .9rem; margin: 6px 0 8px; }
+    #guide-avatar img, #guide-sas.reduit #guide-avatar img { height: 64px; width: 64px; object-fit: cover; object-position: 50% 4%; border-radius: 50%; background: var(--rose-pale); border: 3px solid #fff; animation: none; }
+  }
+  @media (max-width: 760px) { #guide-sas { top: 84px; left: 16px; right: 16px; justify-content: flex-end; } }
+
+  /* Bouton et fenêtre réservés au staff */
+  .bouton-staff { border: 2px solid currentColor; background: transparent; color: inherit; border-radius: 999px; padding: .45em 1.1em; font-weight: 700; font-size: .85rem; opacity: .75; }
+  .bouton-staff:hover { opacity: 1; }
+  #actions-sas .bouton-staff { color: var(--creme); }
+  #staff { z-index: 200; }
+  #staff .avertissement { background: var(--rose-pale); border-left: 6px solid var(--corail); border-radius: 10px; padding: 10px 14px; font-weight: 700; }
+  #code-staff { width: 100%; margin-top: 6px; padding: .7em 1.1em; border-radius: 999px; border: 2px solid var(--marine); font: inherit; font-weight: 700; font-size: 1.2rem; letter-spacing: .3em; text-align: center; }
+  #staff-erreur { color: #c94a4b; font-weight: 900; min-height: 1.4em; margin: 8px 0 0; }
+
+  /* Écran de fin : Cléo félicite le joueur */
+  #fin-jeu { z-index: 150; background: radial-gradient(ellipse at 50% 70%, #3d5bc0 0%, #26399a 45%, #141d55 100%); display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; }
+  body.avec-portrait #fin-jeu { padding-left: 16px; }
+  #fin-jeu img { height: min(70vh, 620px); filter: drop-shadow(0 10px 24px rgba(0,0,0,.35)); animation: flotte 2.4s ease-in-out infinite; }
+  #fin-jeu .carte { width: min(520px, 100%); text-align: center; }
+  #fin-jeu h2 { font-family: var(--titre); color: var(--corail); margin: 0 0 6px; font-size: clamp(1.5rem, 4vw, 2.2rem); }
+  #fin-jeu .trophee { font-size: 3rem; }
+  #fin-texte { font-size: 1.15rem; line-height: 1.5; }
+  #fin-jeu .bouton-staff { margin-top: 14px; }
+  @media (max-width: 760px) { #fin-jeu { align-content: center; } #fin-jeu img { height: 30vh; } }
+
   /* HUD */
   #hud { position: fixed; inset: 0; pointer-events: none; }
   #ouvrir-carte { position: absolute; top: 96px; left: 16px; pointer-events: auto; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--marine); color: var(--creme); font-weight: 900; }
@@ -260,7 +305,19 @@
       </div>
     </div>
   </div>
+  <div id="guide-sas">
+    <div id="guide-bulle">
+      <div id="guide-tete"><strong>Cléo</strong><span id="guide-etape"></span></div>
+      <p id="guide-texte"></p>
+      <div id="guide-boutons">
+        <button id="guide-reduire">Masquer</button>
+        <button id="guide-suivant">Étape suivante →</button>
+      </div>
+    </div>
+    <button id="guide-avatar" title="Cléo, ta guide"><img src="../portraits/cleo_miko.png" alt="Cléo, la gardienne du Sas"></button>
+  </div>
   <div id="actions-sas">
+    <button class="bouton-staff ouvrir-staff">Staff</button>
     <button class="bouton secondaire" id="reprendre" hidden></button>
     <button class="bouton" id="commencer">Entrer dans le Sas</button>
   </div>
@@ -320,7 +377,31 @@
     <h2 id="minijeu-titre-carte" style="font-family:var(--titre);margin:0;color:var(--corail)">Les îles de Médiaventure</h2>
     <p>Choisis une île pour t’y rendre directement.</p>
     <div class="carte-iles" id="liste-iles"></div>
-    <div class="mj-actions"><button class="bouton secondaire" id="fermer-carte">Fermer</button></div>
+    <div class="mj-actions"><button class="bouton-staff ouvrir-staff">Nouvelle partie (staff)</button> <button class="bouton secondaire" id="fermer-carte">Fermer</button></div>
+  </div>
+</section>
+
+<section id="fin-jeu" class="modale" hidden>
+  <img src="../portraits/cleo_miko.png" alt="Cléo">
+  <div class="carte">
+    <div class="trophee">🏆</div>
+    <h2>Bravo !</h2>
+    <p id="fin-texte"></p>
+    <button class="bouton-staff ouvrir-staff">Nouvelle partie (staff)</button>
+  </div>
+</section>
+
+<section id="staff" class="modale" hidden>
+  <div class="carte">
+    <h2 style="margin-top:0">Nouvelle partie — réservé au staff</h2>
+    <p class="avertissement">Ce bouton est réservé au staff de la salle informatique. Une fois le code entré, la partie en cours sera perdue.</p>
+    <label for="code-staff">Code staff</label>
+    <input id="code-staff" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+    <p id="staff-erreur"></p>
+    <div class="mj-actions">
+      <button class="bouton secondaire" id="staff-annuler">Annuler, revenir au jeu</button>
+      <button class="bouton" id="staff-valider">Valider et recommencer</button>
+    </div>
   </div>
 </section>
 

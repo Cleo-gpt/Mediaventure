@@ -109,6 +109,19 @@ function catalogue(a) {
   };
 }
 
+// ---------------------------------------------------------------- Cléo, guide du Sas
+// Une explication par catégorie, dans l'ordre où Cléo fait passer le joueur.
+const ETAPES = [
+  { onglet: 'visage', categorie: 'espece', texte: 'Bienvenue dans le Sas ! Je suis Cléo et je vais t’aider à préparer ton personnage. Commence par choisir ton espèce parmi les cartes à gauche.' },
+  { onglet: 'visage', categorie: 'coiffure', texte: 'Choisis maintenant ta coupe de cheveux. Astuce : fais glisser ton personnage pour le faire tourner, et zoome avec la molette pour voir son visage.' },
+  { onglet: 'visage', categorie: 'cheveux', texte: 'Et la couleur de tes cheveux ? Prends celle qui te ressemble… ou pas du tout !' },
+  { onglet: 'tenue', categorie: 'kimono', texte: 'Passons à la tenue ! Choisis la couleur de ton kimono. La carte 🎨 te laisse prendre n’importe quelle couleur.' },
+  { onglet: 'tenue', categorie: 'geta', texte: 'Les geta sont des sandales japonaises en bois. Choisis les tiennes.' },
+  { onglet: 'tenue', categorie: 'accessoire', texte: 'Un sac pour transporter tes objets de quête ? Choisis celui qui t’accompagnera.' },
+  { onglet: 'tenue', categorie: 'arme', texte: 'Un katana pour les combats contre les boss… ou pas, c’est toi qui vois !' },
+  { onglet: 'identite', categorie: 'prenom', texte: 'Dernière étape : écris ton prénom. Quand tu es prêt·e, clique sur « Entrer dans le Sas » pour commencer l’aventure !' },
+];
+
 // ---------------------------------------------------------------- Vestiaire
 export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre }) {
   let onglet = CATEGORIES_DISPONIBLES ? 'visage' : 'tenue';
@@ -139,6 +152,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
     // Catégories
     const liste = cat[onglet];
     if (!liste.some((c) => c.id === categorie)) categorie = liste[0].id;
+    majGuide(cat);
     const colonne = $('categories');
     colonne.innerHTML = '';
     for (const c of liste) {
@@ -183,6 +197,30 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
       }
     }
   }
+
+  // Cléo explique la catégorie affichée et propose de passer à la suivante
+  function majGuide(cat) {
+    const etapes = ETAPES.filter((e) => cat[e.onglet]?.some((c) => c.id === e.categorie));
+    const i = etapes.findIndex((e) => e.categorie === categorie);
+    const etape = etapes[i];
+    $('guide-texte').textContent = etape?.texte ?? 'Choisis ce qui te plaît dans les cartes à gauche.';
+    $('guide-etape').textContent = i >= 0 ? `Étape ${i + 1} / ${etapes.length}` : '';
+    const suivante = etapes[i + 1];
+    $('guide-suivant').hidden = !suivante;
+    $('guide-suivant').onclick = () => {
+      onglet = suivante.onglet;
+      categorie = suivante.categorie;
+      $('info-texte').hidden = true;
+      rendre();
+    };
+  }
+  const reduireGuide = (reduit) => {
+    $('guide-sas').classList.toggle('reduit', reduit);
+    $('guide-bulle').hidden = reduit;
+    $('guide-avatar').title = reduit ? 'Afficher les explications de Cléo' : 'Cléo, ta guide';
+  };
+  $('guide-reduire').onclick = () => reduireGuide(true);
+  $('guide-avatar').onclick = () => reduireGuide(!$('guide-bulle').hidden);
 
   for (const b of document.querySelectorAll('#onglets button')) {
     b.innerHTML = ICONES[b.dataset.onglet];

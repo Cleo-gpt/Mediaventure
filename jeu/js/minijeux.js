@@ -1,6 +1,7 @@
 // Épreuves du milieu de chaque île (mindmap) : vidéo, 7 différences, étapes marketing, code du stand Gaïa.
 // Chaque épreuve s'affiche dans la fenêtre #minijeu et renvoie une promesse : true si elle est réussie.
 import { PALETTE } from './niveaux.js';
+import { codeGaiaValide } from './code-gaia.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -325,7 +326,7 @@ export function epreuveEtapes(etapes) {
 }
 
 // ---------------------------------------------------------------- Admin : le code du stand Gaïa
-export function epreuveCodeGaia(code) {
+export function epreuveCodeGaia() {
   return new Promise((fin) => {
     const zone = ouvrir('Le stand Gaïa', 'Va au stand Gaïa des portes ouvertes : la vendeuse te donnera un code.');
     const champ = Object.assign(document.createElement('input'), { className: 'mj-code', placeholder: 'Code du stand', maxLength: 16, autocomplete: 'off' });
@@ -337,8 +338,8 @@ export function epreuveCodeGaia(code) {
     actions.className = 'mj-actions';
     actions.append(plusTard, valider);
     const essayer = () => {
-      if (champ.value.trim().toUpperCase() === code.toUpperCase()) { fermer(); fin(true); }
-      else { message.textContent = 'Ce n’est pas le bon code. Demande-le au stand Gaïa !'; champ.select(); }
+      if (codeGaiaValide(champ.value)) { fermer(); fin(true); }
+      else { message.textContent = 'Ce n’est pas le bon code (il change toutes les heures). Demande-le au stand Gaïa !'; champ.select(); }
     };
     valider.onclick = essayer;
     champ.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') essayer(); };

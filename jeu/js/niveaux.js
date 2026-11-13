@@ -120,8 +120,7 @@ export const NIVEAUX = {
     titre: 'Admin & gestion', lieu: 'Tokyo — sakura', biome: 'sakura', jouable: true,
     ciel: '#e2c9ec', brume: '#e6d0ef', sol: '#b49ac8', chemin: PALETTE.creme, accent: '#8a5fb4',
     miniJeu: 'stand-gaia', suivant: 'final',
-    // Code donné par la vendeuse du vrai stand Gaïa aux portes ouvertes (à changer le jour J)
-    codeGaia: 'GAIA',
+    // Le code donné par la vendeuse du stand Gaïa change toutes les heures : voir js/code-gaia.js et codes-gaia.html
     boss: {
       nom: 'Baptiste Forestier', titre: 'Boss Admin', pv: 105, pa: 6, pm: 3,
       apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'rejetes', cheveux: '#2a2a2e', kimono: PALETTE.rosePale, hakama: '#4b3470', obi: PALETTE.marine, hachimaki: '#8a5fb4', katana: true, geta: PALETTE.marine },

@@ -336,7 +336,7 @@ function lancerMiniJeu() {
       () => epreuveEtapes(niveau.etapes), `Stratégie validée ! ${nomBoss} t’attend dans l’arène.`, 'Reviens quand ton plan sera prêt.');
   } else if (niveau.miniJeu === 'stand-gaia') {
     epreuve('Passe au stand Gaïa des portes ouvertes : la vendeuse te donnera un code. Entre-le ici pour ouvrir l’arène.',
-      () => epreuveCodeGaia(niveau.codeGaia), `Le code est bon ! ${nomBoss} t’attend dans l’arène.`, 'Reviens avec le code du stand Gaïa.');
+      () => epreuveCodeGaia(), `Le code est bon ! ${nomBoss} t’attend dans l’arène.`, 'Reviens avec le code du stand Gaïa.');
   }
 }
 
@@ -458,6 +458,8 @@ $('fermer-carte').onclick = () => { $('carte-iles').hidden = true; mode = 'explo
 
 // ------------------------------------------------------------------ Fin du jeu
 function victoireFinale() {
+  partie.termine = true; // la partie reste terminée même si la page est rechargée, jusqu'au code staff
+  sauver();
   $('obtenu-icone').textContent = '🏆';
   $('obtenu-nom').textContent = 'Médiaventure terminée !';
   $('obtenu-texte').textContent = niveau.gain;
@@ -467,11 +469,57 @@ function victoireFinale() {
   $('obtenu-ok').onclick = () => {
     $('obtenu').hidden = true;
     $('obtenu-texte').textContent = 'Il rejoint ton inventaire, en haut à droite.';
-    montrerPortrait(false);
-    mode = 'exploration';
-    dialogue([{ nom: 'Cléo Forclaz', texte: `Bravo ${partie.prenom}, tu as vaincu le boss final et terminé Médiaventure !` }]);
+    afficherFin();
   };
 }
+
+// Cléo félicite le joueur et l'envoie chercher sa récompense auprès du staff
+function afficherFin() {
+  mode = 'fin';
+  montrerPortrait(false);
+  $('dialogue').hidden = true;
+  $('hud').hidden = true;
+  $('creation').hidden = true;
+  $('fin-texte').textContent = `Bravo cher·e ${partie.prenom || 'voyageur·se'} ! Vous avez fini le jeu Médiaventure. `
+    + 'Pour obtenir votre récompense, faites appel à un membre du Staff des PO.';
+  $('fin-jeu').hidden = false;
+}
+
+// ------------------------------------------------------------------ Nouvelle partie (staff)
+// Code fixe connu du staff de la salle informatique : efface la sauvegarde et relance le jeu au Sas.
+const CODE_STAFF = '7319';
+let modeAvantStaff = null;
+function ouvrirStaff() {
+  modeAvantStaff = mode;
+  mode = 'staff';
+  touches.clear();
+  $('code-staff').value = '';
+  $('staff-erreur').textContent = '';
+  $('staff').hidden = false;
+  $('code-staff').focus();
+}
+function fermerStaff() {
+  $('staff').hidden = true;
+  mode = modeAvantStaff;
+}
+function validerStaff() {
+  if ($('code-staff').value.trim() !== CODE_STAFF) {
+    $('staff-erreur').textContent = 'Code incorrect.';
+    $('code-staff').select();
+    return;
+  }
+  try { localStorage.removeItem(CLE_SAUVEGARDE); } catch { /* navigation privée */ }
+  location.replace(location.pathname); // sans ?niveau=…, pour repartir du Sas
+}
+for (const b of document.querySelectorAll('.ouvrir-staff')) b.onclick = ouvrirStaff;
+$('staff-annuler').onclick = fermerStaff;
+$('staff-valider').onclick = validerStaff;
+$('code-staff').addEventListener('keydown', (e) => {
+  e.stopPropagation(); // les touches tapées ne doivent pas piloter le jeu
+  if (e.key === 'Enter') validerStaff();
+  if (e.key === 'Escape') fermerStaff();
+});
+$('staff').addEventListener('click', (e) => { if (e.target === $('staff')) fermerStaff(); });
 
 // ------------------------------------------------------------------ Objet de quête
 async function apparaitreObjet() {
@@ -742,10 +790,15 @@ function boucle() {
     if (!chargementTermine && mode === 'creation') { chargementTermine = true; fondu(false); }
     return;
   }
+  if (mode === 'fin' || (mode === 'staff' && modeAvantStaff === 'fin')) {
+    if (!chargementTermine) { chargementTermine = true; fondu(false); }
+    return;
+  }
+  if (mode === 'staff' && modeAvantStaff === 'creation') { renderer.render(sceneCreation, camera); return; }
   if (!monde) return;
   for (const a of monde.animations) a(dt, t);
   if (mode === 'combat') combat?.update(dt);
-  else majExploration(dt);
+  else if (mode !== 'staff') majExploration(dt);
   renderer.render(scene, camera);
 }
 boucle();
@@ -757,6 +810,9 @@ if (params.has('niveau') && NIVEAUX[params.get('niveau')]) {
   partie.prenom ||= 'Testeur·se';
   lancerNiveau(params.get('niveau'));
 }
+
+// Une partie terminée reste sur l'écran de fin (seul le code staff relance une partie)
+if (partie.termine && !params.has('niveau')) afficherFin();
 
 // Pour le débogage depuis la console
 window.jeu = { partie, lancerMiniJeu, tourner: (r) => { rotationApercu = r; rotationAuto = false; }, essayer: (ap) => { Object.assign(partie.apparence, ap); majApercu(); }, zoom: (v) => { zoomVoulu = zoomApercu = v; }, get mode() { return mode; }, get combat() { return combat; }, etatNiveau, lancerNiveau, ouvrirArene, lancerCombat, joueur: () => joueur, camera, cam };
