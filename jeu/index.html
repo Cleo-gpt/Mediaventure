@@ -336,11 +336,13 @@
     document.getElementById('erreur-texte').innerHTML =
       'Le fichier a été ouvert directement depuis le Finder. Ferme cet onglet et double-clique sur <b>« Lancer le jeu.command »</b> à la racine du dossier Mediaventure.';
     document.getElementById('erreur-lancement').hidden = false;
+    document.getElementById('chargement').classList.remove('visible'); // sinon l'écran de chargement cache le message
   }
   addEventListener('error', (e) => {
     if (location.protocol === 'file:') return;
     document.getElementById('erreur-texte').textContent = 'Erreur : ' + (e.message || e.target?.src || 'inconnue') + ' — recharge la page avec Cmd+Maj+R.';
     document.getElementById('erreur-lancement').hidden = false;
+    document.getElementById('chargement').classList.remove('visible');
   }, true);
 </script>
 <script type="module" src="./js/main.js"></script>
