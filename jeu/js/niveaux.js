@@ -44,7 +44,9 @@ export const NIVEAUX = {
     ],
     boss: {
       nom: 'M. Graber', titre: 'Boss Multimédia', pv: 85, pa: 6, pm: 3,
-      apparence: { espece: 'shiba', coiffure: 'chonmage', cheveux: '#2a2a2e', kimono: '#f2b632', geta: PALETTE.marine },
+      apparence: { espece: 'humain', coiffure: 'rejetes', cheveux: '#c29a6b', tenue: 'veste', lunettes: true },
+      portrait: '../portraits/graber.png',
+      defi: 'Ah, te voilà ! Silence sur le plateau… moteur… action ! Voyons si tu tiens la lumière.',
       sorts: [
         { nom: 'Coupe franche', pa: 3, portee: [1, 1], degats: [9, 13] },
         { nom: 'Flash aveuglant', pa: 4, portee: [2, 5], degats: [7, 11] },

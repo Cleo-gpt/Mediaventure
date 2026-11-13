@@ -220,6 +220,54 @@ function geometriesMiko() {
   return miko;
 }
 
+// Tenue de ville (M. Graber) : chemise rouge, veste en daim ouverte, pantalon sombre, chaussures
+const chemise = (x, y, z) => Math.max(torse(x, y, z) - 0.01, 0.2 - y, y - 0.53);
+const veste = (x, y, z) => {
+  let d = Math.max(torse(x, y, z) - 0.024, 0.17 - y);
+  for (let i = 0; i < 2; i++) {
+    // manches longues jusqu'au-dessus de la main
+    const a = J.epaule[i], b = a.map((v, k) => v + (J.poignet[i][k] - v) * 0.8);
+    const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    d = smin(d, Math.max(cone(x, y, z, a, b, 0.082, 0.078), (le_long(x, y, z, a, b) - 1) * l), 0.02);
+  }
+  // ouverture en V sur le devant, qui laisse voir la chemise
+  const demi = 0.012 + Math.max(0, y - 0.28) * 0.42;
+  d = Math.max(d, -Math.max(Math.abs(x) - demi, 0.02 - z));
+  return Math.max(d, y - 0.535);
+};
+// Revers du col, rabattus de part et d'autre de l'ouverture
+const revers = (x, y, z) => {
+  const demi = 0.012 + Math.max(0, y - 0.28) * 0.42;
+  return Math.max(torse(x, y, z) - 0.03, Math.abs(Math.abs(x) - demi - 0.03) - 0.03, 0.4 - y, y - 0.53, 0.04 - z);
+};
+const pantalon = (x, y, z) => {
+  let d = Math.max(torse(x, y, z) - 0.012, y - 0.26);
+  for (let i = 0; i < 2; i++) d = smin(d, cone(x, y, z, J.cuisse[i], [J.cheville[i][0], 0.075, J.cheville[i][2]], 0.094, 0.084), 0.03);
+  return Math.max(d, 0.075 - y);
+};
+const chaussures = (x, y, z) => {
+  let d = Infinity;
+  for (let i = 0; i < 2; i++) d = Math.min(d, ellipsoide(x, y, z, [J.orteil[i][0], 0.05, 0.04], [0.09, 0.066, 0.13]));
+  return Math.max(d, -y);
+};
+// Le pantalon ne suit que les jambes et le bassin (jamais les mains, pourtant proches)
+const poidsJambes = (x, y, z, liste) => {
+  const garde = [O.hanches, O.colonne, O.cuisseG, O.genouG, O.chevilleG, O.cuisseD, O.genouD, O.chevilleD];
+  const l = liste.filter(([os]) => garde.includes(os));
+  return l.length ? l : [[O.hanches, 1]];
+};
+let ville = null;
+function geometriesVille() {
+  ville ??= {
+    chemise: ponderer(extraire(chemise, [-0.22, 0.18, -0.2], [0.22, 0.55, 0.22], PAS), SEGMENTS),
+    veste: ponderer(extraire(veste, [-0.33, 0.15, -0.23], [0.33, 0.56, 0.26], PAS), SEGMENTS, { surcharge: poidsManches }),
+    revers: ponderer(extraire(revers, [-0.2, 0.38, 0.0], [0.2, 0.55, 0.24], 0.004), SEGMENTS),
+    pantalon: ponderer(extraire(pantalon, [-0.24, 0.06, -0.2], [0.24, 0.28, 0.2], PAS), SEGMENTS, { surcharge: poidsJambes }),
+    chaussures: ponderer(extraire(chaussures, [-0.22, -0.01, -0.11], [0.22, 0.13, 0.19], 0.006), SEGMENTS, { surcharge: poidsJambes }),
+  };
+  return ville;
+}
+
 let tissus = null; // habits : même géométrie pour les deux espèces
 function geometriesTissus() {
   tissus ??= {
@@ -349,6 +397,37 @@ const coiffures = {
       d = smin(d, cone(x, y, z, haut, milieu, 0.04, 0.032), 0.012);
       d = smin(d, cone(x, y, z, milieu, pointe, 0.032, 0.004), 0.006);
     }
+    return d;
+  },
+  // Cheveux mi-courts rejetés en arrière, front dégagé, volume ébouriffé (M. Graber)
+  rejetes: (x, y, z) => {
+    // ligne du front dégagée (plus basse aux tempes) et calotte qui s'amincit vers le bord : pas d'effet bonnet
+    const lim = -0.1 + 0.3 * Math.max(0, z / 0.255) ** 1.5 - 0.07 * Math.min(1, (x / 0.25) ** 2);
+    const ep = 0.004 + 0.02 * Math.min(1, Math.max(0, (y - lim) / 0.1));
+    let d = Math.max(CRANE(x, y, z) - ep, lim - y);
+    d = smin(d, ellipsoide(x, y, z, [0, 0.17, -0.09], [0.22, 0.09, 0.18]), 0.05); // un peu de volume sur le dessus
+    for (let i = 0; i < 7; i++) {
+      // mèches peignées vers l'arrière : pointe fine au bord du front, puis épaisses et soulevées sur le crâne
+      const x0 = -0.15 + i * 0.05, h = (i % 3) * 0.012;
+      const front = [x0, 0.15 - h, 0.205 - Math.abs(x0) * 0.3];
+      const sommet = [x0 * 1.1, 0.262 + h - x0 * x0 * 2.4, 0.02];
+      d = smin(d, cone(x, y, z, front, sommet, 0.008, 0.038), 0.008);
+      d = smin(d, cone(x, y, z, sommet, [x0 * 1.3, 0.16, -0.27], 0.04, 0.008), 0.012);
+    }
+    // côtés : mèches couchées vers l'arrière au-dessus des oreilles
+    for (const s of [-1, 1]) {
+      for (const [y0, dz] of [[0.12, 0.08], [0.04, 0.02], [0.07, -0.08]]) {
+        d = smin(d, cone(x, y, z, [s * (0.265 - Math.max(0, y0 - 0.05) * 0.9), y0 + 0.04, dz + 0.05], [s * 0.29, y0 - 0.09, dz - 0.08], 0.026, 0.005), 0.01);
+      }
+    }
+    // nuque : mèches étagées qui effleurent le col
+    for (let k = 0; k < 9; k++) {
+      const th = 2.0 + (k / 8) * 2.3, sx = Math.sin(th), cz = Math.cos(th);
+      d = smin(d, cone(x, y, z, [sx * 0.26, 0.05, cz * 0.24], [sx * 0.29, -0.12 - (k % 2) * 0.03, cz * 0.27], 0.04, 0.007), 0.01);
+    }
+    // deux mèches rebelles qui retombent sur le côté du front
+    d = smin(d, cone(x, y, z, [0.15, 0.22, 0.15], [0.2, 0.09, 0.225], 0.022, 0.004), 0.01);
+    d = smin(d, cone(x, y, z, [-0.18, 0.21, 0.13], [-0.235, 0.1, 0.18], 0.02, 0.004), 0.01);
     return d;
   },
   // Coupe dégradée : couches effilées, nuque longue, épis, petite queue, frange irrégulière
@@ -611,7 +690,9 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   racine.updateMatrixWorld(true);
   const squelette = new THREE.Skeleton(OS.map((n) => os[n]));
 
-  const fourrure = materiau('#ffffff', { vertexColors: true, motif: MOTIF_FOURRURE, liseré: 0.32, cle: 'fourrure' });
+  const fourrure = espece === 'humain'
+    ? materiau('#ffffff', { vertexColors: true, motif: 'diffuseColor.rgb *= 0.97 + 0.04 * bruit(vPosObj * 300.0);', liseré: 0.2, cle: 'peau' })
+    : materiau('#ffffff', { vertexColors: true, motif: MOTIF_FOURRURE, liseré: 0.32, cle: 'fourrure' });
   const couches = [[g.corps, fourrure]];
   // Col, ourlet et obi s'accordent à la couleur du kimono (y compris une couleur libre)
   const clarte = a.kimono ? new THREE.Color(a.kimono).getHSL({}).l : 0;
@@ -623,6 +704,10 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     couches.push([m.haut, materiau('#fbf8f2', { liseré: 0.12, cle: 'uni' })], [m.hakama, materiau(ROUGE_MIKO, { liseré: 0.12, cle: 'uni' })],
       [m.bandes, materiau(ROUGE_MIKO, { liseré: 0.1, cle: 'uni' })], [t.col, materiau(ROUGE_MIKO, { liseré: 0.1, cle: 'uni' })],
       [t.obi, materiau(ROUGE_MIKO, { liseré: 0.1, cle: 'uni' })]);
+  } else if (a.tenue === 'veste') {
+    const v = geometriesVille(), daim = materiau('#9a7048', { motif: MOTIF_FOURRURE, liseré: 0.15, cle: 'daim' });
+    couches.push([v.chemise, materiau('#b8323a', { liseré: 0.12, cle: 'uni' })], [v.veste, daim], [v.revers, daim],
+      [v.pantalon, materiau('#2e3346', { liseré: 0.12, cle: 'uni' })], [v.chaussures, materiau('#4a3226', { liseré: 0.2, cle: 'uni' })]);
   } else if (a.kimono) {
     const t = geometriesTissus();
     couches.push([t.kimono, materiau(a.kimono, { motif: MOTIF_SEIGAIHA, liseré: 0.12, cle: 'kimono' })],
@@ -682,6 +767,19 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       geta.add(lanière, piece(new THREE.SphereGeometry(0.012, 10, 8), hanao, 0, 0.03, 0.1));
       fixer('cheville' + c, geta, J.orteil[i][0], -0.012, 0.05);
     });
+  }
+
+  // Lunettes de soleil accrochées à l'ouverture de la chemise
+  if (a.lunettes) {
+    const l = new THREE.Group(), verre = new THREE.MeshBasicMaterial({ color: '#1e2128' });
+    for (const s of [-1, 1]) {
+      const v = piece(new THREE.SphereGeometry(0.024, 14, 10), verre, s * 0.027, 0, 0);
+      v.scale.set(1, 1.05, 0.25);
+      l.add(sans(v), piece(new THREE.TorusGeometry(0.024, 0.003, 6, 18), or, s * 0.027, 0, 0.002));
+    }
+    l.add(piece(new THREE.CylinderGeometry(0.0025, 0.0025, 0.012, 6), or, 0, 0.012, 0.002));
+    l.rotation.set(-0.3, 0, 0.05);
+    fixer('poitrine', l, 0.0, 0.37, 0.19);
   }
 
   // Accessoires
@@ -762,6 +860,21 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       const globe = piece(new THREE.SphereGeometry(0.022, 16, 12), noir);
       globe.scale.set(0.9, 1.15, 0.4);
       oeil.add(sans(globe), sans(piece(new THREE.SphereGeometry(0.0075, 10, 8), blanc, -s * 0.006, 0.01, 0.009)));
+    } else if (espece === 'humain') {
+      // œil d'anime rieur : blanc, iris bleu-gris, pupille, reflet, paupière marquée et sourcil
+      oeil.position.set(s * 0.095, 0.0, 0.238);
+      const globe = piece(new THREE.SphereGeometry(0.03, 18, 14), blanc);
+      globe.scale.set(1, 0.72, 0.3);
+      const iris = piece(new THREE.SphereGeometry(0.021, 16, 12), new THREE.MeshBasicMaterial({ color: '#5d7896' }), 0, -0.002, 0.005);
+      iris.scale.set(0.95, 0.95, 0.3);
+      const pupille = piece(new THREE.SphereGeometry(0.011, 12, 10), new THREE.MeshBasicMaterial({ color: '#1b2230' }), 0, -0.002, 0.008);
+      pupille.scale.z = 0.3;
+      const paupiere = piece(new THREE.TorusGeometry(0.031, 0.0045, 6, 18, Math.PI), new THREE.MeshBasicMaterial({ color: '#4a3226' }), 0, -0.002, 0.006);
+      paupiere.scale.set(1.05, 0.75, 1);
+      const sourcil = piece(new THREE.CapsuleGeometry(0.006, 0.04, 4, 8), new THREE.MeshBasicMaterial({ color: '#8a6a45' }), s * 0.004, 0.05, 0.004);
+      sourcil.rotation.z = Math.PI / 2 - s * 0.18;
+      oeil.add(sans(globe), sans(iris), sans(pupille), sans(paupiere), sans(sourcil),
+        sans(piece(new THREE.SphereGeometry(0.0065, 10, 8), blanc, -s * 0.006, 0.006, 0.011)));
     } else {
       // dans la tache noire : un œil brillant et deux reflets
       oeil.position.set(s * 0.1, 0.0, 0.236);
@@ -779,15 +892,26 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     const tache = piece(new THREE.SphereGeometry(0.035, 14, 10), new THREE.MeshBasicMaterial({ color: ROSE, transparent: true, opacity: 0.75 }));
     tache.scale.set(1.3, 0.75, 0.2);
     joue.add(sans(tache));
-    for (const k of [-1, 0, 1]) {
+    if (espece !== 'humain') for (const k of [-1, 0, 1]) {
       const trait = piece(new THREE.BoxGeometry(0.003, 0.016, 0.003), new THREE.MeshBasicMaterial({ color: '#e7788a' }), k * 0.015, 0, 0.008);
       trait.rotation.z = 0.5;
       joue.add(sans(trait));
     }
     tete.add(joue);
   }
+  // Visage humain : petit nez et grand sourire
+  if (!a.masque && espece === 'humain') {
+    const nez = piece(new THREE.SphereGeometry(0.012, 10, 8), toon('#e9b89c'), 0, -0.05, 0.262);
+    nez.scale.set(1, 0.8, 0.6);
+    tete.add(sans(nez));
+    const sourire = piece(new THREE.TorusGeometry(0.04, 0.0045, 6, 20, Math.PI * 0.8), new THREE.MeshBasicMaterial({ color: '#7a3a32' }), 0.006, -0.075, 0.248);
+    sourire.rotation.z = Math.PI + Math.PI * 0.1 - 0.12; // en coin, un peu narquois comme sur la photo
+    sourire.scale.set(1, 0.6, 1);
+    sourire.rotation.x = -0.25;
+    tete.add(sans(sourire));
+  }
   // Truffe et bouche en ω
-  if (!a.masque) {
+  if (!a.masque && espece !== 'humain') {
   const zMuseau = 0.282;
   const truffe = piece(new THREE.SphereGeometry(0.02, 16, 12), noir, 0, -0.045, zMuseau);
   truffe.scale.set(1.25, 0.8, 0.6);

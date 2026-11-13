@@ -279,7 +279,8 @@ async function lancerNiveau(id) {
     objet: boss, rayon: 2.8,
     actif: () => etatNiveau.miniJeuReussi && !etatNiveau.bossVaincu,
     texte: () => `Défier ${niveau.boss.nom}`,
-    action: lancerCombat,
+    // le boss lance son défi (avec son portrait) avant le combat, s'il a une réplique
+    action: () => (niveau.boss.defi ? dialogue([{ nom: niveau.boss.nom, texte: niveau.boss.defi }], lancerCombat) : lancerCombat()),
   });
 
   $('hud-titre').textContent = niveau.titre;
