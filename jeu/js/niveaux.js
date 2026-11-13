@@ -84,7 +84,7 @@ export const NIVEAUX = {
     fond: '../fonds/informatique_fuji.jpg', miniJeu: 'quiz', suivant: 'marketing',
     boss: {
       nom: 'Philippe Kiener', titre: 'Boss Informatique', pv: 90, pa: 6, pm: 3,
-      apparence: { espece: 'humain', coiffure: 'frange', cheveux: '#3a2c24', kimono: PALETTE.marine, geta: PALETTE.bleu },
+      apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'samourai', cheveux: '#3a2c24', kimono: PALETTE.bleu, hakama: PALETTE.marine, hachimaki: '#f4efe4', katana: true, geta: PALETTE.bleu },
       sorts: [
         { nom: 'Erreur 404', pa: 3, portee: [1, 2], degats: [9, 13] },
         { nom: 'Écran bleu', pa: 4, portee: [2, 5], degats: [7, 11] },
@@ -108,7 +108,7 @@ export const NIVEAUX = {
     ],
     boss: {
       nom: 'Olivier Droz', titre: 'Boss Marketing', pv: 95, pa: 6, pm: 3,
-      apparence: { espece: 'humain', coiffure: 'chonmage', cheveux: '#5a3a2a', kimono: '#a44c94', geta: PALETTE.corail },
+      apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'samourai', cheveux: '#5a3a2a', kimono: PALETTE.creme, hakama: '#7a3470', obi: PALETTE.corail, katana: true, geta: PALETTE.corail },
       sorts: [
         { nom: 'Argument choc', pa: 3, portee: [1, 1], degats: [10, 14] },
         { nom: 'Campagne virale', pa: 4, portee: [2, 5], degats: [8, 12] },
@@ -124,7 +124,7 @@ export const NIVEAUX = {
     codeGaia: 'GAIA',
     boss: {
       nom: 'Baptiste Forestier', titre: 'Boss Admin', pv: 105, pa: 6, pm: 3,
-      apparence: { espece: 'humain', coiffure: 'rejetes', cheveux: '#2a2a2e', kimono: '#8a5fb4', geta: PALETTE.marine },
+      apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'rejetes', cheveux: '#2a2a2e', kimono: PALETTE.rosePale, hakama: '#4b3470', obi: PALETTE.marine, hachimaki: '#8a5fb4', katana: true, geta: PALETTE.marine },
       sorts: [
         { nom: 'Facture surprise', pa: 3, portee: [1, 1], degats: [10, 14] },
         { nom: 'Pile de dossiers', pa: 4, portee: [2, 5], degats: [8, 12] },
@@ -139,7 +139,7 @@ export const NIVEAUX = {
     gain: 'Passe au stand Médiaventure : ton gain t’attend (goodies, print spécial PO ou rabais sur une Gaïa) !',
     boss: {
       nom: 'Christophe Haenssler', titre: 'Boss final', pv: 160, pa: 7, pm: 3,
-      apparence: { espece: 'humain', coiffure: 'frange', cheveux: '#6b5a4a', kimono: PALETTE.marine, katana: true, geta: PALETTE.corail },
+      apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'samourai', cheveux: '#6b5a4a', kimono: '#b8323a', hakama: '#1f2433', obi: '#e2b552', hachimaki: PALETTE.corail, katana: true, geta: PALETTE.corail },
       sorts: [
         { nom: 'Coup de maître', pa: 3, portee: [1, 1], degats: [12, 16] },
         { nom: 'Onde médiatique', pa: 4, portee: [2, 5], degats: [9, 13] },

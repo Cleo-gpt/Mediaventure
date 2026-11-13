@@ -268,6 +268,46 @@ function geometriesVille() {
   return ville;
 }
 
+// Samouraï (kamishimo) : kosode à manches courtes, hakama-pantalon large et plissé,
+// kataginu (gilet aux épaules en ailes, ajoutées en pièces rigides) et obi
+const kosode = (x, y, z) => {
+  let d = Math.max(torse(x, y, z) - 0.014, 0.2 - y);
+  for (let i = 0; i < 2; i++) {
+    const a = J.epaule[i], b = a.map((v, k) => v + (J.poignet[i][k] - v) * 0.6);
+    const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    d = smin(d, Math.max(cone(x, y, z, a, b, 0.078, 0.088), (le_long(x, y, z, a, b) - 1) * l), 0.02);
+  }
+  return Math.max(d, y - 0.53);
+};
+const plis = (x, z, k) => 0.006 * k * Math.abs(Math.sin(Math.atan2(z, x) * 7));
+const hakamaSamourai = (x, y, z) => {
+  let d = Math.max(torse(x, y, z) - 0.02, y - 0.3);
+  for (let i = 0; i < 2; i++) {
+    // jambes larges qui s'évasent jusqu'aux chevilles
+    const bas = [J.cheville[i][0] * 1.25, 0.06, J.cheville[i][2]];
+    const t = Math.min(1, Math.max(0, (0.24 - y) / 0.18));
+    d = smin(d, cone(x, y, z, [J.cuisse[i][0], 0.25, 0], bas, 0.11, 0.135) - plis(x - J.cuisse[i][0], z, t), 0.05);
+  }
+  return Math.max(d, 0.06 - y);
+};
+const kataginu = (x, y, z) => {
+  let d = Math.max(torse(x, y, z) - 0.026, 0.27 - y, y - 0.535);
+  // ouverture en V sur le devant : le kosode apparaît dessous
+  const demi = 0.01 + Math.max(0, y - 0.27) * 0.5;
+  return Math.max(d, -Math.max(Math.abs(x) - demi, 0.02 - z));
+};
+const obiSamourai = (x, y, z) => Math.max(torse(x, y, z) - 0.03, Math.abs(y - 0.285) - 0.028);
+let samourai = null;
+function geometriesSamourai() {
+  samourai ??= {
+    kosode: ponderer(extraire(kosode, [-0.33, 0.18, -0.23], [0.33, 0.55, 0.26], PAS), SEGMENTS, { surcharge: poidsManches }),
+    hakama: ponderer(extraire(hakamaSamourai, [-0.3, 0.04, -0.24], [0.3, 0.33, 0.26], PAS), SEGMENTS, { surcharge: poidsJambes }),
+    kataginu: ponderer(extraire(kataginu, [-0.24, 0.25, -0.22], [0.24, 0.56, 0.24], PAS), SEGMENTS, { surcharge: (x, y, z) => [[O.poitrine, 1]] }),
+    obi: ponderer(extraire(obiSamourai, [-0.25, 0.24, -0.24], [0.25, 0.33, 0.24], 0.005), SEGMENTS),
+  };
+  return samourai;
+}
+
 let tissus = null; // habits : même géométrie pour les deux espèces
 function geometriesTissus() {
   tissus ??= {
@@ -507,6 +547,16 @@ const coiffures = {
     // deux mèches rebelles qui retombent sur le côté du front
     d = smin(d, cone(x, y, z, [0.15, 0.22, 0.15], [0.2, 0.09, 0.225], 0.022, 0.004), 0.01);
     d = smin(d, cone(x, y, z, [-0.18, 0.21, 0.13], [-0.235, 0.1, 0.18], 0.02, 0.004), 0.01);
+    return d;
+  },
+  // Samouraï : cheveux courts plaqués, front dégagé, favoris, chignon (mage) replié vers l'avant sur le sommet
+  samourai: (x, y, z) => {
+    const lim = -0.12 + 0.32 * Math.max(0, z / 0.255) ** 1.5 - 0.05 * Math.min(1, (x / 0.25) ** 2);
+    let d = Math.max(CRANE(x, y, z) - 0.016, lim - y);
+    for (const s of [-1, 1]) d = smin(d, cone(x, y, z, [s * 0.272, 0.06, 0.085], [s * 0.278, -0.07, 0.11], 0.026, 0.016), 0.01); // favoris
+    d = smin(d, ellipsoide(x, y, z, [0, 0.22, -0.14], [0.07, 0.06, 0.07]), 0.03); // attache du chignon
+    d = smin(d, cone(x, y, z, [0, 0.27, -0.15], [0, 0.31, 0.06], 0.045, 0.036), 0.015); // mage couché vers l'avant
+    d = smin(d, ellipsoide(x, y, z, [0, 0.305, 0.07], [0.042, 0.038, 0.036]), 0.01);
     return d;
   },
   // Coupe dégradée : couches effilées, nuque longue, épis, petite queue, frange irrégulière
@@ -787,6 +837,11 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     const v = geometriesVille(), daim = materiau('#9a7048', { motif: MOTIF_FOURRURE, liseré: 0.15, cle: 'daim' });
     couches.push([v.chemise, materiau('#b8323a', { liseré: 0.12, cle: 'uni' })], [v.veste, daim], [v.revers, daim],
       [v.pantalon, materiau('#2e3346', { liseré: 0.12, cle: 'uni' })], [v.chaussures, materiau('#4a3226', { liseré: 0.2, cle: 'uni' })]);
+  } else if (a.tenue === 'samourai') {
+    const s = geometriesSamourai(), sombre = a.hakama ?? '#2e3346';
+    const motif = materiau(sombre, { motif: MOTIF_SEIGAIHA, liseré: 0.12, cle: 'kimono' });
+    couches.push([s.kosode, materiau(a.kimono ?? PALETTE.creme, { liseré: 0.12, cle: 'uni' })], [s.hakama, motif], [s.kataginu, motif],
+      [geometriesTissus().col, materiau(PALETTE.creme, { liseré: 0.1, cle: 'uni' })], [s.obi, materiau(a.obi ?? PALETTE.corail, { liseré: 0.1, cle: 'uni' })]);
   } else if (a.kimono) {
     const t = geometriesTissus();
     couches.push([t.kimono, materiau(a.kimono, { motif: MOTIF_SEIGAIHA, liseré: 0.12, cle: 'kimono' })],
@@ -819,7 +874,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   const corail = uni(PALETTE.corail), or = uni('#e2b552');
 
   // Nœud de l'obi (ou du hakama de la miko), sur le devant
-  if (a.kimono || a.tenue === 'miko') {
+  if ((a.kimono || a.tenue === 'miko') && a.tenue !== 'samourai') {
     const noeud = new THREE.Group();
     const matObi = uni(a.tenue === 'miko' ? ROUGE_MIKO : couleurObi);
     noeud.add(piece(new RoundedBoxGeometry(0.045, 0.045, 0.03, 2, 0.01), matObi));
@@ -832,6 +887,22 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       noeud.scale.setScalar(1.4);
       fixer('colonne', noeud, 0, 0.27, 0.21);
     } else fixer('colonne', noeud, 0.07, 0.27, 0.205);
+  }
+
+  // Samouraï : épaules du kataginu en ailes rigides et mon (blason) blanc sur la poitrine
+  if (a.tenue === 'samourai') {
+    const tissu = uni(a.hakama ?? '#2e3346');
+    for (const s of [-1, 1]) {
+      const aile = piece(new RoundedBoxGeometry(0.2, 0.026, 0.22, 2, 0.01), tissu);
+      aile.rotation.z = s * 0.18;
+      fixer('poitrine', aile, s * 0.215, 0.53, -0.005);
+      const mon = new THREE.Group();
+      mon.add(piece(new THREE.CylinderGeometry(0.022, 0.022, 0.006, 20), uni(PALETTE.creme)));
+      mon.add(piece(new THREE.CylinderGeometry(0.011, 0.011, 0.008, 5), uni(a.hakama ?? '#2e3346')));
+      mon.rotation.x = Math.PI / 2 - 0.35;
+      mon.rotation.z = -s * 0.25;
+      fixer('poitrine', mon, s * 0.095, 0.455, 0.175);
+    }
   }
 
   // Geta : semelle de bois, deux dents, lanière (le personnage est surélevé d'autant)
@@ -903,7 +974,15 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     }
     k.add(piece(new THREE.SphereGeometry(0.015, 10, 8), or, 0, 0.135, 0));
     k.rotation.set(1.3, 0, -0.3);
-    fixer('hanches', k, a.kimono ? -0.225 : -0.17, 0.27, a.kimono ? 0.1 : 0.07); // passé par-dessus le kimono s'il y en a un
+    const samourai = a.tenue === 'samourai';
+    fixer('hanches', k, samourai ? -0.24 : a.kimono ? -0.225 : -0.17, 0.28, samourai ? 0.09 : a.kimono ? 0.1 : 0.07); // passé par-dessus le kimono s'il y en a un
+    if (samourai) {
+      // wakizashi : le sabre court, glissé dans l'obi à côté du katana
+      const w = k.clone();
+      w.scale.set(1, 0.7, 1);
+      w.rotation.set(1.15, 0.15, -0.5);
+      fixer('hanches', w, -0.225, 0.3, 0.13);
+    }
   }
 
   // Coussinets roses sur l'intérieur des pattes avant (animaux seulement)
@@ -927,6 +1006,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   const tete = new THREE.Group();
   tete.position.set(TETE[0] - J.tete[0], TETE[1] - J.tete[1], TETE[2] - J.tete[2]);
   os.tete.add(tete);
+  const homme = espece === 'humain' && a.genre === 'homme'; // traits plus marqués, sans joues roses
   const photo = !!a.tetePhoto; // tête réaliste tirée d'une photo (M. Graber) : pas de traits dessinés
   tete.add(photo ? tetePhoto(a.tetePhoto) : new THREE.Mesh(g.tete, fourrure));
   const yeux = [];
@@ -944,15 +1024,18 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       // œil d'anime rieur : blanc, iris bleu-gris, pupille, reflet, paupière marquée et sourcil
       oeil.position.set(s * 0.095, 0.0, 0.238);
       const globe = piece(new THREE.SphereGeometry(0.03, 18, 14), blanc);
-      globe.scale.set(1, 0.72, 0.3);
+      globe.scale.set(1, homme ? 0.62 : 0.72, 0.3);
       const iris = piece(new THREE.SphereGeometry(0.021, 16, 12), new THREE.MeshBasicMaterial({ color: '#5d7896' }), 0, -0.002, 0.005);
       iris.scale.set(0.95, 0.95, 0.3);
       const pupille = piece(new THREE.SphereGeometry(0.011, 12, 10), new THREE.MeshBasicMaterial({ color: '#1b2230' }), 0, -0.002, 0.008);
       pupille.scale.z = 0.3;
       const paupiere = piece(new THREE.TorusGeometry(0.031, 0.0045, 6, 18, Math.PI), new THREE.MeshBasicMaterial({ color: '#4a3226' }), 0, -0.002, 0.006);
       paupiere.scale.set(1.05, 0.75, 1);
-      const sourcil = piece(new THREE.CapsuleGeometry(0.006, 0.04, 4, 8), new THREE.MeshBasicMaterial({ color: '#8a6a45' }), s * 0.004, 0.05, 0.004);
-      sourcil.rotation.z = Math.PI / 2 - s * 0.18;
+      // sourcils d'homme : épais, de la couleur des cheveux, froncés vers le nez (air décidé de samouraï)
+      const sourcil = homme
+        ? piece(new THREE.CapsuleGeometry(0.011, 0.045, 4, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(a.cheveux).multiplyScalar(0.8) }), s * 0.002, 0.045, 0.004)
+        : piece(new THREE.CapsuleGeometry(0.006, 0.04, 4, 8), new THREE.MeshBasicMaterial({ color: '#8a6a45' }), s * 0.004, 0.05, 0.004);
+      sourcil.rotation.z = Math.PI / 2 + s * (homme ? 0.3 : -0.18);
       oeil.add(sans(globe), sans(iris), sans(pupille), sans(paupiere), sans(sourcil),
         sans(piece(new THREE.SphereGeometry(0.0065, 10, 8), blanc, -s * 0.006, 0.006, 0.011)));
     } else {
@@ -965,7 +1048,8 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     }
     tete.add(oeil);
     yeux.push(oeil);
-    // Joues roses avec trois petits traits
+    // Joues roses avec trois petits traits (pas pour les hommes)
+    if (homme) continue;
     const joue = new THREE.Group();
     joue.position.set(s * 0.19, -0.07, 0.19);
     joue.rotation.y = s * 0.75;
@@ -984,9 +1068,11 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     const nez = piece(new THREE.SphereGeometry(0.012, 10, 8), toon('#e9b89c'), 0, -0.05, 0.262);
     nez.scale.set(1, 0.8, 0.6);
     tete.add(sans(nez));
-    const sourire = piece(new THREE.TorusGeometry(0.04, 0.0045, 6, 20, Math.PI * 0.8), new THREE.MeshBasicMaterial({ color: '#7a3a32' }), 0.006, -0.075, 0.248);
-    sourire.rotation.z = Math.PI + Math.PI * 0.1 - 0.12; // en coin, un peu narquois comme sur la photo
-    sourire.scale.set(1, 0.6, 1);
+    const sourire = homme
+      ? piece(new THREE.TorusGeometry(0.03, 0.0045, 6, 16, Math.PI * 0.55), new THREE.MeshBasicMaterial({ color: '#7a3a32' }), 0.006, -0.08, 0.248)
+      : piece(new THREE.TorusGeometry(0.04, 0.0045, 6, 20, Math.PI * 0.8), new THREE.MeshBasicMaterial({ color: '#7a3a32' }), 0.006, -0.075, 0.248);
+    sourire.rotation.z = homme ? Math.PI + Math.PI * 0.225 - 0.1 : Math.PI + Math.PI * 0.1 - 0.12; // en coin, un peu narquois
+    sourire.scale.set(1, homme ? 0.45 : 0.6, 1);
     sourire.rotation.x = -0.25;
     tete.add(sans(sourire));
   }
@@ -1066,11 +1152,34 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       attache.rotation.z = longs ? s * 0.12 : 0;
       touffe.add(attache);
     }
+  } else if (a.coiffure === 'samourai') {
+    const lien = piece(new THREE.TorusGeometry(0.046, 0.011, 8, 16), uni('#f4efe4'), 0, 0.285, -0.07);
+    lien.rotation.x = -0.2;
+    lien.scale.set(1, 1, 0.8);
+    touffe.add(lien);
   } else if (a.coiffure === 'chonmage') {
     const lien = piece(new THREE.TorusGeometry(0.03, 0.009, 8, 16), corail, 0, 0.2, -0.22);
     lien.rotation.y = Math.PI / 2;
     lien.rotation.z = 0.3;
     touffe.add(lien);
+  }
+  // Hachimaki : bandeau noué autour du front, deux pans flottent derrière
+  if (a.hachimaki) {
+    const tissu = uni(a.hachimaki);
+    const bande = piece(new THREE.CylinderGeometry(1, 1, 0.05, 40, 1, true), tissu, 0, 0.115, -0.005);
+    bande.scale.set(0.31, 1, 0.276);
+    bande.rotation.x = -0.26; // plus haut sur le front que sur la nuque
+    bande.material = bande.material.clone();
+    bande.material.side = THREE.DoubleSide;
+    touffe.add(bande);
+    const noeud = piece(new THREE.SphereGeometry(0.03, 12, 10), tissu, 0, 0.0, -0.275);
+    noeud.scale.set(1.1, 0.9, 0.7);
+    touffe.add(noeud);
+    for (const s of [-1, 1]) {
+      const pan = piece(new RoundedBoxGeometry(0.035, 0.15, 0.008, 2, 0.003), tissu, s * 0.03, -0.07, -0.29);
+      pan.rotation.set(-0.35, 0, s * 0.35);
+      touffe.add(pan);
+    }
   }
   tete.add(touffe);
   contourner(tete);
