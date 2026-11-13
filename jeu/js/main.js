@@ -32,6 +32,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 800);
+// Décors et objets 3D intégrés (jeu/ressources.js) : le jeu marche aussi ouvert par double-clic, sans serveur
+THREE.DefaultLoadingManager.setURLModifier((url) => window.RESSOURCES?.[url] ?? url);
 const chargeurTexture = new THREE.TextureLoader();
 const chargeurGLB = new GLTFLoader();
 const horloge = new THREE.Clock();

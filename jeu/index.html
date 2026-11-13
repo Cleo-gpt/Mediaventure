@@ -218,7 +218,6 @@
   /* Sur petit écran, le portrait laisse la place aux fenêtres (quiz, épreuves, carte…) */
   @media (max-width: 760px) { body:has(.modale:not([hidden])) #dialogue-portrait { display: none; } }
 </style>
-<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }</script>
 </head>
 <body>
 <canvas id="scene"></canvas>
@@ -331,20 +330,14 @@
   </div>
 </section>
 <script>
-  // Ouvert par double-clic (file://), le navigateur bloque les modules et les fichiers 3D.
-  if (location.protocol === 'file:') {
-    document.getElementById('erreur-texte').innerHTML =
-      'Le fichier a été ouvert directement depuis le Finder. Ferme cet onglet et double-clique sur <b>« Lancer le jeu.command »</b> à la racine du dossier Mediaventure.';
-    document.getElementById('erreur-lancement').hidden = false;
-    document.getElementById('chargement').classList.remove('visible'); // sinon l'écran de chargement cache le message
-  }
   addEventListener('error', (e) => {
-    if (location.protocol === 'file:') return;
     document.getElementById('erreur-texte').textContent = 'Erreur : ' + (e.message || e.target?.src || 'inconnue') + ' — recharge la page avec Cmd+Maj+R.';
     document.getElementById('erreur-lancement').hidden = false;
     document.getElementById('chargement').classList.remove('visible');
   }, true);
 </script>
-<script type="module" src="./js/main.js"></script>
+<!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
+<script src="./ressources.js"></script>
+<script src="./jeu.js"></script>
 </body>
 </html>
