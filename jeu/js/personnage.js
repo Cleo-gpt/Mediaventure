@@ -360,19 +360,23 @@ function tetePhoto(def) {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
     const mat = new THREE.MeshBasicMaterial({ map: tex });
-    const cheveux = new THREE.Color(def.cheveux);
+    const cheveux = new THREE.Color(def.cheveux), peau = new THREE.Color(def.peau ?? '#d9a88f');
     mat.onBeforeCompile = (sh) => {
       sh.uniforms.couleurCheveux = { value: cheveux };
+      sh.uniforms.couleurPeau = { value: peau };
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', '#include <common>\nattribute float avant;\nvarying float vAvant;\nvarying vec3 vPosObj;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvAvant = avant;\nvPosObj = position;');
       sh.fragmentShader = sh.fragmentShader
-        .replace('#include <common>', '#include <common>\nuniform vec3 couleurCheveux;\nvarying float vAvant;\nvarying vec3 vPosObj;' + BRUIT)
+        .replace('#include <common>', '#include <common>\nuniform vec3 couleurCheveux;\nuniform vec3 couleurPeau;\nvarying float vAvant;\nvarying vec3 vPosObj;' + BRUIT)
         .replace('#include <map_fragment>', `#include <map_fragment>
           // mèches sur l'arrière du crâne, un peu plus sombres vers la nuque
           float meches = fbm(vPosObj * vec3(150.0, 30.0, 150.0));
           vec3 dos = couleurCheveux * (0.8 + 0.3 * meches) * (0.85 + 0.25 * smoothstep(-0.25, 0.25, vPosObj.y));
-          diffuseColor.rgb = mix(dos, diffuseColor.rgb, smoothstep(0.05, 0.45, vAvant));`);
+          // sur les côtés, sous la ligne des cheveux : la peau (joues, oreilles), puis les cheveux vers l'arrière
+          float cote = (1.0 - smoothstep(-0.11, -0.03, vPosObj.y)) * smoothstep(-0.5, 0.0, vAvant);
+          vec3 tour = mix(dos, couleurPeau * (0.93 + 0.07 * fbm(vPosObj * 60.0)), cote);
+          diffuseColor.rgb = mix(tour, diffuseColor.rgb, smoothstep(0.3, 0.62, vAvant));`);
     };
     mat.customProgramCacheKey = () => 'tete-photo';
     cacheTetesPhoto.set(def.texture, { geo: geometrieTetePhoto(def), mat });
