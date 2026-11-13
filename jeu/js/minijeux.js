@@ -222,8 +222,17 @@ export function epreuveEtapes(etapes) {
         n.className = 'mj-numero';
         n.textContent = i + 1;
         li.append(n);
-        if (e) li.append(carte(e));
-        else li.append(Object.assign(document.createElement('span'), { className: 'mj-vide', textContent: 'Glisse une étape ici' }));
+        if (e) {
+          const c = carte(e);
+          // après vérification, la bonne étape s'affiche sous chaque erreur
+          if (corrige && e !== etapes[i]) {
+            const bonne = document.createElement('small');
+            bonne.className = 'mj-bonne';
+            bonne.textContent = '✔ Bonne étape : ' + etapes[i];
+            c.append(bonne);
+          }
+          li.append(c);
+        } else li.append(Object.assign(document.createElement('span'), { className: 'mj-vide', textContent: 'Glisse une étape ici' }));
         li.onclick = (ev) => { if (choisie && !ev.target.closest('.mj-etape')) poser(choisie, i); };
         liste.append(li);
       });
@@ -306,7 +315,7 @@ export function epreuveEtapes(etapes) {
         ok.onclick = () => { fermer(); fin(true); };
         actions.append(ok);
       } else {
-        message.textContent = `${justes} étape${justes > 1 ? 's' : ''} sur ${etapes.length} au bon numéro. Déplace les étapes en rouge et réessaie.`;
+        message.textContent = `${justes} étape${justes > 1 ? 's' : ''} sur ${etapes.length} au bon numéro. La bonne étape est indiquée sous chaque erreur : remets-les en place et vérifie à nouveau.`;
       }
     };
     recommencer.onclick = () => { cases.fill(null); choisie = null; corrige = false; message.textContent = ''; rendre(); };

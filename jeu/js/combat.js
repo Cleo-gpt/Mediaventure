@@ -13,7 +13,7 @@ const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
 const alea = ([min, max]) => min + Math.floor(Math.random() * (max - min + 1));
 
 export class Combat {
-  constructor({ scene, camera, canvas, joueur, boss, def, tutoriel, onFin }) {
+  constructor({ scene, camera, canvas, joueur, boss, def, pvJoueur, tutoriel, onFin }) {
     Object.assign(this, { scene, camera, canvas, joueur, boss, def, tutoriel, onFin });
     this.ui = {
       racine: document.getElementById('combat'),
@@ -30,7 +30,7 @@ export class Combat {
     this.anims = [];
     this.obstacles = new Set(OBSTACLES.map(([i, j]) => `${i},${j}`));
 
-    this.j = { c: { i: 4, j: 7 }, pv: PV_JOUEUR, max: PV_JOUEUR, pa: PA_JOUEUR, pm: PM_JOUEUR, mesh: joueur, vitesse: 0 };
+    this.j = { c: { i: 4, j: 7 }, pv: pvJoueur ?? PV_JOUEUR, max: pvJoueur ?? PV_JOUEUR, pa: PA_JOUEUR, pm: PM_JOUEUR, mesh: joueur, vitesse: 0 };
     this.b = { c: { i: 4, j: 1 }, pv: def.pv, max: def.pv, pa: def.pa ?? 6, pm: def.pm ?? 3, mesh: boss, vitesse: 0 };
     this.placer(this.j); this.placer(this.b);
     this.orienter(this.j, this.b.c); this.orienter(this.b, this.j.c);

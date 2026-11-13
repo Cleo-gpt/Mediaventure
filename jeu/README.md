@@ -26,12 +26,12 @@ Les sept îles de la mindmap, dans l'ordre des portails :
 | Île | Décor | Épreuve du milieu | Boss | Objet |
 |---|---|---|---|---|
 | Sas | Forêt de bambous (fond dessiné) | Présentation par Cléo + combat d'entraînement | Cléo Forclaz | Clé |
-| Multimédia | Champs de tournesols de Sayo | Regarder une vidéo de la bibliothèque | M. Graber | Caméra |
-| Design | Daisetsuzan en automne | Jeu des 7 différences | Mme Nicolier | Règle-cutter |
-| Informatique | Îles flottantes, fond mont Fuji | Quiz (7 bonnes réponses sur 10) | M. Kiner | Raspberry Pi |
-| Marketing | Nara : glycines, cerfs, pagode | Remettre les étapes d'un projet dans l'ordre | M. Droz | Parchemin |
-| Admin | Tokyo : sakura, stand Gaïa | Code donné au vrai stand Gaïa | M. Forestier | Bouteille Gaïa |
-| Boss final | Matsue : château au bord du lac | Les 6 objets sont obligatoires | M. Denervaud ou M. Haensler | Gain au stand |
+| Multimédia | Champs de tournesols de Sayo | Regarder une vidéo de la bibliothèque | Roderick Graber | Caméra |
+| Design | Daisetsuzan en automne | Jeu des 7 différences | Ariane Nicollier | Règle-cutter |
+| Informatique | Îles flottantes, fond mont Fuji | Quiz (7 bonnes réponses sur 10) | Philippe Kiener | Raspberry Pi |
+| Marketing | Nara : glycines, cerfs, pagode | Remettre les étapes d'un projet dans l'ordre | Olivier Droz | Parchemin |
+| Admin | Tokyo : sakura, stand Gaïa | Code donné au vrai stand Gaïa | Baptiste Forestier | Bouteille Gaïa |
+| Boss final | Matsue : château au bord du lac | Les 6 objets sont obligatoires | Christophe Haenssler | Gain au stand |
 
 À régler avant les portes ouvertes, dans `js/niveaux.js` :
 - `codeGaia` (île Admin) : le code que donnera la vendeuse du stand Gaïa ;

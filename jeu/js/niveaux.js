@@ -17,6 +17,7 @@ export const OBJETS = {
 
 export const NIVEAUX = {
   sas: {
+    pvJoueur: 60, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Le Sas', lieu: 'Forêt de bambous — Kyoto', biome: 'bambou', jouable: true,
     ciel: '#628d34', brume: '#628d34', sol: '#bd8a4c', chemin: PALETTE.creme, accent: PALETTE.corail,
     fond: '../fonds/sas_bambous.jpg', miniJeu: 'demo', suivant: 'multimedia',
@@ -32,6 +33,7 @@ export const NIVEAUX = {
     },
   },
   multimedia: {
+    pvJoueur: 70, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Multimédia', lieu: 'Sayo — champs de tournesols', biome: 'tournesol', jouable: true,
     ciel: '#82ccfa', brume: '#7aa852', sol: '#77ab52', chemin: PALETTE.creme, accent: '#f2b632',
     fond: '../fonds/multimedia_tournesols.jpg', miniJeu: 'video', suivant: 'design',
@@ -43,7 +45,7 @@ export const NIVEAUX = {
       { titre: 'Lumière : la règle des 3 points', duree: 12, icone: '💡' },
     ],
     boss: {
-      nom: 'M. Graber', titre: 'Boss Multimédia', pv: 85, pa: 6, pm: 3,
+      nom: 'Roderick Graber', titre: 'Boss Multimédia', pv: 85, pa: 6, pm: 3,
       apparence: {
         espece: 'humain', tenue: 'veste', lunettes: true,
         // vraie tête tirée de la photo (texture préparée par outils/tete_photo.py)
@@ -62,12 +64,13 @@ export const NIVEAUX = {
     },
   },
   design: {
+    pvJoueur: 80, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Design', lieu: 'Parc national de Daisetsuzan', biome: 'automne', jouable: true,
     ciel: '#f4b98a', brume: '#f2c29a', sol: '#c9884e', chemin: PALETTE.creme, accent: '#e8672c',
     miniJeu: '7-differences', suivant: 'informatique',
     boss: {
-      nom: 'Mme Nicolier', titre: 'Boss Design', pv: 85, pa: 6, pm: 3,
-      apparence: { espece: 'panda', coiffure: 'chignon', cheveux: '#a8643a', kimono: '#e8672c', geta: PALETTE.creme },
+      nom: 'Ariane Nicollier', titre: 'Boss Design', pv: 85, pa: 6, pm: 3,
+      apparence: { espece: 'humain', coiffure: 'tresses', cheveux: '#7a4a2a', kimono: '#e8672c', geta: PALETTE.creme },
       sorts: [
         { nom: 'Trait de cutter', pa: 3, portee: [1, 1], degats: [9, 13] },
         { nom: 'Palette de couleurs', pa: 4, portee: [2, 5], degats: [7, 11] },
@@ -75,12 +78,13 @@ export const NIVEAUX = {
     },
   },
   informatique: {
+    pvJoueur: 90, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Informatique', lieu: 'Le Ciel — îles flottantes', biome: 'ciel', jouable: true,
     ciel: '#92a3b7', brume: '#a8b8cb', sol: '#bccad8', chemin: PALETTE.creme, accent: PALETTE.corail,
     fond: '../fonds/informatique_fuji.jpg', miniJeu: 'quiz', suivant: 'marketing',
     boss: {
-      nom: 'M. Kiner', titre: 'Boss Informatique', pv: 90, pa: 6, pm: 3,
-      apparence: { espece: 'panda', genre: 'homme', coiffure: 'chonmage', cheveux: '#2a2a2e', kimono: PALETTE.marine },
+      nom: 'Philippe Kiener', titre: 'Boss Informatique', pv: 90, pa: 6, pm: 3,
+      apparence: { espece: 'humain', coiffure: 'frange', cheveux: '#3a2c24', kimono: PALETTE.marine, geta: PALETTE.bleu },
       sorts: [
         { nom: 'Erreur 404', pa: 3, portee: [1, 2], degats: [9, 13] },
         { nom: 'Écran bleu', pa: 4, portee: [2, 5], degats: [7, 11] },
@@ -88,6 +92,7 @@ export const NIVEAUX = {
     },
   },
   marketing: {
+    pvJoueur: 100, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Marketing', lieu: 'Nara — glycines', biome: 'glycine', jouable: true,
     ciel: '#d9b3e0', brume: '#dcbde3', sol: '#9db56a', chemin: PALETTE.creme, accent: '#a44c94',
     miniJeu: 'etapes-projet', suivant: 'admin',
@@ -102,8 +107,8 @@ export const NIVEAUX = {
       'Mesurer les résultats et ajuster',
     ],
     boss: {
-      nom: 'M. Droz', titre: 'Boss Marketing', pv: 90, pa: 6, pm: 3,
-      apparence: { espece: 'shiba', coiffure: 'tresses', cheveux: '#5a3a2a', kimono: '#a44c94', geta: PALETTE.corail },
+      nom: 'Olivier Droz', titre: 'Boss Marketing', pv: 95, pa: 6, pm: 3,
+      apparence: { espece: 'humain', coiffure: 'chonmage', cheveux: '#5a3a2a', kimono: '#a44c94', geta: PALETTE.corail },
       sorts: [
         { nom: 'Argument choc', pa: 3, portee: [1, 1], degats: [10, 14] },
         { nom: 'Campagne virale', pa: 4, portee: [2, 5], degats: [8, 12] },
@@ -111,14 +116,15 @@ export const NIVEAUX = {
     },
   },
   admin: {
+    pvJoueur: 110, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Admin & gestion', lieu: 'Tokyo — sakura', biome: 'sakura', jouable: true,
     ciel: '#e2c9ec', brume: '#e6d0ef', sol: '#b49ac8', chemin: PALETTE.creme, accent: '#8a5fb4',
     miniJeu: 'stand-gaia', suivant: 'final',
     // Code donné par la vendeuse du vrai stand Gaïa aux portes ouvertes (à changer le jour J)
     codeGaia: 'GAIA',
     boss: {
-      nom: 'M. Forestier', titre: 'Boss Admin', pv: 95, pa: 6, pm: 3,
-      apparence: { espece: 'panda', coiffure: 'chonmage', cheveux: '#2a2a2e', kimono: '#8a5fb4', geta: PALETTE.marine },
+      nom: 'Baptiste Forestier', titre: 'Boss Admin', pv: 105, pa: 6, pm: 3,
+      apparence: { espece: 'humain', coiffure: 'rejetes', cheveux: '#2a2a2e', kimono: '#8a5fb4', geta: PALETTE.marine },
       sorts: [
         { nom: 'Facture surprise', pa: 3, portee: [1, 1], degats: [10, 14] },
         { nom: 'Pile de dossiers', pa: 4, portee: [2, 5], degats: [8, 12] },
@@ -126,13 +132,14 @@ export const NIVEAUX = {
     },
   },
   final: {
+    pvJoueur: 130, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Boss final — Média global', lieu: 'Matsue — château au bord du lac', biome: 'final', jouable: true,
     ciel: '#bfdcf0', brume: '#cfe6f5', sol: '#9fc4dc', chemin: PALETTE.creme, accent: PALETTE.corail,
     miniJeu: 'combat-final', suivant: null,
     gain: 'Passe au stand Médiaventure : ton gain t’attend (goodies, print spécial PO ou rabais sur une Gaïa) !',
     boss: {
-      nom: 'M. Denervaud ou M. Haensler', titre: 'Boss final', pv: 150, pa: 7, pm: 3,
-      apparence: { espece: 'shiba', coiffure: 'chonmage', cheveux: '#e8d2a6', kimono: PALETTE.marine, katana: true, geta: PALETTE.corail },
+      nom: 'Christophe Haenssler', titre: 'Boss final', pv: 160, pa: 7, pm: 3,
+      apparence: { espece: 'humain', coiffure: 'frange', cheveux: '#6b5a4a', kimono: PALETTE.marine, katana: true, geta: PALETTE.corail },
       sorts: [
         { nom: 'Coup de maître', pa: 3, portee: [1, 1], degats: [12, 16] },
         { nom: 'Onde médiatique', pa: 4, portee: [2, 5], degats: [9, 13] },

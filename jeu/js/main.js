@@ -292,6 +292,10 @@ async function lancerNiveau(id) {
   mode = 'exploration';
   await fondu(false);
   const lignes = [{ nom: niveau.titre, texte: `${niveau.lieu}. Va au centre de l’île : le chemin commence là.` }];
+  const precedent = ORDRE[ORDRE.indexOf(id) - 1];
+  if (precedent && NIVEAUX[precedent]?.pvJoueur && niveau.pvJoueur > NIVEAUX[precedent].pvJoueur) {
+    lignes.push({ nom: niveau.titre, texte: `Ton aventure t’a rendu·e plus fort·e : tu as maintenant ${niveau.pvJoueur} PV en combat (+${niveau.pvJoueur - NIVEAUX[precedent].pvJoueur}).` });
+  }
   if (ECRAN_TACTILE && id === 'sas') {
     lignes.push({ nom: niveau.titre, texte: 'Joystick en bas à gauche pour te déplacer (pousse-le à fond pour courir), glisse l’écran pour tourner la caméra, ⤒ pour sauter.' });
   }
@@ -405,7 +409,7 @@ function lancerCombat() {
   $('invite').hidden = true;
   $('aide').hidden = true;
   combat = new Combat({
-    scene, camera, canvas, joueur, boss, def: niveau.boss, tutoriel: niveau.id === 'sas',
+    scene, camera, canvas, joueur, boss, def: niveau.boss, pvJoueur: niveau.pvJoueur, tutoriel: niveau.id === 'sas',
     onFin: (victoire) => {
       combat = null;
       document.body.classList.remove('en-combat');
