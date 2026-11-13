@@ -44,9 +44,44 @@ export function extraire(f, min, max, h) {
   const nx = Math.ceil((max[0] - min[0]) / h) + 1, ny = Math.ceil((max[1] - min[1]) / h) + 1, nz = Math.ceil((max[2] - min[2]) / h) + 1;
   const v = new Float32Array(nx * ny * nz);
   const I = (i, j, k) => i + nx * (j + ny * k);
-  for (let k = 0; k < nz; k++) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-    v[I(i, j, k)] = f(min[0] + i * h, min[1] + j * h, min[2] + k * h);
-  }
+  // Évaluation adaptative : on part d'un gros bloc couvrant la grille et on le découpe en 8 tant qu'il
+  // peut contenir la surface. Un bloc dont les 8 coins sont tous loin de la surface (plus loin que sa
+  // diagonale, avec une marge) ne la contient pas : ses points reçoivent une valeur interpolée du bon
+  // signe, sans calcul. On ne calcule donc vraiment le champ que près de la surface : bien plus rapide.
+  const fait = new Uint8Array(nx * ny * nz); // points déjà calculés exactement
+  const exact = (i, j, k) => {
+    const n = I(i, j, k);
+    if (!fait[n]) { v[n] = f(min[0] + i * h, min[1] + j * h, min[2] + k * h); fait[n] = 1; }
+    return v[n];
+  };
+  const coinsBloc = new Float32Array(8);
+  const bloc = (i0, j0, k0, t) => {
+    if (i0 >= nx - 1 || j0 >= ny - 1 || k0 >= nz - 1) return;
+    const i1 = Math.min(i0 + t, nx - 1), j1 = Math.min(j0 + t, ny - 1), k1 = Math.min(k0 + t, nz - 1);
+    if (t === 1) { for (const [i, j, k] of [[i0, j0, k0], [i1, j0, k0], [i0, j1, k0], [i1, j1, k0], [i0, j0, k1], [i1, j0, k1], [i0, j1, k1], [i1, j1, k1]]) exact(i, j, k); return; }
+    coinsBloc[0] = exact(i0, j0, k0); coinsBloc[1] = exact(i1, j0, k0); coinsBloc[2] = exact(i0, j1, k0); coinsBloc[3] = exact(i1, j1, k0);
+    coinsBloc[4] = exact(i0, j0, k1); coinsBloc[5] = exact(i1, j0, k1); coinsBloc[6] = exact(i0, j1, k1); coinsBloc[7] = exact(i1, j1, k1);
+    const marge = Math.hypot(i1 - i0, j1 - j0, k1 - k0) * h * 1.25;
+    let loin = true;
+    for (let q = 0; q < 8 && loin; q++) if (Math.abs(coinsBloc[q]) <= marge || (coinsBloc[q] < 0) !== (coinsBloc[0] < 0)) loin = false;
+    if (loin) {
+      const [a0, a1, a2, a3, a4, a5, a6, a7] = coinsBloc;
+      for (let k = k0; k <= k1; k++) for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const n = I(i, j, k);
+        if (fait[n]) continue;
+        const u = (i - i0) / (i1 - i0), w = (j - j0) / (j1 - j0), s = (k - k0) / (k1 - k0);
+        const a = a0 + (a1 - a0) * u, b = a2 + (a3 - a2) * u, d = a4 + (a5 - a4) * u, e = a6 + (a7 - a6) * u;
+        const p = a + (b - a) * w, q = d + (e - d) * w;
+        v[n] = p + (q - p) * s;
+      }
+      return;
+    }
+    const m = t / 2;
+    for (const dk of [0, m]) for (const dj of [0, m]) for (const di of [0, m]) bloc(i0 + di, j0 + dj, k0 + dk, m);
+  };
+  let taille = 1;
+  while (taille < Math.max(nx, ny, nz) - 1) taille *= 2;
+  bloc(0, 0, 0, taille);
   const cx = nx - 1, cy = ny - 1, cz = nz - 1;
   const C = (i, j, k) => i + cx * (j + cy * k);
   const cellule = new Int32Array(cx * cy * cz).fill(-1);

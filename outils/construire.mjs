@@ -11,20 +11,35 @@ import { fileURLToPath } from 'node:url';
 const racine = join(dirname(fileURLToPath(import.meta.url)), '..');
 const jeu = join(racine, 'jeu');
 
+const addonsThree = {
+  name: 'addons-three',
+  setup(b) {
+    b.onResolve({ filter: /^three\/addons\// }, (a) => ({ path: join(jeu, 'vendor/addons', a.path.slice('three/addons/'.length)) }));
+  },
+};
+
+// Worker qui sculpte les formes des personnages en arrière-plan : son code est glissé dans jeu.js
+// (un fichier séparé ne pourrait pas être chargé en double-cliquant sur index.html)
+const worker = await build({
+  entryPoints: [join(jeu, 'js/worker-formes.js')],
+  bundle: true, format: 'iife', minify: true, target: 'es2020', write: false,
+  alias: { three: join(jeu, 'vendor/three.module.min.js') },
+  plugins: [addonsThree],
+  logLevel: 'warning',
+});
+const codeWorker = worker.outputFiles[0].text;
+console.log(`worker des formes : ${(codeWorker.length / 1024).toFixed(0)} ko`);
+
 await build({
   entryPoints: [join(jeu, 'js/main.js')],
+  define: { __CODE_WORKER__: JSON.stringify(codeWorker) },
   bundle: true,
   format: 'iife',
   minify: true,
   target: 'es2020',
   outfile: join(jeu, 'jeu.js'),
   alias: { three: join(jeu, 'vendor/three.module.min.js') },
-  plugins: [{
-    name: 'addons-three',
-    setup(b) {
-      b.onResolve({ filter: /^three\/addons\// }, (a) => ({ path: join(jeu, 'vendor/addons', a.path.slice('three/addons/'.length)) }));
-    },
-  }],
+  plugins: [addonsThree],
   banner: { js: '// Fichier généré par outils/construire.mjs — ne pas modifier à la main (modifier jeu/js/ puis relancer).' },
   logLevel: 'info',
 });

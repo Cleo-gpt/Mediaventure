@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { ARENE } from './monde.js';
 import { SORTS_JOUEUR, PALETTE } from './niveaux.js';
+import { t } from './i18n.js';
 import { animerPersonnage } from './personnage.js';
 
 const PV_JOUEUR = 60, PA_JOUEUR = 6, PM_JOUEUR = 3;
@@ -40,11 +41,11 @@ export class Combat {
     this.ecouter();
     this.cadrerCamera();
     this.ui.racine.hidden = false;
-    this.log(`⚔️ Combat contre ${def.nom} !`);
+    this.log(t('⚔️ Combat contre {nom} !', { nom: def.nom }));
     if (tutoriel) {
-      this.log('Cases bleues : clique pour te déplacer (PM). Choisis un sort puis clique sur la cible (PA).');
-      this.log('Touches 1, 2, 3 pour les sorts, Entrée pour finir le tour.');
-      this.log('Abrite-toi derrière les pierres : elles arrêtent les shurikens et les sorts à distance.');
+      this.log(t('Cases bleues : clique pour te déplacer (PM). Choisis un sort puis clique sur la cible (PA).'));
+      this.log(t('Touches 1, 2, 3 pour les sorts, Entrée pour finir le tour.'));
+      this.log(t('Abrite-toi derrière les pierres : elles arrêtent les shurikens et les sorts à distance.'));
     }
     this.debutTourJoueur();
   }
@@ -165,12 +166,15 @@ export class Combat {
 
   // ---------------------------------------------------------------- UI
   construireUI() {
-    this.ui.nomB.textContent = `${this.def.nom} — ${this.def.titre}`;
+    this.ui.nomB.textContent = `${this.def.nom} — ${t(this.def.titre)}`;
     this.ui.sorts.innerHTML = '';
     this.boutons = SORTS_JOUEUR.map((s) => {
       const b = document.createElement('button');
       b.className = 'sort';
-      b.innerHTML = `<kbd>${s.touche}</kbd><span>${s.nom}</span><small>${s.pa} PA · ${s.soin ? `soin ${s.soin.join('–')}` : `${s.degats.join('–')} dégâts · portée ${s.portee.join('–')}`}</small>`;
+      const detail = s.soin
+        ? t('{pa} PA · soin {soin}', { pa: s.pa, soin: s.soin.join('–') })
+        : t('{pa} PA · {degats} dégâts · portée {portee}', { pa: s.pa, degats: s.degats.join('–'), portee: s.portee.join('–') });
+      b.innerHTML = `<kbd>${s.touche}</kbd><span>${t(s.nom)}</span><small>${detail}</small>`;
       b.onclick = () => this.choisirSort(s);
       this.ui.sorts.append(b);
       return { s, b };
@@ -181,13 +185,13 @@ export class Combat {
   majUI() {
     const barre = (el, u) => {
       el.style.setProperty('--pct', `${Math.max(0, (u.pv / u.max) * 100)}%`);
-      el.dataset.texte = `${Math.max(0, u.pv)} / ${u.max} PV`;
+      el.dataset.texte = t('{pv} / {max} PV', { pv: Math.max(0, u.pv), max: u.max });
     };
     barre(this.ui.pvJ, this.j);
     barre(this.ui.pvB, this.b);
     this.ui.pa.textContent = this.j.pa;
     this.ui.pm.textContent = this.j.pm;
-    this.ui.tour.textContent = this.etat === 'joueur' ? 'À toi de jouer' : this.etat === 'boss' ? `Tour de ${this.def.nom}` : '';
+    this.ui.tour.textContent = this.etat === 'joueur' ? t('À toi de jouer') : this.etat === 'boss' ? t('Tour de {nom}', { nom: this.def.nom }) : '';
     for (const { s, b } of this.boutons) {
       b.disabled = this.etat !== 'joueur' || s.pa > this.j.pa || (s.parTour && this.utilises[s.id] >= s.parTour);
       b.classList.toggle('actif', this.sort === s);
@@ -281,7 +285,7 @@ export class Combat {
     if (this.sort) {
       const d = dist(c, this.j.c);
       if (d < this.sort.portee[0] || d > this.sort.portee[1]) return;
-      if (!this.atteint(this.sort, this.j.c, c)) { this.log('🪨 Une pierre bloque la ligne de vue.'); return; }
+      if (!this.atteint(this.sort, this.j.c, c)) { this.log(t('🪨 Une pierre bloque la ligne de vue.')); return; }
       const cible = cle(c) === cle(this.b.c) ? this.b : null;
       const s = this.sort;
       this.sort = null;
@@ -321,7 +325,8 @@ export class Combat {
       const v = Math.min(alea(s.soin), lanceur.max - lanceur.pv);
       lanceur.pv += v;
       this.bulle(lanceur, `+${v}`, 'soin');
-      this.log(`🍵 ${nomL} ${lanceur === this.j ? 'bois' : 'boit'} un ${s.nom} : +${v} PV.`);
+      const v2 = { nom: nomL, sort: t(s.nom), v };
+      this.log(lanceur === this.j ? t('🍵 Tu bois un {sort} : +{v} PV.', v2) : t('🍵 {nom} boit un {sort} : +{v} PV.', v2));
     } else {
       this.orienter(lanceur, caseVisee);
       if (s.portee[1] <= 1) await this.fente(lanceur);
@@ -331,9 +336,11 @@ export class Combat {
         cible.pv -= v;
         this.bulle(cible, `-${v}`, 'degat');
         await this.tween(160, (k) => { cible.mesh.position.y = 0.08 + Math.sin(k * Math.PI) * 0.25; });
-        this.log(`${lanceur === this.j ? '🗡️' : '💥'} ${nomL} ${lanceur === this.j ? 'lances' : 'lance'} ${s.nom} : ${v} dégâts.`);
+        const v2 = { nom: nomL, sort: t(s.nom), v };
+        this.log(lanceur === this.j ? t('🗡️ Tu lances {sort} : {v} dégâts.', v2) : t('💥 {nom} lance {sort} : {v} dégâts.', v2));
       } else {
-        this.log(`${nomL} ${lanceur === this.j ? 'lances' : 'lance'} ${s.nom}… dans le vide.`);
+        const v2 = { nom: nomL, sort: t(s.nom) };
+        this.log(lanceur === this.j ? t('Tu lances {sort}… dans le vide.', v2) : t('{nom} lance {sort}… dans le vide.', v2));
       }
     }
     if (this.verifierFin()) return;
@@ -365,7 +372,7 @@ export class Combat {
     this.etat = 'fin';
     const victoire = this.b.pv <= 0;
     this.majUI();
-    this.log(victoire ? `🏆 ${this.def.nom} est vaincu·e !` : '💫 Tu es K.O.…');
+    this.log(victoire ? t('🏆 {nom} est vaincu·e !', { nom: this.def.nom }) : t('💫 Tu es K.O.…'));
     if (victoire) this.boss.rotation.z = Math.PI / 2;
     setTimeout(() => this.terminer(victoire), 1400);
     return true;

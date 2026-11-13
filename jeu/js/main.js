@@ -8,6 +8,8 @@ import { Combat } from './combat.js';
 import { epreuveVideo, epreuveDifferences, epreuveEtapes, epreuveCodeGaia } from './minijeux.js';
 import { creerVestiaire } from './vestiaire.js';
 import { ECRAN_TACTILE, joystick, installerCommandes, majBoutonAction } from './tactile.js';
+import { t, choisirLangue } from './i18n.js';
+import { jouerMusique, couperSon, sonCoupe } from './musique.js';
 
 const $ = (id) => document.getElementById(id);
 const DOSSIER_OBJETS = '../objets-quete/';
@@ -22,6 +24,24 @@ function sauver() {
 }
 let partie = charger() ?? { prenom: '', apparence: { ...APPARENCE_DEFAUT }, objets: [], niveau: 'sas' };
 partie.apparence = { ...APPARENCE_DEFAUT, ...partie.apparence };
+partie.langue ??= 'fr';
+partie.musique ??= 'zen';
+choisirLangue(partie.langue);
+
+// ------------------------------------------------------------------ Musique
+// Le navigateur n'autorise le son qu'après une action du joueur : la musique démarre au premier clic ou à la première touche.
+{
+  const lancer = () => { jouerMusique(partie.musique); removeEventListener('pointerdown', lancer, true); removeEventListener('keydown', lancer, true); };
+  addEventListener('pointerdown', lancer, true);
+  addEventListener('keydown', lancer, true);
+}
+function majBoutonSon() {
+  const b = $('bouton-son');
+  b.textContent = sonCoupe() || partie.musique === 'aucune' ? '🔇' : '🔊';
+  b.title = sonCoupe() ? t('Remettre le son') : t('Couper le son');
+}
+$('bouton-son').onclick = () => { couperSon(!sonCoupe()); majBoutonSon(); };
+majBoutonSon();
 
 // ------------------------------------------------------------------ Rendu
 const canvas = $('scene');
@@ -53,7 +73,7 @@ const NOMS_PNJ = {
   quiz: 'Gardien·ne du Réseau', video: 'Projectionniste', '7-differences': 'Esprit des couleurs',
   'etapes-projet': 'Stratège de Nara', 'stand-gaia': 'Gardien·ne du stand', 'combat-final': 'Esprit du château',
 };
-const nomPnj = () => NOMS_PNJ[niveau.miniJeu] ?? 'Esprit du biome';
+const nomPnj = () => t(NOMS_PNJ[niveau.miniJeu] ?? 'Esprit du biome');
 let scene = new THREE.Scene();
 
 // ------------------------------------------------------------------ Le Sas : vestiaire sous un ciel étoilé
@@ -160,10 +180,12 @@ function majApercu() {
 }
 
 const sauvegarde = charger();
-if (sauvegarde && sauvegarde.niveau !== 'sas') {
+function majReprendre() {
+  if (!sauvegarde || sauvegarde.niveau === 'sas') return;
   $('reprendre').hidden = false;
-  $('reprendre').textContent = `Reprendre : ${NIVEAUX[sauvegarde.niveau].titre}`;
+  $('reprendre').textContent = t('Reprendre : {ile}', { ile: t(NIVEAUX[sauvegarde.niveau].titre) });
 }
+majReprendre();
 creerVestiaire({
   partie,
   surChangement: () => { majApercu(); sauver(); },
@@ -176,6 +198,12 @@ creerVestiaire({
     lancerNiveau('sas');
   },
   surReprendre: () => { quitterVestiaire(); lancerNiveau(partie.niveau); },
+  // langue et musique choisies dans l'onglet Identité
+  surChoixPartie: (champ, valeur) => {
+    if (champ === 'langue') { choisirLangue(valeur); majReprendre(); majBoutonSon(); }
+    if (champ === 'musique') { couperSon(false); jouerMusique(valeur); majBoutonSon(); }
+    sauver();
+  },
 });
 
 function quitterVestiaire() {
@@ -274,30 +302,33 @@ async function lancerNiveau(id) {
   interactions.push({
     objet: pnj, rayon: 2.6,
     actif: () => !etatNiveau.miniJeuReussi,
-    texte: () => `Parler à ${pnj === boss ? niveau.boss.nom : nomPnj()}`,
+    texte: () => t('Parler à {nom}', { nom: pnj === boss ? niveau.boss.nom : nomPnj() }),
+    verbe: () => t('Parler'),
     action: lancerMiniJeu,
   });
   interactions.push({
     objet: boss, rayon: 2.8,
     actif: () => etatNiveau.miniJeuReussi && !etatNiveau.bossVaincu,
-    texte: () => `Défier ${niveau.boss.nom}`,
+    texte: () => t('Défier {nom}', { nom: niveau.boss.nom }),
+    verbe: () => t('Défier'),
     // le boss lance son défi (avec son portrait) avant le combat, s'il a une réplique
-    action: () => (niveau.boss.defi ? dialogue([{ nom: niveau.boss.nom, texte: niveau.boss.defi }], lancerCombat) : lancerCombat()),
+    action: () => (niveau.boss.defi ? dialogue([{ nom: niveau.boss.nom, texte: t(niveau.boss.defi) }], lancerCombat) : lancerCombat()),
   });
 
-  $('hud-titre').textContent = niveau.titre;
-  $('hud-lieu').textContent = niveau.lieu;
+  $('hud-titre').textContent = t(niveau.titre);
+  $('hud-lieu').textContent = t(niveau.lieu);
   majInventaire();
   $('hud').hidden = false;
   mode = 'exploration';
   await fondu(false);
-  const lignes = [{ nom: niveau.titre, texte: `${niveau.lieu}. Va au centre de l’île : le chemin commence là.` }];
+  const titre = t(niveau.titre);
+  const lignes = [{ nom: titre, texte: t('{lieu}. Va au centre de l’île : le chemin commence là.', { lieu: t(niveau.lieu) }) }];
   const precedent = ORDRE[ORDRE.indexOf(id) - 1];
   if (precedent && NIVEAUX[precedent]?.pvJoueur && niveau.pvJoueur > NIVEAUX[precedent].pvJoueur) {
-    lignes.push({ nom: niveau.titre, texte: `Ton aventure t’a rendu·e plus fort·e : tu as maintenant ${niveau.pvJoueur} PV en combat (+${niveau.pvJoueur - NIVEAUX[precedent].pvJoueur}).` });
+    lignes.push({ nom: titre, texte: t('Ton aventure t’a rendu·e plus fort·e : tu as maintenant {pv} PV en combat (+{plus}).', { pv: niveau.pvJoueur, plus: niveau.pvJoueur - NIVEAUX[precedent].pvJoueur }) });
   }
   if (ECRAN_TACTILE && id === 'sas') {
-    lignes.push({ nom: niveau.titre, texte: 'Joystick en bas à gauche pour te déplacer (pousse-le à fond pour courir), glisse l’écran pour tourner la caméra, ⤒ pour sauter.' });
+    lignes.push({ nom: titre, texte: t('Joystick en bas à gauche pour te déplacer (pousse-le à fond pour courir), glisse l’écran pour tourner la caméra, ⤒ pour sauter.') });
   }
   dialogue(lignes);
 }
@@ -306,37 +337,37 @@ function lancerMiniJeu() {
   const nomBoss = niveau.boss.nom;
   if (niveau.miniJeu === 'demo') {
     dialogue([
-      { nom: nomBoss, texte: `Bienvenue dans Médiaventure, ${partie.prenom} ! Je suis la gardienne du Sas.` },
-      { nom: nomBoss, texte: 'Chaque île suit le même parcours : une épreuve au milieu, un boss, un objet de quête, puis le portail.' },
-      { nom: nomBoss, texte: 'Les six objets de quête sont obligatoires pour affronter le boss final. Garde-les précieusement !' },
-      { nom: nomBoss, texte: 'Montre-moi ce que tu vaux : rejoins-moi dans l’arène pour un combat d’entraînement.' },
+      { nom: nomBoss, texte: t('Bienvenue dans Médiaventure, {prenom} ! Je suis la gardienne du Sas.', { prenom: partie.prenom }) },
+      { nom: nomBoss, texte: t('Chaque île suit le même parcours : une épreuve au milieu, un boss, un objet de quête, puis le portail.') },
+      { nom: nomBoss, texte: t('Les six objets de quête sont obligatoires pour affronter le boss final. Garde-les précieusement !') },
+      { nom: nomBoss, texte: t('Montre-moi ce que tu vaux : rejoins-moi dans l’arène pour un combat d’entraînement.') },
     ], () => {
       ouvrirArene();
       boss.position.copy(ARENE.centre).add(new THREE.Vector3(0, 0, -2));
     });
   } else if (niveau.miniJeu === 'quiz') {
     dialogue([
-      { nom: 'Gardien·ne du Réseau', texte: `Pour atteindre ${nomBoss}, réponds à mon quiz : ${QUESTIONS.length} questions, ${SEUIL} bonnes réponses minimum.` },
+      { nom: t('Gardien·ne du Réseau'), texte: t('Pour atteindre {boss}, réponds à mon quiz : {n} questions, {seuil} bonnes réponses minimum.', { boss: nomBoss, n: QUESTIONS.length, seuil: SEUIL }) },
     ], lancerQuiz);
   } else if (niveau.miniJeu === 'combat-final') {
     const manquants = ORDRE.slice(0, -1).filter((id) => !partie.objets.includes(id));
     if (manquants.length) {
-      dialogue([{ nom: nomPnj(), texte: `Il te manque encore : ${manquants.map((id) => OBJETS[id].nom).join(', ')}.` }]);
+      dialogue([{ nom: nomPnj(), texte: t('Il te manque encore : {liste}.', { liste: manquants.map((id) => t(OBJETS[id].nom)).join(', ') }) }]);
     } else {
-      dialogue([{ nom: nomPnj(), texte: 'Tu as réuni les six objets de quête. Le boss final t’attend !' }], ouvrirArene);
+      dialogue([{ nom: nomPnj(), texte: t('Tu as réuni les six objets de quête. Le boss final t’attend !') }], ouvrirArene);
     }
   } else if (niveau.miniJeu === 'video') {
-    epreuve('Bienvenue au cinéma des tournesols ! Choisis une vidéo dans la bibliothèque et regarde-la jusqu’au bout.',
-      () => epreuveVideo(niveau.videos), `Belle séance ! ${nomBoss} t’attend dans l’arène.`, 'Reviens quand tu veux finir ta vidéo.');
+    epreuve(t('Bienvenue au cinéma des tournesols ! Choisis une vidéo dans la bibliothèque et regarde-la jusqu’au bout.'),
+      () => epreuveVideo(niveau.videos.map((v) => ({ ...v, titre: t(v.titre) }))), t('Belle séance ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens quand tu veux finir ta vidéo.'));
   } else if (niveau.miniJeu === '7-differences') {
-    epreuve('Un bon designer a l’œil : trouve les 7 différences entre ces deux paysages.',
-      epreuveDifferences, `Quel regard ! ${nomBoss} t’attend dans l’arène.`, 'Reviens me voir pour réessayer.');
+    epreuve(t('Un bon designer a l’œil : trouve les 7 différences entre ces deux paysages.'),
+      epreuveDifferences, t('Quel regard ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens me voir pour réessayer.'));
   } else if (niveau.miniJeu === 'etapes-projet') {
-    epreuve('Un projet marketing se construit dans l’ordre. Remets ses étapes dans le bon ordre.',
-      () => epreuveEtapes(niveau.etapes), `Stratégie validée ! ${nomBoss} t’attend dans l’arène.`, 'Reviens quand ton plan sera prêt.');
+    epreuve(t('Un projet marketing se construit dans l’ordre. Remets ses étapes dans le bon ordre.'),
+      () => epreuveEtapes(niveau.etapes.map((e) => t(e))), t('Stratégie validée ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens quand ton plan sera prêt.'));
   } else if (niveau.miniJeu === 'stand-gaia') {
-    epreuve('Passe au stand Gaïa des portes ouvertes : la vendeuse te donnera un code. Entre-le ici pour ouvrir l’arène.',
-      () => epreuveCodeGaia(), `Le code est bon ! ${nomBoss} t’attend dans l’arène.`, 'Reviens avec le code du stand Gaïa.');
+    epreuve(t('Passe au stand Gaïa des portes ouvertes : la vendeuse te donnera un code. Entre-le ici pour ouvrir l’arène.'),
+      () => epreuveCodeGaia(), t('Le code est bon ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens avec le code du stand Gaïa.'));
   }
 }
 
@@ -367,13 +398,13 @@ function lancerQuiz() {
   montrerPortrait(null);
   const afficher = () => {
     const q = QUESTIONS[i];
-    $('quiz-compteur').textContent = `Question ${i + 1} / ${QUESTIONS.length} · ${score} bonne${score > 1 ? 's' : ''} réponse${score > 1 ? 's' : ''}`;
-    $('quiz-question').textContent = q.q;
+    $('quiz-compteur').textContent = t('Question {i} / {n} · Bonnes réponses : {score}', { i: i + 1, n: QUESTIONS.length, score });
+    $('quiz-question').textContent = t(q.q);
     const rep = $('quiz-reponses');
     rep.innerHTML = '';
     q.r.forEach((texte, k) => {
       const b = document.createElement('button');
-      b.textContent = texte;
+      b.textContent = t(texte);
       b.onclick = () => {
         if (rep.dataset.verrou) return;
         rep.dataset.verrou = '1';
@@ -394,9 +425,9 @@ function lancerQuiz() {
     montrerPortrait(false);
     mode = 'exploration';
     if (score >= SEUIL) {
-      dialogue([{ nom: 'Gardien·ne du Réseau', texte: `${score} / ${QUESTIONS.length} ! L’arène de ${niveau.boss.nom} est ouverte.` }], ouvrirArene);
+      dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('{score} / {n} ! L’arène de {boss} est ouverte.', { score, n: QUESTIONS.length, boss: niveau.boss.nom }) }], ouvrirArene);
     } else {
-      dialogue([{ nom: 'Gardien·ne du Réseau', texte: `${score} / ${QUESTIONS.length}… Il en faut ${SEUIL}. Reviens me parler pour réessayer.` }]);
+      dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('{score} / {n}… Il en faut {seuil}. Reviens me parler pour réessayer.', { score, n: QUESTIONS.length, seuil: SEUIL }) }]);
     }
   };
   afficher();
@@ -424,11 +455,11 @@ function lancerCombat() {
         monde.colliders.splice(monde.colliders.findIndex((c) => c.objet === boss), 1);
         if (niveau.id === 'final') victoireFinale();
         else apparaitreObjet();
-        dialogue([{ nom: niveau.boss.nom, texte: 'Bien joué… Prends cet objet de quête, tu l’as mérité.' }]);
+        dialogue([{ nom: niveau.boss.nom, texte: t('Bien joué… Prends cet objet de quête, tu l’as mérité.') }]);
       } else {
         boss.rotation.set(0, 0, 0);
         boss.position.copy(ARENE.centre).add(new THREE.Vector3(0, 0, -2));
-        dialogue([{ nom: niveau.boss.nom, texte: 'Pas encore… Reprends ton souffle et défie-moi à nouveau !' }]);
+        dialogue([{ nom: niveau.boss.nom, texte: t('Pas encore… Reprends ton souffle et défie-moi à nouveau !') }]);
       }
     },
   });
@@ -446,8 +477,8 @@ function ouvrirCarte() {
     const b = document.createElement('button');
     b.className = `ile${id === niveau.id ? ' actuelle' : ''}`;
     const objet = OBJETS[id];
-    const etat = objet ? (partie.objets.includes(id) ? `${objet.icone} obtenu` : 'objet à gagner') : 'boss final';
-    b.innerHTML = `<strong>${n.titre}</strong><span>${n.lieu}</span><small>${etat}</small>`;
+    const etat = objet ? (partie.objets.includes(id) ? `${objet.icone} ${t('obtenu')}` : t('objet à gagner')) : t('boss final');
+    b.innerHTML = `<strong>${t(n.titre)}</strong><span>${t(n.lieu)}</span><small>${etat}</small>`;
     b.onclick = () => { $('carte-iles').hidden = true; mode = 'exploration'; if (id !== niveau.id) lancerNiveau(id); };
     liste.append(b);
   }
@@ -461,14 +492,14 @@ function victoireFinale() {
   partie.termine = true; // la partie reste terminée même si la page est rechargée, jusqu'au code staff
   sauver();
   $('obtenu-icone').textContent = '🏆';
-  $('obtenu-nom').textContent = 'Médiaventure terminée !';
-  $('obtenu-texte').textContent = niveau.gain;
+  $('obtenu-nom').textContent = t('Médiaventure terminée !');
+  $('obtenu-texte').textContent = t(niveau.gain);
   $('obtenu').hidden = false;
   montrerPortrait(null);
   mode = 'dialogue';
   $('obtenu-ok').onclick = () => {
     $('obtenu').hidden = true;
-    $('obtenu-texte').textContent = 'Il rejoint ton inventaire, en haut à droite.';
+    $('obtenu-texte').textContent = t('Il rejoint ton inventaire, en haut à droite.');
     afficherFin();
   };
 }
@@ -480,8 +511,8 @@ function afficherFin() {
   $('dialogue').hidden = true;
   $('hud').hidden = true;
   $('creation').hidden = true;
-  $('fin-texte').textContent = `Bravo cher·e ${partie.prenom || 'voyageur·se'} ! Vous avez fini le jeu Médiaventure. `
-    + 'Pour obtenir votre récompense, faites appel à un membre du Staff des PO.';
+  $('fin-texte').textContent = t('Bravo cher·e {prenom} ! Vous avez fini le jeu Médiaventure. Pour obtenir votre récompense, faites appel à un membre du Staff des PO.',
+    { prenom: partie.prenom || t('voyageur·se') });
   $('fin-jeu').hidden = false;
 }
 
@@ -504,7 +535,7 @@ function fermerStaff() {
 }
 function validerStaff() {
   if ($('code-staff').value.trim() !== CODE_STAFF) {
-    $('staff-erreur').textContent = 'Code incorrect.';
+    $('staff-erreur').textContent = t('Code incorrect.');
     $('code-staff').select();
     return;
   }
@@ -546,7 +577,8 @@ async function apparaitreObjet() {
   interactions.push({
     objet: support, rayon: 2.4,
     actif: () => objetQuete === support,
-    texte: () => `Ramasser : ${def?.nom ?? 'objet'}`,
+    texte: () => t('Ramasser : {objet}', { objet: t(def?.nom ?? 'objet') }),
+    verbe: () => t('Ramasser'),
     action: () => ramasser(def),
   });
 }
@@ -558,7 +590,7 @@ function ramasser(def) {
   sauver();
   majInventaire();
   $('obtenu-icone').textContent = def?.icone ?? '✨';
-  $('obtenu-nom').textContent = def?.nom ?? '';
+  $('obtenu-nom').textContent = t(def?.nom ?? '');
   $('obtenu').hidden = false;
   montrerPortrait(null);
   mode = 'dialogue';
@@ -568,9 +600,9 @@ function ramasser(def) {
     mode = 'exploration';
     if (niveau.suivant) {
       monde.portail.visible = true;
-      dialogue([{ nom: niveau.titre, texte: `Le portail vers « ${NIVEAUX[niveau.suivant].titre} » s’est ouvert au nord.` }]);
+      dialogue([{ nom: t(niveau.titre), texte: t('Le portail vers « {ile} » s’est ouvert au nord.', { ile: t(NIVEAUX[niveau.suivant].titre) }) }]);
     } else {
-      dialogue([{ nom: 'Médiaventure', texte: 'Bravo, tu as terminé Médiaventure ! Passe au stand récupérer ton gain.' }]);
+      dialogue([{ nom: 'Médiaventure', texte: t('Bravo, tu as terminé Médiaventure ! Passe au stand récupérer ton gain.') }]);
     }
   };
 }
@@ -583,7 +615,7 @@ function majInventaire() {
     const a = partie.objets.includes(id);
     d.className = `case-inv${a ? ' acquis' : ''}`;
     d.textContent = a ? OBJETS[id].icone : '';
-    d.title = a ? OBJETS[id].nom : `${NIVEAUX[id].titre} — pas encore obtenu`;
+    d.title = a ? t(OBJETS[id].nom) : t('{ile} — pas encore obtenu', { ile: t(NIVEAUX[id].titre) });
     inv.append(d);
   }
 }
@@ -671,7 +703,11 @@ installerCommandes({
   surSauter: () => { if (mode === 'exploration') sauter(); },
   surAction: () => { if (mode === 'exploration') interagir(); },
 });
-if (ECRAN_TACTILE) document.querySelector('#dialogue small').textContent = 'Touche la bulle pour continuer';
+if (ECRAN_TACTILE) {
+  const aide = document.querySelector('#dialogue small');
+  aide.dataset.fr = 'Touche la bulle pour continuer'; // texte de base pour la traduction
+  aide.textContent = t(aide.dataset.fr);
+}
 
 function sauter() {
   if (joueur.position.y <= 0.001) joueur.userData.vy = 6.2;
@@ -735,7 +771,7 @@ function majExploration(dt) {
   const invite = $('invite');
   invite.hidden = !interactionProche || mode !== 'exploration';
   if (interactionProche) invite.innerHTML = `<kbd>E</kbd> ${interactionProche.texte()}`;
-  majBoutonAction(interactionProche && mode === 'exploration' ? interactionProche.texte().split(' ')[0] : null);
+  majBoutonAction(interactionProche && mode === 'exploration' ? interactionProche.verbe() : null);
 
   // Les PNJ regardent le joueur quand il approche
   for (const p of [pnj, boss]) {

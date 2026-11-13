@@ -147,6 +147,64 @@ const queueShiba = (x, y, z) => {
   return d;
 };
 
+// ---------------------------------------------------------------- Formes calculées en arrière-plan
+// Sculpter une coiffure, un corps ou un habit prend jusqu'à 1-2 s. Dès l'ouverture du jeu, un worker
+// (second fil d'exécution) les calcule toutes et les renvoie ici : le vestiaire n'a plus rien à calculer
+// quand on clique. Si une forme est demandée avant d'être arrivée, on la calcule sur place.
+const memoire = new Map();
+const recues = new Map();
+const estGeo = (v) => v && v.isBufferGeometry;
+const versBrut = (g) => ({
+  a: Object.fromEntries(Object.entries(g.attributes).map(([n, at]) => [n, [at.array, at.itemSize, at.normalized]])),
+  i: g.index ? g.index.array : null,
+});
+const depuisBrut = (d) => {
+  const g = new THREE.BufferGeometry();
+  for (const [n, [tab, taille, norm]] of Object.entries(d.a)) g.setAttribute(n, new THREE.BufferAttribute(tab, taille, norm));
+  if (d.i) g.setIndex(new THREE.BufferAttribute(d.i, 1));
+  return g;
+};
+function memo(cle, construire) {
+  if (!memoire.has(cle)) {
+    const d = recues.get(cle);
+    memoire.set(cle, !d ? construire() : d.a ? depuisBrut(d) : Object.fromEntries(Object.entries(d).map(([k, v]) => [k, depuisBrut(v)])));
+  }
+  return memoire.get(cle);
+}
+// Toutes les formes, dans l'ordre où le worker les calcule (celles du vestiaire d'abord)
+function formes() {
+  return [
+    ...Object.keys(coiffures).map((id) => ['coiffure.' + id, () => geometrieCoiffure(id)]),
+    ['espece.humain', () => geometries('humain')], ['espece.panda', () => geometries('panda')],
+    ['tissus', geometriesTissus], ['miko', geometriesMiko], ['samourai', geometriesSamourai], ['ville', geometriesVille],
+    ['espece.shiba', () => geometries('shiba')],
+  ];
+}
+// Côté worker : calcule chaque forme et l'envoie (les tableaux sont transférés, pas copiés)
+export function travaillerEnArrierePlan(envoyer) {
+  for (const [cle, f] of formes()) {
+    const v = f();
+    const brut = estGeo(v) ? versBrut(v) : Object.fromEntries(Object.entries(v).map(([k, g]) => [k, versBrut(g)]));
+    const transfert = [];
+    const noter = (b) => { for (const [t] of Object.values(b.a)) transfert.push(t.buffer); if (b.i) transfert.push(b.i.buffer); };
+    if (brut.a) noter(brut); else Object.values(brut).forEach(noter);
+    envoyer({ cle, brut }, transfert);
+  }
+  envoyer({ fini: true }, []);
+}
+// Côté page : démarre le worker (son code est intégré à jeu.js par outils/construire.mjs)
+if (typeof window !== 'undefined' && typeof __CODE_WORKER__ === 'string' && __CODE_WORKER__) {
+  try {
+    const url = URL.createObjectURL(new Blob([__CODE_WORKER__], { type: 'text/javascript' }));
+    const w = new Worker(url);
+    w.onmessage = (e) => {
+      if (e.data.fini) { w.terminate(); URL.revokeObjectURL(url); return; }
+      if (!memoire.has(e.data.cle)) recues.set(e.data.cle, e.data.brut);
+    };
+    w.onerror = () => w.terminate(); // pas de worker : tout se calcule sur place, comme avant
+  } catch { /* navigateur sans worker : calcul sur place */ }
+}
+
 // ---------------------------------------------------------------- Habits (couches autour du corps)
 // Jupe du kimono : évasée de la taille jusqu'aux chevilles, légèrement plissée
 const HAUT_JUPE = 0.3, BAS_JUPE = 0.06;
@@ -212,11 +270,11 @@ const poidsManches = (x, y, z, liste) => {
 };
 let miko = null;
 function geometriesMiko() {
-  miko ??= {
+  miko ??= memo('miko', () => ({
     haut: ponderer(extraire(mikoHaut, [-0.36, 0.1, -0.23], [0.36, 0.55, 0.27], PAS), SEGMENTS, { surcharge: poidsManches }),
     bandes: ponderer(extraire(bandesManches, [-0.38, 0.1, -0.2], [0.38, 0.35, 0.25], 0.004), SEGMENTS, { surcharge: poidsManches }),
     hakama: ponderer(extraire(hakama, [-0.33, 0.04, -0.27], [0.33, 0.33, 0.28], PAS), SEGMENTS, { surcharge: poidsJupe }),
-  };
+  }));
   return miko;
 }
 
@@ -258,13 +316,13 @@ const poidsJambes = (x, y, z, liste) => {
 };
 let ville = null;
 function geometriesVille() {
-  ville ??= {
+  ville ??= memo('ville', () => ({
     chemise: ponderer(extraire(chemise, [-0.22, 0.18, -0.2], [0.22, 0.55, 0.22], PAS), SEGMENTS),
     veste: ponderer(extraire(veste, [-0.33, 0.15, -0.23], [0.33, 0.56, 0.26], PAS), SEGMENTS, { surcharge: poidsManches }),
     revers: ponderer(extraire(revers, [-0.2, 0.38, 0.0], [0.2, 0.55, 0.24], 0.004), SEGMENTS),
     pantalon: ponderer(extraire(pantalon, [-0.24, 0.06, -0.2], [0.24, 0.28, 0.2], PAS), SEGMENTS, { surcharge: poidsJambes }),
     chaussures: ponderer(extraire(chaussures, [-0.22, -0.01, -0.11], [0.22, 0.13, 0.19], 0.006), SEGMENTS, { surcharge: poidsJambes }),
-  };
+  }));
   return ville;
 }
 
@@ -299,23 +357,23 @@ const kataginu = (x, y, z) => {
 const obiSamourai = (x, y, z) => Math.max(torse(x, y, z) - 0.03, Math.abs(y - 0.285) - 0.028);
 let samourai = null;
 function geometriesSamourai() {
-  samourai ??= {
+  samourai ??= memo('samourai', () => ({
     kosode: ponderer(extraire(kosode, [-0.33, 0.18, -0.23], [0.33, 0.55, 0.26], PAS), SEGMENTS, { surcharge: poidsManches }),
     hakama: ponderer(extraire(hakamaSamourai, [-0.3, 0.04, -0.24], [0.3, 0.33, 0.26], PAS), SEGMENTS, { surcharge: poidsJambes }),
     kataginu: ponderer(extraire(kataginu, [-0.24, 0.25, -0.22], [0.24, 0.56, 0.24], PAS), SEGMENTS, { surcharge: (x, y, z) => [[O.poitrine, 1]] }),
     obi: ponderer(extraire(obiSamourai, [-0.25, 0.24, -0.24], [0.25, 0.33, 0.24], 0.005), SEGMENTS),
-  };
+  }));
   return samourai;
 }
 
 let tissus = null; // habits : même géométrie pour les deux espèces
 function geometriesTissus() {
-  tissus ??= {
+  tissus ??= memo('tissus', () => ({
     kimono: ponderer(extraire(kimono, [-0.33, 0.04, -0.26], [0.33, 0.55, 0.27], PAS), SEGMENTS, { surcharge: poidsJupe }),
     ourlet: ponderer(extraire(ourlet, [-0.27, 0.04, -0.26], [0.27, 0.1, 0.27], 0.004), SEGMENTS, { surcharge: poidsJupe }),
     col: ponderer(extraire(col, [-0.13, 0.22, 0.0], [0.13, 0.54, 0.25], 0.004), SEGMENTS),
     obi: ponderer(extraire(obi, [-0.25, 0.22, -0.24], [0.25, 0.32, 0.24], 0.005), SEGMENTS),
-  };
+  }));
   return tissus;
 }
 
@@ -587,7 +645,7 @@ const coiffures = {
 const cacheCoiffures = new Map();
 function geometrieCoiffure(id) {
   if (!coiffures[id]) return null;
-  if (!cacheCoiffures.has(id)) {
+  if (!cacheCoiffures.has(id)) cacheCoiffures.set(id, memo('coiffure.' + id, () => {
     const geo = extraire(coiffures[id], [-0.4, id === 'longs' ? -0.5 : -0.42, -0.4], [0.4, 0.36, 0.33], 0.0055);
     // Dégradé des longs cheveux : châtain foncé en haut, caramel aux pointes
     if (id === 'longs') {
@@ -599,8 +657,8 @@ function geometrieCoiffure(id) {
       }
       geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     }
-    cacheCoiffures.set(id, geo);
-  }
+    return geo;
+  }));
   return cacheCoiffures.get(id);
 }
 
@@ -710,11 +768,14 @@ const SEGMENTS = (() => {
 const cache = new Map();
 function geometries(espece) {
   if (cache.has(espece)) return cache.get(espece);
+  const geos = memo('espece.' + espece, () => {
   const geos = {
     corps: peindre(ponderer(extraire(corps, [-0.32, -0.005, -0.2], [0.32, 0.56, 0.24], PAS), SEGMENTS), couleursCorps(espece)),
     tete: peindre(extraire(tetes[espece], [-0.34, -0.24, -0.29], [0.34, 0.38, 0.31], PAS_TETE), couleursTete(espece)),
   };
   if (espece === 'shiba') geos.queue = peindre(extraire(queueShiba, [-0.07, -0.06, -0.21], [0.14, 0.3, 0.09], 0.004), couleursQueue());
+  return geos;
+  });
   cache.set(espece, geos);
   return geos;
 }

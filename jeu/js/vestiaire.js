@@ -1,6 +1,8 @@
 // Le Sas : vestiaire de création du personnage (onglets, catégories, cartes à étoiles, historique).
 import { OPTIONS, CATEGORIES_DISPONIBLES } from './personnage.js';
 import { PALETTE } from './niveaux.js';
+import { t, LANGUES, langueActuelle } from './i18n.js';
+import { MUSIQUES } from './musique.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -41,6 +43,10 @@ const ICONES = {
   },
   shiba: svg('<path d="M14 8l12 14M50 8L38 22" stroke="#e48a3c" stroke-width="10" stroke-linecap="round"/><circle cx="32" cy="34" r="22" fill="#e48a3c"/><path d="M14 40q18 22 36 0q-6 14-18 14t-18-14z" fill="#f7ead8"/><ellipse cx="32" cy="44" rx="10" ry="8" fill="#f7ead8"/><circle cx="24" cy="32" r="4" fill="#2b2224"/><circle cx="40" cy="32" r="4" fill="#2b2224"/><ellipse cx="32" cy="40" rx="4" ry="2.6" fill="#2b2224"/><circle cx="23" cy="31" r="1.4" fill="#fff"/><circle cx="39" cy="31" r="1.4" fill="#fff"/>'),
   panda: svg('<circle cx="15" cy="14" r="8" fill="#2a2a30"/><circle cx="49" cy="14" r="8" fill="#2a2a30"/><circle cx="32" cy="34" r="22" fill="#f6f5f0"/><ellipse cx="23" cy="33" rx="6" ry="8" transform="rotate(25 23 33)" fill="#2a2a30"/><ellipse cx="41" cy="33" rx="6" ry="8" transform="rotate(-25 41 33)" fill="#2a2a30"/><circle cx="24" cy="32" r="3" fill="#fff"/><circle cx="40" cy="32" r="3" fill="#fff"/><circle cx="24" cy="32" r="2" fill="#1f1f24"/><circle cx="40" cy="32" r="2" fill="#1f1f24"/><ellipse cx="32" cy="42" rx="4" ry="2.6" fill="#1f1f24"/>'),
+  langue: svg('<circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-width="4"/><path d="M12 32h40M32 12q-12 20 0 40M32 12q12 20 0 40" fill="none" stroke="currentColor" stroke-width="3"/>'),
+  musique: svg('<path d="M24 46V14l26-6v32" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><ellipse cx="18" cy="46" rx="8" ry="6" fill="currentColor"/><ellipse cx="44" cy="40" rx="8" ry="6" fill="currentColor"/>'),
+  codeLangue: (code) => svg(`<rect x="6" y="14" width="52" height="36" rx="10" fill="#ddd0f5"/><text x="32" y="40" text-anchor="middle" font-family="Space Mono, monospace" font-weight="700" font-size="20" fill="#3b3360">${code}</text>`),
+  emoji: (e) => svg(`<text x="32" y="44" text-anchor="middle" font-size="34">${e}</text>`),
   oeil: (c) => svg(`<path d="M8 34q24-26 48 0q-24 22-48 0z" fill="#fff" stroke="#2b2333" stroke-width="3"/><ellipse cx="32" cy="33" rx="10" ry="12" fill="${c}"/><ellipse cx="32" cy="32" rx="4" ry="6" fill="#1d1830"/><circle cx="28" cy="28" r="3" fill="#fff"/><path d="M6 30q26-30 52 0" fill="none" stroke="#2b2333" stroke-width="5" stroke-linecap="round"/>`),
 };
 
@@ -60,7 +66,7 @@ function catalogue(a) {
         id: 'geta', titre: 'Chaussures – Geta', icone: ICONES.geta('currentColor'), champ: 'geta',
         info: 'Sandales japonaises en bois à deux dents. Choisis la couleur de la lanière.',
         cartes: [{ valeur: null, nom: 'Pieds nus', etoiles: 1, visuel: ICONES.aucun },
-          ...OPTIONS.geta.map((c, i) => ({ valeur: c, nom: `Lanière ${NOMS_COULEURS[c].toLowerCase()}`, etoiles: 2 - (i > 1), visuel: ICONES.geta(c) }))],
+          ...OPTIONS.geta.map((c, i) => ({ valeur: c, nom: t('Lanière {couleur}', { couleur: langueActuelle() === 'de' ? t(NOMS_COULEURS[c]) : t(NOMS_COULEURS[c]).toLowerCase() }), etoiles: 2 - (i > 1), visuel: ICONES.geta(c) }))],
       },
       {
         id: 'accessoire', titre: 'Accessoire – Sac', icone: ICONES.sac, champ: 'accessoire',
@@ -104,7 +110,17 @@ function catalogue(a) {
       },
     ],
     identite: [
+      {
+        id: 'langue', titre: 'Identité – Langue', icone: ICONES.langue, champ: 'langue', partie: true,
+        info: 'La langue de tout le jeu : dialogues, épreuves et combats.',
+        cartes: LANGUES.map((l) => ({ valeur: l.id, nom: l.nom, etoiles: 3, visuel: ICONES.codeLangue(l.code), brut: true })),
+      },
       { id: 'prenom', titre: 'Identité – Prénom', icone: ICONES.identite, champ: null, info: 'Le prénom sous lequel les gardiens t’appelleront.' },
+      {
+        id: 'musique', titre: 'Identité – Musique', icone: ICONES.musique, champ: 'musique', partie: true,
+        info: 'La musique qui t’accompagne pendant l’aventure. Clique sur une carte pour l’écouter.',
+        cartes: MUSIQUES.map((m) => ({ valeur: m.id, nom: m.nom, etoiles: m.id === 'aucune' ? 1 : 3, visuel: ICONES.emoji(m.icone) })),
+      },
     ],
   };
 }
@@ -112,24 +128,34 @@ function catalogue(a) {
 // ---------------------------------------------------------------- Cléo, guide du Sas
 // Une explication par catégorie, dans l'ordre où Cléo fait passer le joueur.
 const ETAPES = [
-  { onglet: 'visage', categorie: 'espece', texte: 'Bienvenue dans le Sas ! Je suis Cléo et je vais t’aider à préparer ton personnage. Commence par choisir ton espèce parmi les cartes à gauche.' },
+  { onglet: 'identite', categorie: 'langue', texte: 'Bienvenue dans le Sas ! Je suis Cléo et je vais t’aider à préparer ton personnage. Choisis d’abord la langue du jeu.' },
+  { onglet: 'visage', categorie: 'espece', texte: 'Choisis maintenant ton espèce parmi les cartes à gauche.' },
   { onglet: 'visage', categorie: 'coiffure', texte: 'Choisis maintenant ta coupe de cheveux. Astuce : fais glisser ton personnage pour le faire tourner, et zoome avec la molette pour voir son visage.' },
   { onglet: 'visage', categorie: 'cheveux', texte: 'Et la couleur de tes cheveux ? Prends celle qui te ressemble… ou pas du tout !' },
   { onglet: 'tenue', categorie: 'kimono', texte: 'Passons à la tenue ! Choisis la couleur de ton kimono. La carte 🎨 te laisse prendre n’importe quelle couleur.' },
   { onglet: 'tenue', categorie: 'geta', texte: 'Les geta sont des sandales japonaises en bois. Choisis les tiennes.' },
   { onglet: 'tenue', categorie: 'accessoire', texte: 'Un sac pour transporter tes objets de quête ? Choisis celui qui t’accompagnera.' },
   { onglet: 'tenue', categorie: 'arme', texte: 'Un katana pour les combats contre les boss… ou pas, c’est toi qui vois !' },
-  { onglet: 'identite', categorie: 'prenom', texte: 'Dernière étape : écris ton prénom. Quand tu es prêt·e, clique sur « Entrer dans le Sas » pour commencer l’aventure !' },
+  { onglet: 'identite', categorie: 'prenom', texte: 'Écris maintenant ton prénom : les gardiens des îles t’appelleront ainsi.' },
+  { onglet: 'identite', categorie: 'musique', texte: 'Dernière étape : choisis ta musique, ou joue sans le son. Quand tu es prêt·e, clique sur « Entrer dans le Sas » pour commencer l’aventure !' },
 ];
 
 // ---------------------------------------------------------------- Vestiaire
-export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre }) {
-  let onglet = CATEGORIES_DISPONIBLES ? 'visage' : 'tenue';
-  let categorie = CATEGORIES_DISPONIBLES ? CATEGORIES_DISPONIBLES[0] : 'kimono';
+export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre, surChoixPartie }) {
+  // on commence par la langue (onglet Identité), pour que tout le reste soit dans la bonne langue
+  let onglet = 'identite';
+  let categorie = 'langue';
 
   const a = () => partie.apparence;
 
-  function appliquer(champ, valeur) {
+  function appliquer(champ, valeur, surPartie = false) {
+    if (surPartie) {
+      // langue et musique : réglages de la partie, pas de l'apparence (on rejoue la musique même si elle est déjà choisie)
+      partie[champ] = valeur;
+      surChoixPartie?.(champ, valeur);
+      rendre();
+      return;
+    }
     if (a()[champ] === valeur) return;
     a()[champ] = valeur;
     surChangement();
@@ -140,7 +166,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
     const cat = catalogue(a());
     if (CATEGORIES_DISPONIBLES) {
       // On ne propose que ce qui est déjà modélisé ; le reste reviendra au fil des étapes
-      for (const k of Object.keys(cat)) cat[k] = cat[k].filter((c) => CATEGORIES_DISPONIBLES.includes(c.id));
+      for (const k of Object.keys(cat)) cat[k] = cat[k].filter((c) => CATEGORIES_DISPONIBLES.includes(c.id) || c.partie);
     }
     // Onglets
     for (const b of document.querySelectorAll('#onglets button')) {
@@ -158,26 +184,27 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
     for (const c of liste) {
       const b = document.createElement('button');
       b.className = `categorie${c.id === categorie ? ' actif' : ''}`;
-      b.title = c.titre;
+      b.title = t(c.titre);
       b.innerHTML = c.icone;
       b.onclick = () => { categorie = c.id; $('info-texte').hidden = true; rendre(); };
       colonne.append(b);
     }
     // Contenu
     const c = liste.find((x) => x.id === categorie);
-    $('cat-titre').textContent = c.titre;
-    $('info-texte').textContent = c.info;
+    $('cat-titre').textContent = t(c.titre);
+    $('info-texte').textContent = t(c.info);
     const grille = $('cartes');
     grille.innerHTML = '';
     $('champ-prenom').hidden = c.id !== 'prenom';
     if (c.cartes) {
       for (const carte of c.cartes) {
         const b = document.createElement('button');
-        const choisie = a()[c.champ] === carte.valeur;
+        const choisie = (c.partie ? partie[c.champ] : a()[c.champ]) === carte.valeur;
+        const nom = carte.brut ? carte.nom : t(carte.nom); // les noms de langues restent dans leur propre langue
         b.className = `carte-objet etoiles-${carte.etoiles}${choisie ? ' choisie' : ''}`;
-        b.title = carte.nom;
-        b.innerHTML = `${carte.visuel}<span class="nom">${carte.nom}</span><span class="etoiles">${'★'.repeat(carte.etoiles)}</span>`;
-        b.onclick = () => appliquer(c.champ, carte.valeur);
+        b.title = nom;
+        b.innerHTML = `${carte.visuel}<span class="nom">${nom}</span><span class="etoiles">${'★'.repeat(carte.etoiles)}</span>`;
+        b.onclick = () => appliquer(c.champ, carte.valeur, c.partie);
         grille.append(b);
       }
       if (c.id === 'kimono') {
@@ -185,9 +212,9 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
         const libre = !!a().kimono && !OPTIONS.kimono.includes(a().kimono);
         const carte = document.createElement('label');
         carte.className = `carte-objet etoiles-3 carte-libre${libre ? ' choisie' : ''}`;
-        carte.title = 'Couleur libre';
+        carte.title = t('Couleur libre');
         const valeur = a().kimono ?? PALETTE.corail;
-        carte.innerHTML = `${ICONES.kimono(valeur)}<span class="nom">Couleur libre</span><span class="etoiles">🎨</span>`;
+        carte.innerHTML = `${ICONES.kimono(valeur)}<span class="nom">${t('Couleur libre')}</span><span class="etoiles">🎨</span>`;
         const champ = document.createElement('input');
         champ.type = 'color';
         champ.value = valeur.length === 7 ? valeur.toLowerCase() : '#ff696a';
@@ -203,8 +230,8 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
     const etapes = ETAPES.filter((e) => cat[e.onglet]?.some((c) => c.id === e.categorie));
     const i = etapes.findIndex((e) => e.categorie === categorie);
     const etape = etapes[i];
-    $('guide-texte').textContent = etape?.texte ?? 'Choisis ce qui te plaît dans les cartes à gauche.';
-    $('guide-etape').textContent = i >= 0 ? `Étape ${i + 1} / ${etapes.length}` : '';
+    $('guide-texte').textContent = t(etape?.texte ?? 'Choisis ce qui te plaît dans les cartes à gauche.');
+    $('guide-etape').textContent = i >= 0 ? t('Étape {n} / {total}', { n: i + 1, total: etapes.length }) : '';
     const suivante = etapes[i + 1];
     $('guide-suivant').hidden = !suivante;
     $('guide-suivant').onclick = () => {
@@ -217,7 +244,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre 
   const reduireGuide = (reduit) => {
     $('guide-sas').classList.toggle('reduit', reduit);
     $('guide-bulle').hidden = reduit;
-    $('guide-avatar').title = reduit ? 'Afficher les explications de Cléo' : 'Cléo, ta guide';
+    $('guide-avatar').title = reduit ? t('Afficher les explications de Cléo') : t('Cléo, ta guide');
   };
   $('guide-reduire').onclick = () => reduireGuide(true);
   $('guide-avatar').onclick = () => reduireGuide(!$('guide-bulle').hidden);

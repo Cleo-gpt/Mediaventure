@@ -2,6 +2,7 @@
 // Chaque épreuve s'affiche dans la fenêtre #minijeu et renvoie une promesse : true si elle est réussie.
 import { PALETTE } from './niveaux.js';
 import { codeGaiaValide } from './code-gaia.js';
+import { t } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -22,7 +23,7 @@ const bouton = (texte, classe = 'bouton') => Object.assign(document.createElemen
 // ---------------------------------------------------------------- Multimédia : regarder une vidéo de la bibliothèque
 export function epreuveVideo(videos) {
   return new Promise((fin) => {
-    const zone = ouvrir('La bibliothèque', 'Choisis une vidéo et regarde-la jusqu’au bout.');
+    const zone = ouvrir(t('La bibliothèque'), t('Choisis une vidéo et regarde-la jusqu’au bout.'));
     const liste = document.createElement('div');
     liste.className = 'mj-videos';
     for (const v of videos) {
@@ -49,7 +50,7 @@ export function epreuveVideo(videos) {
         ecran.append(video);
       } else {
         // Pas encore de fichier vidéo : lecteur animé en attendant les vraies vidéos
-        ecran.innerHTML = `<div class="mj-lecture"><span>${v.icone}</span><strong>${v.titre}</strong><em>Lecture…</em></div>`;
+        ecran.innerHTML = `<div class="mj-lecture"><span>${v.icone}</span><strong>${v.titre}</strong><em>${t('Lecture…')}</em></div>`;
       }
       zone.append(ecran, barre);
       const debut = performance.now();
@@ -58,7 +59,7 @@ export function epreuveVideo(videos) {
         ecoule = video ? video.currentTime : (performance.now() - debut) / 1000;
         remplissage.style.width = `${Math.min(100, (ecoule / duree) * 100)}%`;
         if (ecoule >= duree - 0.05 || video?.ended) {
-          const ok = bouton('J’ai tout vu !');
+          const ok = bouton(t('J’ai tout vu !'));
           ok.onclick = () => { fermer(); fin(true); };
           zone.append(ok);
           return;
@@ -131,7 +132,7 @@ function dessinerPaysage(ctx, modifie) {
 
 export function epreuveDifferences() {
   return new Promise((fin) => {
-    const zone = ouvrir('Les 7 différences', 'Clique sur les différences, sur l’une ou l’autre image.');
+    const zone = ouvrir(t('Les 7 différences'), t('Clique sur les différences, sur l’une ou l’autre image.'));
     const compteur = document.createElement('p');
     compteur.className = 'mj-compteur';
     const images = document.createElement('div');
@@ -145,7 +146,7 @@ export function epreuveDifferences() {
       return c;
     });
     const maj = () => {
-      compteur.textContent = `${trouvees.size} / ${DIFFERENCES.length} différences trouvées`;
+      compteur.textContent = t('{n} / {total} différences trouvées', { n: trouvees.size, total: DIFFERENCES.length });
       for (const c of toiles) {
         const ctx = c.getContext('2d');
         dessinerPaysage(ctx, c === toiles[1]);
@@ -153,7 +154,7 @@ export function epreuveDifferences() {
         for (const i of trouvees) { const d = DIFFERENCES[i]; ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.stroke(); }
       }
       if (trouvees.size === DIFFERENCES.length) {
-        const ok = bouton('Bravo, toutes trouvées !');
+        const ok = bouton(t('Bravo, toutes trouvées !'));
         ok.onclick = () => { fermer(); fin(true); };
         zone.append(ok);
       }
@@ -174,7 +175,7 @@ export function epreuveDifferences() {
 // ---------------------------------------------------------------- Marketing : remettre les étapes d'un projet dans l'ordre
 export function epreuveEtapes(etapes) {
   return new Promise((fin) => {
-    const zone = ouvrir('Le projet marketing', 'Glisse chaque étape sur son numéro, de 1 (la première) à ' + etapes.length + ' (la dernière).');
+    const zone = ouvrir(t('Le projet marketing'), t('Glisse chaque étape sur son numéro, de 1 (la première) à {n} (la dernière).', { n: etapes.length }));
     const melange = [...etapes].sort(() => Math.random() - 0.5);
     const cases = etapes.map(() => null); // étape posée sur chaque numéro
     let choisie = null; // étape sélectionnée d'un simple toucher (alternative au glisser)
@@ -186,8 +187,8 @@ export function epreuveEtapes(etapes) {
     message.className = 'mj-compteur';
     const actions = document.createElement('div');
     actions.className = 'mj-actions';
-    const verifier = bouton('Vérifier');
-    const recommencer = bouton('Recommencer', 'bouton secondaire');
+    const verifier = bouton(t('Vérifier'));
+    const recommencer = bouton(t('Recommencer'), 'bouton secondaire');
     actions.append(recommencer, verifier);
     let corrige = false;
 
@@ -229,11 +230,11 @@ export function epreuveEtapes(etapes) {
           if (corrige && e !== etapes[i]) {
             const bonne = document.createElement('small');
             bonne.className = 'mj-bonne';
-            bonne.textContent = '✔ Bonne étape : ' + etapes[i];
+            bonne.textContent = t('✔ Bonne étape : {etape}', { etape: etapes[i] });
             c.append(bonne);
           }
           li.append(c);
-        } else li.append(Object.assign(document.createElement('span'), { className: 'mj-vide', textContent: 'Glisse une étape ici' }));
+        } else li.append(Object.assign(document.createElement('span'), { className: 'mj-vide', textContent: t('Glisse une étape ici') }));
         li.onclick = (ev) => { if (choisie && !ev.target.closest('.mj-etape')) poser(choisie, i); };
         liste.append(li);
       });
@@ -310,13 +311,13 @@ export function epreuveEtapes(etapes) {
       corrige = true;
       rendre();
       if (justes === etapes.length) {
-        message.textContent = 'Parfait : ton projet est bien construit !';
+        message.textContent = t('Parfait : ton projet est bien construit !');
         actions.innerHTML = '';
-        const ok = bouton('Continuer');
+        const ok = bouton(t('Continuer'));
         ok.onclick = () => { fermer(); fin(true); };
         actions.append(ok);
       } else {
-        message.textContent = `${justes} étape${justes > 1 ? 's' : ''} sur ${etapes.length} au bon numéro. La bonne étape est indiquée sous chaque erreur : remets-les en place et vérifie à nouveau.`;
+        message.textContent = t('{n} étape(s) sur {total} au bon numéro. La bonne étape est indiquée sous chaque erreur : remets-les en place et vérifie à nouveau.', { n: justes, total: etapes.length });
       }
     };
     recommencer.onclick = () => { cases.fill(null); choisie = null; corrige = false; message.textContent = ''; rendre(); };
@@ -328,18 +329,18 @@ export function epreuveEtapes(etapes) {
 // ---------------------------------------------------------------- Admin : le code du stand Gaïa
 export function epreuveCodeGaia() {
   return new Promise((fin) => {
-    const zone = ouvrir('Le stand Gaïa', 'Va au stand Gaïa des portes ouvertes : la vendeuse te donnera un code.');
-    const champ = Object.assign(document.createElement('input'), { className: 'mj-code', placeholder: 'Code à 6 chiffres', maxLength: 16, autocomplete: 'off', inputMode: 'numeric' });
+    const zone = ouvrir(t('Le stand Gaïa'), t('Va au stand Gaïa des portes ouvertes : la vendeuse te donnera un code.'));
+    const champ = Object.assign(document.createElement('input'), { className: 'mj-code', placeholder: t('Code à 6 chiffres'), maxLength: 16, autocomplete: 'off', inputMode: 'numeric' });
     const message = document.createElement('p');
     message.className = 'mj-compteur';
-    const valider = bouton('Valider');
-    const plusTard = bouton('Plus tard', 'bouton secondaire');
+    const valider = bouton(t('Valider'));
+    const plusTard = bouton(t('Plus tard'), 'bouton secondaire');
     const actions = document.createElement('div');
     actions.className = 'mj-actions';
     actions.append(plusTard, valider);
     const essayer = () => {
       if (codeGaiaValide(champ.value)) { fermer(); fin(true); }
-      else { message.textContent = 'Ce n’est pas le bon code (il change toutes les heures). Demande-le au stand Gaïa !'; champ.select(); }
+      else { message.textContent = t('Ce n’est pas le bon code (il change toutes les heures). Demande-le au stand Gaïa !'); champ.select(); }
     };
     valider.onclick = essayer;
     champ.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') essayer(); };

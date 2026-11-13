@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1b2763">
 <title>Médiaventure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Asimovian&family=Dela+Gothic+One&family=Space+Mono:wght@400;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   /* Charte graphique PO 2026. Polices de la charte : « TO JAPAN » (titres) et « New Zen » (texte),
      avec des polices Google proches en secours si elles ne sont pas installées. */
@@ -29,84 +29,120 @@
   .bouton:hover { transform: translateY(-2px); }
   .bouton.secondaire { background: var(--creme); color: var(--marine); box-shadow: 0 4px 0 #cbbd9f; }
 
-  /* Le Sas : vestiaire (inspiré de références/personnage-tenue.jpg) */
-  #creation { position: fixed; inset: 0; pointer-events: none; color: #fff; }
+  /* Le Sas : vestiaire en couleurs pastel (rose, bleu, violet), formes du site des PO 2026 :
+     blocs arrondis à ombre décalée, Asimovian + Space Mono, fleurs de sakura */
+  :root {
+    --rose-pastel: #f9cfe0; --rose-pastel-fonce: #eaa3c0;
+    --bleu-pastel: #c9dcf7; --bleu-pastel-fonce: #93b4e3;
+    --violet-pastel: #ddd0f5; --violet-pastel-fonce: #b49fe2;
+    --texte-sas: #3b3360;
+    --titre-po: 'Asimovian', 'Space Mono', monospace; --mono: 'Space Mono', monospace;
+  }
+  #creation #sakura-sas { position: absolute; inset: 0; pointer-events: none; }
+  @media (max-width: 760px) { #sakura-sas .f4 { display: none; } }
+  .fleur { position: absolute; animation: balance 6s ease-in-out infinite; }
+  .fleur.f2 { animation-duration: 7s; animation-delay: -2s; } .fleur.f3 { animation-duration: 8s; animation-delay: -4s; }
+  @keyframes balance { 50% { transform: rotate(14deg) translateY(6px); } }
+  .petale { position: absolute; top: -60px; opacity: .9; animation: chute 12s linear infinite; }
+  @keyframes chute {
+    0% { transform: translate(0, 0) rotate(0); }
+    50% { transform: translate(-40px, 55vh) rotate(200deg); }
+    100% { transform: translate(30px, 112vh) rotate(420deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .petale { display: none; } }
+
+  #creation { position: fixed; inset: 0; pointer-events: none; color: var(--texte-sas); font-family: var(--mono); }
   #creation > * { pointer-events: auto; }
-  #panneau { position: absolute; top: 24px; left: 24px; bottom: 24px; width: min(560px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 18px; }
-  #onglets { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: rgba(16,24,70,.55); border: 2px solid rgba(160,185,255,.18); border-radius: 999px; padding: 5px; }
-  #onglets button { position: relative; border: 0; background: transparent; border-radius: 999px; height: 52px; color: #dfe6ff; display: grid; place-items: center; }
-  #onglets button svg { width: 34px; height: 34px; }
-  #onglets button.actif { background: #fff; color: var(--marine); box-shadow: 0 0 0 3px rgba(160,190,255,.45); }
-  #badge-identite { position: absolute; top: -4px; right: 22%; width: 22px; height: 22px; border-radius: 50%; background: var(--corail); color: #fff; font-weight: 900; font-size: .85rem; display: grid; place-items: center; box-shadow: 0 0 0 2px #fff; }
-  #corps { flex: 1; display: grid; grid-template-columns: 76px 1fr; gap: 18px; min-height: 0; }
-  #categories { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 4px; }
-  .categorie { flex: none; width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(160,185,255,.2); background: rgba(16,24,70,.6); color: #e8edff; display: grid; place-items: center; transition: transform .15s; }
+  #panneau { position: absolute; top: 24px; left: 24px; bottom: 24px; width: min(560px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 14px; }
+  #onglets { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--violet-pastel); border-radius: 999px; padding: 5px; box-shadow: 0 5px 0 var(--violet-pastel-fonce); }
+  #onglets button { position: relative; border: 0; background: transparent; border-radius: 999px; height: 50px; color: #7d6fae; display: grid; place-items: center; }
+  #onglets button svg { width: 32px; height: 32px; }
+  #onglets button.actif { background: #fff; color: var(--texte-sas); box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
+  #badge-identite { position: absolute; top: -4px; right: 22%; width: 22px; height: 22px; border-radius: 50%; background: var(--rose-pastel-fonce); color: #fff; font-weight: 700; font-size: .85rem; display: grid; place-items: center; box-shadow: 0 0 0 2px #fff; }
+  #corps { flex: 1; display: grid; grid-template-columns: 76px 1fr; gap: 16px; min-height: 0; padding: 14px; background: var(--violet-pastel); border-radius: 18px; box-shadow: 0 7px 0 var(--violet-pastel-fonce); margin-bottom: 7px; }
+  #categories { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 4px 4px 8px; }
+  .categorie { flex: none; width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--bleu-pastel); color: var(--texte-sas); display: grid; place-items: center; box-shadow: 0 4px 0 var(--bleu-pastel-fonce); transition: transform .15s; }
+  .categorie:hover { transform: translateY(-2px); }
   .categorie svg { width: 34px; height: 34px; }
-  .categorie.actif { width: 72px; height: 72px; margin-left: -4px; background: #fff; color: var(--marine); box-shadow: 0 0 0 5px rgba(120,160,255,.35); }
+  .categorie.actif { background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce), 0 0 0 3px #fff; }
   #contenu { display: flex; flex-direction: column; min-height: 0; }
   #contenu header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  #cat-titre { margin: 4px 0 0; font-size: clamp(1.3rem, 2.4vw, 1.8rem); line-height: 1.2; text-shadow: 0 2px 6px rgba(0,0,0,.35); }
-  .rond { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; background: #fff; color: var(--marine); font-weight: 900; font-size: 1.4rem; font-family: Georgia, serif; display: grid; place-items: center; }
-  #info-texte { margin: 10px 0 0; background: rgba(16,24,70,.7); padding: 10px 14px; border-radius: 12px; font-size: .9rem; }
-  #cartes { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; overflow-y: auto; padding: 4px; align-content: start; }
-  .carte-objet { position: relative; aspect-ratio: 1 / 1.05; border-radius: 8px; border: 2px solid rgba(160,185,255,.25); padding: 8px 6px 30px; color: #fff; display: grid; place-items: center; background: linear-gradient(180deg, #4a63b8, #3550a5 70%, #3f7f6a 100%); box-shadow: inset 0 -5px 0 #5fbf7a; }
-  .carte-objet.etoiles-3 { background: linear-gradient(180deg, #4f6fd0, #3a56b5 70%); box-shadow: inset 0 -5px 0 #6aa8ff; }
-  .carte-objet.etoiles-1 { background: linear-gradient(180deg, #5b6a92, #485780 70%); box-shadow: inset 0 -5px 0 #a7b3cc; }
-  .carte-objet svg { width: 72%; height: 72%; color: #e8edff; filter: drop-shadow(0 3px 3px rgba(0,0,0,.25)); }
-  .carte-objet .etoiles { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; color: #fff; letter-spacing: .05em; font-size: 1.05rem; text-shadow: 0 0 6px #8fb8ff; }
-  .carte-objet .nom { position: absolute; top: 6px; left: 8px; right: 8px; font-size: .68rem; font-weight: 700; text-align: left; opacity: 0; transition: opacity .15s; text-shadow: 0 1px 2px #000; }
+  #cat-titre { margin: 4px 0 0; font-family: var(--titre-po); font-weight: 400; font-size: clamp(1.3rem, 2.4vw, 1.8rem); line-height: 1.15; color: var(--texte-sas); }
+  .rond { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--creme); color: var(--marine); font-weight: 900; font-size: 1.4rem; font-family: Georgia, serif; display: grid; place-items: center; }
+  #creation .rond { background: #fff; color: var(--texte-sas); box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
+  #info-texte { margin: 10px 0 0; background: #fff; border-left: 4px solid var(--rose-pastel-fonce); padding: 10px 14px; border-radius: 10px; font-size: .85rem; }
+  #cartes { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 12px; overflow-y: auto; padding: 4px 4px 10px; align-content: start; }
+  .carte-objet { position: relative; aspect-ratio: 1 / 1.05; border-radius: 14px; border: 3px solid transparent; padding: 8px 6px 28px; color: var(--texte-sas); display: grid; place-items: center; background: #fff; box-shadow: 0 4px 0 var(--bleu-pastel-fonce); transition: transform .15s; }
+  .carte-objet:hover { transform: translateY(-3px); }
+  .carte-objet svg { width: 70%; height: 70%; color: var(--texte-sas); }
+  .carte-objet .etoiles { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; color: var(--violet-pastel-fonce); letter-spacing: .1em; font-size: 1rem; }
+  .carte-objet.etoiles-1 .etoiles { color: var(--bleu-pastel-fonce); } .carte-objet.etoiles-2 .etoiles { color: var(--rose-pastel-fonce); }
+  .carte-objet .nom { position: absolute; top: 6px; left: 8px; right: 8px; font-size: .62rem; font-weight: 700; text-align: left; opacity: 0; transition: opacity .15s; color: var(--texte-sas); }
   .carte-objet:hover .nom, .carte-objet.choisie .nom { opacity: 1; }
-  .carte-objet.choisie { border-color: #fff; box-shadow: 0 0 0 3px #6fa8ff, 0 0 18px #6fa8ff, inset 0 -5px 0 #6aa8ff; }
+  .carte-objet.choisie { border-color: var(--rose-pastel-fonce); background: #fff6fa; box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
   .carte-libre { cursor: pointer; }
   .carte-libre input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .carte-objet.choisie::after { content: '✓'; position: absolute; top: -2px; right: -2px; width: 30px; height: 30px; background: #59c96b; color: #fff; font-weight: 900; display: grid; place-items: center; border-radius: 0 6px 0 10px; }
+  .carte-objet.choisie::after { content: '✓'; position: absolute; top: -3px; right: -3px; width: 28px; height: 28px; background: var(--rose-pastel-fonce); color: #fff; font-weight: 700; display: grid; place-items: center; border-radius: 0 12px 0 10px; }
   #champ-prenom { margin-top: 18px; }
-  #prenom { width: 100%; padding: .8em 1.2em; border-radius: 999px; border: 2px solid rgba(160,185,255,.35); background: rgba(16,24,70,.6); color: #fff; font: inherit; font-weight: 700; font-size: 1.1rem; }
-  #actions-sas { position: absolute; right: 24px; bottom: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-  #actions-sas .rond { width: 56px; height: 56px; background: rgba(255,255,255,.95); }
-  #actions-sas .rond:disabled { background: rgba(255,255,255,.25); color: rgba(255,255,255,.6); cursor: default; }
-  #actions-sas .rond svg { width: 28px; height: 28px; }
+  #prenom { width: 100%; padding: .8em 1.2em; border-radius: 999px; border: 3px solid var(--rose-pastel-fonce); background: #fff; color: var(--texte-sas); font: inherit; font-weight: 700; font-size: 1.1rem; }
+
+  /* Boutons du Sas : même forme pour tous, une couleur pastel chacun */
+  #creation .bouton, #actions-sas .bouton-staff { font-family: var(--mono); font-weight: 700; border: 0; border-radius: 24px; color: var(--texte-sas); opacity: 1; transition: transform .2s, box-shadow .2s; }
+  #creation .bouton { background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
+  #creation .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
+  #creation .bouton.secondaire { background: var(--bleu-pastel); box-shadow: 0 4px 0 var(--bleu-pastel-fonce); }
+  #creation .bouton.secondaire:hover { box-shadow: 0 7px 0 var(--bleu-pastel-fonce); }
+  #actions-sas .bouton-staff { padding: .8em 1.4em; font-size: .9rem; background: var(--violet-pastel); box-shadow: 0 4px 0 var(--violet-pastel-fonce); }
+  #actions-sas .bouton-staff:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--violet-pastel-fonce); }
+  /* les boutons ne touchent jamais le panneau : ils passent à la ligne s'il manque de place */
+  #actions-sas { position: absolute; right: 24px; bottom: 24px; left: calc(min(560px, 100% - 32px) + 56px); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
   #titre-sas { position: absolute; top: 28px; right: 28px; text-align: right; }
-  #titre-sas h1 { margin: 0; font-family: var(--titre); font-size: clamp(1.6rem, 4vw, 2.8rem); color: var(--creme); text-shadow: 0 4px 0 var(--corail); }
-  #titre-sas p { margin: 4px 0 0; color: var(--rose-pale); font-weight: 700; }
+  #titre-sas h1 { margin: 0; font-family: var(--titre-po); font-weight: 400; font-size: clamp(1.8rem, 4.4vw, 3.4rem); line-height: 1; color: #fff; text-shadow: 0 4px 0 var(--violet-pastel-fonce); }
+  #titre-sas p { display: inline-block; margin: 10px 0 0; padding: 8px 18px; border-radius: 30px; background: #fff; color: var(--texte-sas); letter-spacing: .1em; font-size: .9rem; box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
   @media (max-width: 760px) {
-    #panneau { top: auto; left: 16px; right: 16px; bottom: 90px; width: auto; height: 46%; }
-    #corps { grid-template-columns: 60px 1fr; gap: 10px; }
-    .categorie { width: 52px; height: 52px; } .categorie.actif { width: 56px; height: 56px; margin-left: -2px; }
+    #panneau { top: auto; left: 12px; right: 12px; bottom: 90px; width: auto; height: 46%; gap: 10px; }
+    #corps { grid-template-columns: 60px 1fr; gap: 10px; padding: 10px; }
+    .categorie { width: 52px; height: 52px; }
     #cartes { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
     #titre-sas { top: 16px; right: 16px; }
-    #actions-sas { right: 16px; bottom: 16px; left: 16px; }
+    #titre-sas p { font-size: .75rem; padding: 6px 12px; margin-top: 6px; }
+    #actions-sas { right: 16px; bottom: 16px; left: 16px; flex-wrap: nowrap; }
+    #actions-sas .bouton-staff { padding: .8em 1em; }
   }
 
-  /* Cléo guide le joueur dans le Sas */
-  #guide-sas { position: absolute; right: 24px; bottom: 96px; display: flex; align-items: flex-end; gap: 8px; pointer-events: none; }
-  #guide-sas > * { pointer-events: auto; }
-  #guide-bulle { position: relative; width: min(330px, calc(100vw - 140px)); margin-bottom: 40px; background: var(--creme); color: var(--marine); border: 3px solid var(--marine); border-radius: 18px; padding: 14px 16px 12px; box-shadow: 0 8px 22px rgba(0,0,0,.3); animation: portrait-entree .35s ease-out; }
-  #guide-bulle::after { content: ''; position: absolute; right: -12px; bottom: 26px; border: 10px solid transparent; border-left-color: var(--marine); border-right: 0; }
+  /* Cléo guide le joueur dans le Sas : sous les cartes du panneau de gauche */
+  #guide-sas { flex: none; display: flex; align-items: flex-end; gap: 10px; }
+  #guide-bulle { position: relative; flex: 1; max-width: 420px; margin-bottom: 18px; background: #fff; color: var(--texte-sas); border-radius: 18px; padding: 12px 16px 10px; box-shadow: 0 5px 0 var(--rose-pastel-fonce); animation: portrait-entree .35s ease-out; }
+  #guide-bulle::after { content: ''; position: absolute; left: -10px; bottom: 26px; border: 10px solid transparent; border-right-color: #fff; border-left: 0; }
   #guide-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  #guide-tete strong { background: var(--corail); color: #fff; padding: 2px 12px; border-radius: 999px; font-weight: 900; }
-  #guide-etape { font-size: .8rem; color: #6b7a8c; font-weight: 700; }
-  #guide-texte { margin: 8px 0 10px; line-height: 1.4; font-size: .98rem; }
+  #guide-tete strong { background: var(--rose-pastel); color: var(--texte-sas); padding: 2px 12px; border-radius: 999px; font-weight: 700; }
+  #guide-etape { font-size: .8rem; color: #8a80b0; font-weight: 700; }
+  #guide-texte { margin: 6px 0 8px; line-height: 1.45; font-size: .85rem; }
   #guide-boutons { display: flex; gap: 8px; justify-content: flex-end; }
-  #guide-boutons button { border: 0; border-radius: 999px; padding: .45em 1.1em; font-weight: 900; font-size: .88rem; }
-  #guide-suivant { background: var(--corail); color: #fff; box-shadow: 0 3px 0 #c94a4b; }
-  #guide-reduire { background: transparent; color: var(--marine); text-decoration: underline; }
-  #guide-avatar { border: 0; background: none; padding: 0; }
-  #guide-avatar img { display: block; height: min(46vh, 420px); filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); animation: flotte 2.4s ease-in-out infinite; }
-  #guide-sas.reduit #guide-avatar img { height: 120px; }
-  @media (max-width: 1100px) {
-    #guide-sas { bottom: auto; top: 96px; right: 16px; align-items: flex-start; flex-direction: row; }
-    #guide-bulle { margin: 0; width: min(330px, calc(100vw - 110px)); padding: 10px 12px; }
+  #guide-boutons button { font-family: var(--mono); border: 0; border-radius: 999px; padding: .45em 1.1em; font-weight: 700; font-size: .88rem; }
+  #guide-suivant { background: var(--violet-pastel); color: var(--texte-sas); box-shadow: 0 3px 0 var(--violet-pastel-fonce); }
+  #guide-reduire { background: transparent; color: var(--texte-sas); text-decoration: underline; }
+  #guide-avatar { order: -1; flex: none; border: 0; background: none; padding: 0; }
+  #guide-avatar img { display: block; height: min(42vh, 390px); filter: drop-shadow(0 8px 18px rgba(59,51,96,.25)); }
+  #guide-sas.reduit #guide-avatar img { height: 140px; }
+  @media (max-height: 700px) {
+    #guide-bulle { margin: 0; }
+    #guide-avatar img, #guide-sas.reduit #guide-avatar img { height: 88px; width: 88px; object-fit: cover; object-position: 50% 4%; border-radius: 50%; background: var(--rose-pastel); border: 3px solid #fff; }
+    #guide-sas { align-items: flex-start; }
     #guide-bulle::after { bottom: auto; top: 18px; }
-    #guide-texte { font-size: .9rem; margin: 6px 0 8px; }
-    #guide-avatar img, #guide-sas.reduit #guide-avatar img { height: 64px; width: 64px; object-fit: cover; object-position: 50% 4%; border-radius: 50%; background: var(--rose-pale); border: 3px solid #fff; animation: none; }
   }
-  @media (max-width: 760px) { #guide-sas { top: 84px; left: 16px; right: 16px; justify-content: flex-end; } }
+  /* Sur téléphone, le panneau est en bas : Cléo se place juste au-dessus */
+  @media (max-width: 760px) {
+    #guide-sas { position: absolute; left: 0; right: 0; bottom: calc(100% + 10px); align-items: flex-start; }
+    #guide-bulle { margin: 0; padding: 10px 12px; }
+    #guide-bulle::after { bottom: auto; top: 18px; }
+    #guide-texte { font-size: .9rem; }
+    #guide-avatar img, #guide-sas.reduit #guide-avatar img { height: 88px; width: 88px; object-fit: cover; object-position: 50% 4%; border-radius: 50%; background: var(--rose-pastel); border: 3px solid #fff; }
+  }
 
   /* Bouton et fenêtre réservés au staff */
   .bouton-staff { border: 2px solid currentColor; background: transparent; color: inherit; border-radius: 999px; padding: .45em 1.1em; font-weight: 700; font-size: .85rem; opacity: .75; }
   .bouton-staff:hover { opacity: 1; }
-  #actions-sas .bouton-staff { color: var(--creme); }
   #staff { z-index: 200; }
   #staff .avertissement { background: var(--rose-pale); border-left: 6px solid var(--corail); border-radius: 10px; padding: 10px 14px; font-weight: 700; }
   #code-staff { width: 100%; margin-top: 6px; padding: .7em 1.1em; border-radius: 999px; border: 2px solid var(--marine); font: inherit; font-weight: 700; font-size: 1.2rem; letter-spacing: .3em; text-align: center; }
@@ -125,6 +161,7 @@
 
   /* HUD */
   #hud { position: fixed; inset: 0; pointer-events: none; }
+  #bouton-son { position: absolute; top: 96px; left: 108px; pointer-events: auto; border: 0; border-radius: 999px; width: 40px; height: 36px; background: var(--marine); color: var(--creme); font-size: 1.1rem; }
   #ouvrir-carte { position: absolute; top: 96px; left: 16px; pointer-events: auto; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--marine); color: var(--creme); font-weight: 900; }
   .carte-iles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
   .ile { border: 2px solid var(--marine); background: #fff; border-radius: 14px; padding: 12px; text-align: left; color: var(--marine); display: grid; gap: 4px; }
@@ -267,6 +304,7 @@
     #inventaire { top: 66px; left: 10px; right: auto; gap: 4px; }
     .case-inv { width: 34px; height: 34px; font-size: 1.05rem; border-radius: 9px; }
     #ouvrir-carte { top: 108px; left: 10px; padding: 6px 12px; font-size: .9rem; }
+    #bouton-son { top: 108px; left: auto; right: 10px; height: 32px; width: 36px; font-size: 1rem; }
     #combat-haut { top: 8px; padding: 8px 12px; }
     #journal { display: none; }
     #combat-bas { bottom: 8px; padding: 8px; gap: 8px; }
@@ -284,51 +322,73 @@
 <canvas id="scene"></canvas>
 
 <section id="creation">
+  <div id="sakura-sas" aria-hidden="true">
+    <img class="fleur " src="decor-sas/fleur-1.svg" alt="" style="right:3%;top:24%;width:70px">
+    <img class="fleur f2" src="decor-sas/fleur-2.svg" alt="" style="right:9%;top:31%;width:46px">
+    <img class="fleur f3" src="decor-sas/fleur-3.svg" alt="" style="right:2%;bottom:16%;width:60px">
+    <img class="fleur f2 f4" src="decor-sas/fleur-1.svg" alt="" style="left:47%;top:8%;width:40px">
+    <img class="fleur f3 f4" src="decor-sas/fleur-2.svg" alt="" style="right:24%;top:6%;width:54px">
+    <img class="fleur " src="decor-sas/fleur-3.svg" alt="" style="right:14%;top:52%;width:38px">
+    <img class="fleur f2 f4" src="decor-sas/fleur-1.svg" alt="" style="right:30%;bottom:6%;width:50px">
+    <img class="fleur f3 f4" src="decor-sas/fleur-2.svg" alt="" style="left:52%;bottom:22%;width:44px">
+    <img class="fleur f2" src="decor-sas/fleur-1.svg" alt="" style="right:5%;top:62%;width:34px">
+    <img class="fleur  f4" src="decor-sas/fleur-3.svg" alt="" style="left:58%;top:30%;width:30px">
+    <img class="fleur f3" src="decor-sas/fleur-2.svg" alt="" style="right:20%;bottom:30%;width:28px">
+    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:8%;width:22px;animation-delay:0s;animation-duration:10s">
+    <img class="petale" src="decor-sas/fleur-2.svg" alt="" style="left:22%;width:18px;animation-delay:-3s;animation-duration:13s">
+    <img class="petale" src="decor-sas/fleur-3.svg" alt="" style="left:35%;width:26px;animation-delay:-6s;animation-duration:11s">
+    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:48%;width:16px;animation-delay:-2s;animation-duration:14s">
+    <img class="petale" src="decor-sas/fleur-2.svg" alt="" style="left:63%;width:24px;animation-delay:-8s;animation-duration:12s">
+    <img class="petale" src="decor-sas/fleur-3.svg" alt="" style="left:77%;width:20px;animation-delay:-5s;animation-duration:15s">
+    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:90%;width:18px;animation-delay:-1s;animation-duration:9s">
+    <img class="petale" src="decor-sas/fleur-2.svg" alt="" style="left:70%;width:28px;animation-delay:-11s;animation-duration:16s">
+  </div>
   <div id="titre-sas">
     <h1>MÉDIAVENTURE</h1>
-    <p>Le Sas — choisis ta tenue</p>
+    <p data-i18n>Le Sas — choisis ta tenue</p>
   </div>
   <div id="panneau">
     <nav id="onglets">
-      <button data-onglet="tenue" title="Tenue"></button>
-      <button data-onglet="visage" title="Visage et coiffure"></button>
-      <button data-onglet="identite" title="Identité"></button>
+      <button data-onglet="tenue" title="Tenue" data-i18n-attr="title"></button>
+      <button data-onglet="visage" title="Visage et coiffure" data-i18n-attr="title"></button>
+      <button data-onglet="identite" title="Identité" data-i18n-attr="title"></button>
       <span id="badge-identite">!</span>
     </nav>
     <div id="corps">
       <div id="categories"></div>
       <div id="contenu">
-        <header><h2 id="cat-titre"></h2><button class="rond" id="info" title="Informations">i</button></header>
+        <header><h2 id="cat-titre"></h2><button class="rond" id="info" title="Informations" data-i18n-attr="title">i</button></header>
         <p id="info-texte" hidden></p>
         <div id="cartes"></div>
-        <div id="champ-prenom" hidden><input id="prenom" maxlength="18" placeholder="Ton prénom" autocomplete="off"></div>
+        <div id="champ-prenom" hidden><input id="prenom" maxlength="18" placeholder="Ton prénom" data-i18n-attr="placeholder" autocomplete="off"></div>
       </div>
     </div>
-  </div>
-  <div id="guide-sas">
-    <div id="guide-bulle">
-      <div id="guide-tete"><strong>Cléo</strong><span id="guide-etape"></span></div>
-      <p id="guide-texte"></p>
-      <div id="guide-boutons">
-        <button id="guide-reduire">Masquer</button>
-        <button id="guide-suivant">Étape suivante →</button>
+    <div id="guide-sas">
+      <div id="guide-bulle">
+        <div id="guide-tete"><strong>Cléo</strong><span id="guide-etape"></span></div>
+        <p id="guide-texte"></p>
+        <div id="guide-boutons">
+          <button id="guide-reduire" data-i18n>Masquer</button>
+          <button id="guide-suivant" data-i18n>Étape suivante →</button>
+        </div>
       </div>
+      <button id="guide-avatar" title="Cléo, ta guide"><img src="../portraits/cleo_miko.png" alt="Cléo, la gardienne du Sas"></button>
     </div>
-    <button id="guide-avatar" title="Cléo, ta guide"><img src="../portraits/cleo_miko.png" alt="Cléo, la gardienne du Sas"></button>
   </div>
   <div id="actions-sas">
     <button class="bouton-staff ouvrir-staff">Staff</button>
     <button class="bouton secondaire" id="reprendre" hidden></button>
-    <button class="bouton" id="commencer">Entrer dans le Sas</button>
+    <button class="bouton" id="commencer" data-i18n>Entrer dans le Sas</button>
   </div>
 </section>
 
 <section id="hud" hidden>
   <div id="hud-niveau"><span id="hud-titre"></span><span id="hud-lieu"></span></div>
-  <button id="ouvrir-carte" title="Carte des îles (touche M)">🗺️ Îles</button>
+  <button id="ouvrir-carte" title="Carte des îles (touche M)" data-i18n-attr="title" data-i18n>🗺️ Îles</button>
+  <button id="bouton-son" title="Couper le son">🔊</button>
   <div id="inventaire"></div>
   <div id="invite" hidden></div>
-  <div id="aide"><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> / flèches : bouger · <kbd>Espace</kbd> sauter · <kbd>Maj</kbd> courir · <kbd>E</kbd> interagir · glisser la souris : caméra · molette : zoom</div>
+  <div id="aide" data-i18n><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> / flèches : bouger · <kbd>Espace</kbd> sauter · <kbd>Maj</kbd> courir · <kbd>E</kbd> interagir · glisser la souris : caméra · molette : zoom</div>
 </section>
 
 <section id="combat" hidden>
@@ -341,10 +401,10 @@
   <div id="combat-bas">
     <div>
       <div class="barre" id="pv-joueur"></div>
-      <div class="points"><span><b id="pa"></b> PA</span><span><b id="pm"></b> PM</span></div>
+      <div class="points"><span><b id="pa"></b> <i data-i18n style="font-style:normal">PA</i></span><span><b id="pm"></b> <i data-i18n style="font-style:normal">PM</i></span></div>
     </div>
     <div id="sorts"></div>
-    <button class="bouton" id="fin-tour">Fin du tour</button>
+    <button class="bouton" id="fin-tour" data-i18n>Fin du tour</button>
   </div>
 </section>
 <div id="bulles"></div>
@@ -353,7 +413,7 @@
 <section id="dialogue" hidden>
   <span id="dialogue-nom"></span>
   <p id="dialogue-texte"></p>
-  <small>Espace / clic pour continuer</small>
+  <small data-i18n>Espace / clic pour continuer</small>
 </section>
 
 <section id="quiz" class="modale" hidden>
@@ -374,10 +434,10 @@
 
 <section id="carte-iles" class="modale" hidden>
   <div class="carte carte-large">
-    <h2 id="minijeu-titre-carte" style="font-family:var(--titre);margin:0;color:var(--corail)">Les îles de Médiaventure</h2>
-    <p>Choisis une île pour t’y rendre directement.</p>
+    <h2 id="minijeu-titre-carte" style="font-family:var(--titre);margin:0;color:var(--corail)" data-i18n>Les îles de Médiaventure</h2>
+    <p data-i18n>Choisis une île pour t’y rendre directement.</p>
     <div class="carte-iles" id="liste-iles"></div>
-    <div class="mj-actions"><button class="bouton-staff ouvrir-staff">Nouvelle partie (staff)</button> <button class="bouton secondaire" id="fermer-carte">Fermer</button></div>
+    <div class="mj-actions"><button class="bouton-staff ouvrir-staff" data-i18n>Nouvelle partie (staff)</button> <button class="bouton secondaire" id="fermer-carte" data-i18n>Fermer</button></div>
   </div>
 </section>
 
@@ -385,40 +445,40 @@
   <img src="../portraits/cleo_miko.png" alt="Cléo">
   <div class="carte">
     <div class="trophee">🏆</div>
-    <h2>Bravo !</h2>
+    <h2 data-i18n>Bravo !</h2>
     <p id="fin-texte"></p>
-    <button class="bouton-staff ouvrir-staff">Nouvelle partie (staff)</button>
+    <button class="bouton-staff ouvrir-staff" data-i18n>Nouvelle partie (staff)</button>
   </div>
 </section>
 
 <section id="staff" class="modale" hidden>
   <div class="carte">
-    <h2 style="margin-top:0">Nouvelle partie — réservé au staff</h2>
-    <p class="avertissement">Ce bouton est réservé au staff de la salle informatique. Une fois le code entré, la partie en cours sera perdue.</p>
-    <label for="code-staff">Code staff</label>
+    <h2 style="margin-top:0" data-i18n>Nouvelle partie — réservé au staff</h2>
+    <p class="avertissement" data-i18n>Ce bouton est réservé au staff de la salle informatique. Une fois le code entré, la partie en cours sera perdue.</p>
+    <label for="code-staff" data-i18n>Code staff</label>
     <input id="code-staff" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
     <p id="staff-erreur"></p>
     <div class="mj-actions">
-      <button class="bouton secondaire" id="staff-annuler">Annuler, revenir au jeu</button>
-      <button class="bouton" id="staff-valider">Valider et recommencer</button>
+      <button class="bouton secondaire" id="staff-annuler" data-i18n>Annuler, revenir au jeu</button>
+      <button class="bouton" id="staff-valider" data-i18n>Valider et recommencer</button>
     </div>
   </div>
 </section>
 
 <section id="obtenu" class="modale" hidden>
   <div class="carte">
-    <p>Objet de quête obtenu</p>
+    <p data-i18n>Objet de quête obtenu</p>
     <div id="obtenu-icone"></div>
     <h2 id="obtenu-nom"></h2>
-    <p id="obtenu-texte">Il rejoint ton inventaire, en haut à droite.</p>
-    <button class="bouton" id="obtenu-ok">Continuer</button>
+    <p id="obtenu-texte" data-i18n>Il rejoint ton inventaire, en haut à droite.</p>
+    <button class="bouton" id="obtenu-ok" data-i18n>Continuer</button>
   </div>
 </section>
 
 <div id="chargement" class="visible">
   <img src="../portraits/cleo_miko.png" alt="Cléo, la gardienne du Sas">
   <h1>MÉDIAVENTURE</h1>
-  <p>Chargement</p>
+  <p data-i18n>Chargement</p>
 </div>
 <section id="erreur-lancement" class="modale" hidden>
   <div class="carte">
