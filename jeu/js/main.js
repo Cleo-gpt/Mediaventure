@@ -518,7 +518,7 @@ function afficherFin() {
 
 // ------------------------------------------------------------------ Nouvelle partie (staff)
 // Code fixe connu du staff de la salle informatique : efface la sauvegarde et relance le jeu au Sas.
-const CODE_STAFF = '7319';
+const CODE_STAFF = '582047';
 let modeAvantStaff = null;
 function ouvrirStaff() {
   modeAvantStaff = mode;
