@@ -3,6 +3,7 @@
 import { PALETTE } from './niveaux.js';
 import { codeGaiaValide } from './code-gaia.js';
 import { t } from './i18n.js';
+import { couperSon, sonCoupe } from './musique.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -29,7 +30,9 @@ export function epreuveVideo(videos) {
     for (const v of videos) {
       const b = document.createElement('button');
       b.className = 'mj-video';
-      b.innerHTML = `<span class="mj-video-icone">${v.icone}</span><span>${v.titre}</span><small>${v.duree} s</small>`;
+      const duree = v.duree >= 60 ? `${Math.floor(v.duree / 60)} min ${String(v.duree % 60).padStart(2, '0')}` : `${v.duree} s`;
+      const credit = v.credit ? `<small class="mj-credit">${t('Crédit : {nom}', { nom: v.credit })}</small>` : '';
+      b.innerHTML = `<span class="mj-video-icone">${v.icone}</span><span>${v.titre}</span><small>${duree}</small>${credit}`;
       b.onclick = () => lire(v);
       liste.append(b);
     }
@@ -43,24 +46,39 @@ export function epreuveVideo(videos) {
       barre.className = 'mj-progression';
       const remplissage = document.createElement('div');
       barre.append(remplissage);
-      let duree = v.duree, ecoule = 0, video = null;
+      let duree = v.duree, ecoule = 0, video = null, youtube = null;
+      // la musique du jeu se tait pendant la vidéo, puis reprend comme avant
+      const sonAvant = sonCoupe();
+      const remettreSon = () => couperSon(sonAvant);
+      couperSon(true);
+      zone.append(ecran, barre);
+      const passerSurYoutube = () => {
+        youtube = lecteurYoutube(v, ecran);
+        zone.append(youtube.aide);
+      };
       if (v.src) {
-        video = Object.assign(document.createElement('video'), { src: v.src, autoplay: true, playsInline: true });
+        // Fichier vidéo du projet (dossier videos/) : se lit dans le jeu, même ouvert par double-clic et sans internet.
+        // S'il manque, on passe sur YouTube.
+        video = Object.assign(document.createElement('video'), { src: v.src, autoplay: true, playsInline: true, controls: true });
         video.onloadedmetadata = () => { duree = video.duration; };
+        video.onerror = () => { video.remove(); video = null; zone.querySelector('.mj-credit')?.remove(); if (v.youtube) passerSurYoutube(); };
         ecran.append(video);
+        if (v.credit) zone.append(Object.assign(document.createElement('p'), { className: 'mj-credit', textContent: t('Crédit : {nom}', { nom: v.credit }) }));
+      } else if (v.youtube) {
+        passerSurYoutube();
       } else {
         // Pas encore de fichier vidéo : lecteur animé en attendant les vraies vidéos
         ecran.innerHTML = `<div class="mj-lecture"><span>${v.icone}</span><strong>${v.titre}</strong><em>${t('Lecture…')}</em></div>`;
       }
-      zone.append(ecran, barre);
       const debut = performance.now();
       const tic = () => {
-        if ($('minijeu').hidden) return;
-        ecoule = video ? video.currentTime : (performance.now() - debut) / 1000;
+        if ($('minijeu').hidden) { youtube?.arreter(); remettreSon(); return; }
+        ecoule = youtube ? youtube.ecoule() : video ? video.currentTime : (performance.now() - debut) / 1000;
+        if (youtube?.duree()) duree = youtube.duree();
         remplissage.style.width = `${Math.min(100, (ecoule / duree) * 100)}%`;
-        if (ecoule >= duree - 0.05 || video?.ended) {
+        if (ecoule >= duree - 0.05 || video?.ended || youtube?.fini()) {
           const ok = bouton(t('J’ai tout vu !'));
-          ok.onclick = () => { fermer(); fin(true); };
+          ok.onclick = () => { youtube?.arreter(); remettreSon(); fermer(); fin(true); };
           zone.append(ok);
           return;
         }
@@ -69,6 +87,86 @@ export function epreuveVideo(videos) {
       requestAnimationFrame(tic);
     }
   });
+}
+
+// Lecteur YouTube intégré. Il suit la lecture grâce aux messages du lecteur (enablejsapi) pour savoir
+// quand la vidéo est finie. Si la vidéo ne s'affiche pas (pas d'internet, page ouverte par double-clic…),
+// le joueur peut l'ouvrir sur YouTube : on compte alors la durée de la vidéo à partir de ce moment.
+function lecteurYoutube(v, ecran) {
+  if (location.protocol === 'file:') return lecteurYoutubeFenetre(v, ecran);
+  const origine = location.protocol.startsWith('http') ? `&origin=${encodeURIComponent(location.origin)}` : '';
+  const cadre = Object.assign(document.createElement('iframe'), {
+    src: `https://www.youtube.com/embed/${v.youtube}?enablejsapi=1&autoplay=1&rel=0&playsinline=1${origine}`,
+    allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+    title: v.titre,
+  });
+  cadre.referrerPolicy = 'strict-origin-when-cross-origin';
+  ecran.append(cadre);
+  let temps = 0, total = 0, termine = false, ouvertA = null;
+  const ecouter = (e) => {
+    if (e.source !== cadre.contentWindow) return;
+    let d;
+    try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch { return; }
+    const info = d?.info;
+    if (d?.event === 'onStateChange' && info === 0) termine = true;
+    if (d?.event === 'infoDelivery' && info) {
+      if (typeof info.currentTime === 'number') temps = info.currentTime;
+      if (info.duration) total = info.duration;
+      if (info.playerState === 0) termine = true;
+    }
+  };
+  addEventListener('message', ecouter);
+  // demande au lecteur d'envoyer son état (position, fin de la vidéo)
+  cadre.addEventListener('load', () => cadre.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: v.youtube }), '*'));
+  const aide = document.createElement('p');
+  aide.className = 'mj-credit';
+  aide.innerHTML = `${t('Crédit : {nom}', { nom: v.credit ?? 'YouTube' })} · ${t('La vidéo ne s’affiche pas ?')} `;
+  const lien = Object.assign(document.createElement('a'), { href: `https://www.youtube.com/watch?v=${v.youtube}`, target: '_blank', rel: 'noopener', textContent: t('Ouvre-la sur YouTube') });
+  lien.onclick = () => { ouvertA ??= performance.now(); };
+  aide.append(lien);
+  return {
+    aide,
+    ecoule: () => (ouvertA !== null && !temps ? (performance.now() - ouvertA) / 1000 : temps),
+    duree: () => total,
+    fini: () => termine,
+    arreter: () => { removeEventListener('message', ecouter); cadre.remove(); },
+  };
+}
+
+// Jeu ouvert par double-clic (file://) : YouTube refuse d'être intégré (erreur 153, il lui faut une adresse web).
+// La vidéo s'ouvre donc dans une fenêtre YouTube placée à côté du jeu, sur la droite de l'écran ;
+// le jeu montre la vignette et compte la durée de la vidéo avant de proposer « J'ai tout vu ! ».
+function ouvrirFenetreVideo(url) {
+  const largeur = Math.round(Math.min(screen.availWidth * 0.45, 900));
+  const hauteur = Math.round(Math.min(screen.availHeight * 0.8, largeur * 0.75 + 120));
+  const gauche = (screen.availLeft ?? 0) + screen.availWidth - largeur;
+  const haut = (screen.availTop ?? 0) + Math.round((screen.availHeight - hauteur) / 2);
+  const f = open(url, 'mediaventure-video', `popup,width=${largeur},height=${hauteur},left=${gauche},top=${haut}`);
+  f?.focus();
+  return f;
+}
+function lecteurYoutubeFenetre(v, ecran) {
+  const url = `https://www.youtube.com/watch?v=${v.youtube}`;
+  ecran.classList.add('mj-ecran-yt');
+  ecran.style.backgroundImage = `url(https://i.ytimg.com/vi/${v.youtube}/hqdefault.jpg)`;
+  // ouverte tout de suite : le clic sur la vidéo de la bibliothèque autorise la nouvelle fenêtre
+  let fenetre = ouvrirFenetreVideo(url);
+  const ouvertA = performance.now();
+  // YouTube coupe le lien avec la fenêtre qui l'ouvre : le jeu ne peut ni la fermer ni la ramener devant,
+  // ce bouton rouvre donc simplement la vidéo si le joueur l'a fermée trop tôt.
+  const revoir = bouton(t('▶ Rouvrir la vidéo'));
+  revoir.onclick = () => { fenetre = ouvrirFenetreVideo(url); };
+  ecran.append(revoir);
+  const aide = document.createElement('p');
+  aide.className = 'mj-credit';
+  aide.textContent = `${t('Crédit : {nom}', { nom: v.credit ?? 'YouTube' })} · ${t('La vidéo s’ouvre dans une fenêtre à côté du jeu : regarde-la jusqu’au bout, ferme-la, puis reviens ici.')}`;
+  return {
+    aide,
+    ecoule: () => (performance.now() - ouvertA) / 1000,
+    duree: () => 0,
+    fini: () => false,
+    arreter: () => { try { fenetre?.close(); } catch { /* fenêtre déjà fermée */ } },
+  };
 }
 
 // ---------------------------------------------------------------- Design : jeu des 7 différences

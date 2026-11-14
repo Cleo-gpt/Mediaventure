@@ -37,10 +37,11 @@ export const NIVEAUX = {
     titre: 'Multimédia', lieu: 'Sayo — champs de tournesols', biome: 'tournesol', jouable: true,
     ciel: '#82ccfa', brume: '#7aa852', sol: '#77ab52', chemin: PALETTE.creme, accent: '#f2b632',
     fond: '../fonds/multimedia_tournesols.jpg', miniJeu: 'video', suivant: 'design',
-    // Bibliothèque de vidéos : ajoute `src: '../videos/fichier.mp4'` pour lire une vraie vidéo
+    // Bibliothèque de vidéos : `youtube` = identifiant de la vidéo YouTube (il faut internet),
+    // ou `src: '../videos/fichier.mp4'` pour une vidéo en local ; sans les deux, un lecteur animé la remplace.
     videos: [
-      { titre: 'Making-of d’un clip', duree: 12, icone: '🎬' },
-      { titre: 'Le montage en 3 minutes', duree: 12, icone: '✂️' },
+      { titre: 'Projet vidéo', credit: 'Rémy Martinez', src: '../videos/projet-video.mp4', youtube: 'Ne7nYNzBqcg', duree: 114, icone: '🎬' },
+      { titre: 'La vidéo en bref', credit: 'Cléo Ana Forclaz', src: '../videos/la-video-en-bref.mp4', youtube: 'at5eeLY0Xyw', duree: 136, icone: '🎞️' },
       { titre: 'Prise de son en extérieur', duree: 12, icone: '🎙️' },
       { titre: 'Lumière : la règle des 3 points', duree: 12, icone: '💡' },
     ],

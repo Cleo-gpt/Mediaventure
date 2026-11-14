@@ -74,7 +74,7 @@
   #cartes { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 12px; overflow-y: auto; padding: 4px 4px 10px; align-content: start; }
   .carte-objet { position: relative; aspect-ratio: 1 / 1.05; border-radius: 14px; border: 3px solid transparent; padding: 8px 6px 28px; color: var(--texte-sas); display: grid; place-items: center; background: #fff; box-shadow: 0 4px 0 var(--bleu-pastel-fonce); transition: transform .15s; }
   .carte-objet:hover { transform: translateY(-3px); }
-  .carte-objet svg { width: 70%; height: 70%; color: var(--texte-sas); }
+  .carte-objet svg { width: 70%; height: 70%; color: var(--texte-sas); filter: drop-shadow(0 3px 3px rgba(59,51,96,.3)); }
   .carte-objet .etoiles { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; color: var(--violet-pastel-fonce); letter-spacing: .1em; font-size: 1rem; }
   .carte-objet.etoiles-1 .etoiles { color: var(--bleu-pastel-fonce); } .carte-objet.etoiles-2 .etoiles { color: var(--rose-pastel-fonce); }
   .carte-objet .nom { position: absolute; top: 6px; left: 8px; right: 8px; font-size: .62rem; font-weight: 700; text-align: left; opacity: 0; transition: opacity .15s; color: var(--texte-sas); }
@@ -211,7 +211,11 @@
   .mj-video:hover { background: var(--rose-pale); }
   .mj-video-icone { font-size: 2.2rem; }
   .mj-ecran { aspect-ratio: 16 / 9; background: var(--marine); border-radius: 14px; overflow: hidden; display: grid; place-items: center; color: var(--creme); }
-  .mj-ecran video { width: 100%; height: 100%; }
+  .mj-ecran video, .mj-ecran iframe { width: 100%; height: 100%; border: 0; }
+  .mj-ecran-yt { background: var(--marine) center / cover no-repeat; }
+  .mj-ecran-yt .bouton { box-shadow: 0 4px 0 #c94a4b, 0 0 0 6px rgba(255,255,255,.35); }
+  .mj-credit { font-size: .78rem; font-weight: 400; color: #6b7a8c; margin: 6px 0 0; }
+  .mj-credit a { color: var(--corail); font-weight: 700; }
   .mj-lecture { display: grid; gap: 8px; justify-items: center; text-align: center; }
   .mj-lecture span { font-size: 4rem; animation: mj-pulse 1.2s ease-in-out infinite; }
   @keyframes mj-pulse { 50% { transform: scale(1.12); } }
@@ -323,25 +327,20 @@
 
 <section id="creation">
   <div id="sakura-sas" aria-hidden="true">
-    <img class="fleur " src="decor-sas/fleur-1.svg" alt="" style="right:3%;top:24%;width:70px">
-    <img class="fleur f2" src="decor-sas/fleur-2.svg" alt="" style="right:9%;top:31%;width:46px">
+    <img class="fleur" src="decor-sas/fleur-1.svg" alt="" style="right:3%;top:24%;width:70px">
+    <img class="fleur f2" src="decor-sas/fleur-2.svg" alt="" style="right:4%;top:40%;width:42px">
     <img class="fleur f3" src="decor-sas/fleur-3.svg" alt="" style="right:2%;bottom:16%;width:60px">
     <img class="fleur f2 f4" src="decor-sas/fleur-1.svg" alt="" style="left:47%;top:8%;width:40px">
-    <img class="fleur f3 f4" src="decor-sas/fleur-2.svg" alt="" style="right:24%;top:6%;width:54px">
-    <img class="fleur " src="decor-sas/fleur-3.svg" alt="" style="right:14%;top:52%;width:38px">
-    <img class="fleur f2 f4" src="decor-sas/fleur-1.svg" alt="" style="right:30%;bottom:6%;width:50px">
-    <img class="fleur f3 f4" src="decor-sas/fleur-2.svg" alt="" style="left:52%;bottom:22%;width:44px">
-    <img class="fleur f2" src="decor-sas/fleur-1.svg" alt="" style="right:5%;top:62%;width:34px">
-    <img class="fleur  f4" src="decor-sas/fleur-3.svg" alt="" style="left:58%;top:30%;width:30px">
-    <img class="fleur f3" src="decor-sas/fleur-2.svg" alt="" style="right:20%;bottom:30%;width:28px">
-    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:8%;width:22px;animation-delay:0s;animation-duration:10s">
-    <img class="petale" src="decor-sas/fleur-2.svg" alt="" style="left:22%;width:18px;animation-delay:-3s;animation-duration:13s">
-    <img class="petale" src="decor-sas/fleur-3.svg" alt="" style="left:35%;width:26px;animation-delay:-6s;animation-duration:11s">
-    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:48%;width:16px;animation-delay:-2s;animation-duration:14s">
-    <img class="petale" src="decor-sas/fleur-2.svg" alt="" style="left:63%;width:24px;animation-delay:-8s;animation-duration:12s">
-    <img class="petale" src="decor-sas/fleur-3.svg" alt="" style="left:77%;width:20px;animation-delay:-5s;animation-duration:15s">
-    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:90%;width:18px;animation-delay:-1s;animation-duration:9s">
-    <img class="petale" src="decor-sas/fleur-2.svg" alt="" style="left:70%;width:28px;animation-delay:-11s;animation-duration:16s">
+    <img class="fleur f3 f4" src="decor-sas/fleur-2.svg" alt="" style="right:24%;top:5%;width:50px">
+    <img class="fleur f2" src="decor-sas/fleur-1.svg" alt="" style="right:5%;top:60%;width:34px">
+    <img class="fleur f4" src="decor-sas/fleur-3.svg" alt="" style="left:49%;bottom:10%;width:36px">
+    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:49%;width:20px;animation-delay:0s;animation-duration:11s">
+    <img class="petale" src="decor-sas/fleur-2.svg" alt="" style="left:53%;width:16px;animation-delay:-6s;animation-duration:14s">
+    <img class="petale" src="decor-sas/fleur-3.svg" alt="" style="left:91%;width:22px;animation-delay:-3s;animation-duration:12s">
+    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:95%;width:18px;animation-delay:-8s;animation-duration:15s">
+    <img class="petale" src="decor-sas/fleur-2.svg" alt="" style="left:98%;width:24px;animation-delay:-11s;animation-duration:13s">
+    <img class="petale" src="decor-sas/fleur-3.svg" alt="" style="left:20%;width:18px;animation-delay:-4s;animation-duration:12s">
+    <img class="petale" src="decor-sas/fleur-1.svg" alt="" style="left:35%;width:22px;animation-delay:-9s;animation-duration:14s">
   </div>
   <div id="titre-sas">
     <h1>MÉDIAVENTURE</h1>
@@ -488,6 +487,8 @@
 </section>
 <script>
   addEventListener('error', (e) => {
+    // une vidéo ou une image manquante n'empêche pas le jeu de tourner (le jeu prévoit une solution de secours)
+    if (e.target && e.target !== window && !(e.target instanceof HTMLScriptElement)) return;
     document.getElementById('erreur-texte').textContent = 'Erreur : ' + (e.message || e.target?.src || 'inconnue') + ' — recharge la page avec Cmd+Maj+R.';
     document.getElementById('erreur-lancement').hidden = false;
     document.getElementById('chargement').classList.remove('visible');
