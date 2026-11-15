@@ -182,6 +182,65 @@ function regleCutter() {
   return g;
 }
 
+// ------------------------------------- Design : massicot (guillotine à papier)
+function massicot() {
+  const g = new THREE.Group(); g.name = 'Massicot_Design';
+  const corps = mat('Corps', C.marine, { roughness: 0.5 });
+  const table = mat('Table', '#c9ced6', { metalness: 0.35, roughness: 0.35 });
+  const acier = mat('Acier', '#dfe3e8', { metalness: 0.6, roughness: 0.2 });
+  const papier = mat('Papier', '#fbf8f1', { roughness: 0.9 });
+  const papierRose = mat('Papier_rose', C.rosePale, { roughness: 0.9 });
+  const accent = mat('Accent', C.corail, { roughness: 0.4 });
+  const trait = mat('Graduations', C.marine, { roughness: 0.5 });
+
+  const L = 0.36, P = 0.32; // largeur (x) et profondeur (z) de la table ; la coupe se fait vers l'avant (+z)
+  const zCoupe = P / 2 - 0.07;
+  // Socle et table de coupe
+  g.add(mesh('Socle', new RoundedBoxGeometry(L + 0.04, 0.05, P + 0.03, 4, 0.01), corps, [0, 0.025, 0]));
+  g.add(mesh('Table', new RoundedBoxGeometry(L, 0.012, P, 3, 0.004), table, [0, 0.056, 0]));
+  // Règle graduée sur le bord gauche de la table
+  for (let i = 0; i < 24; i++) {
+    const long = i % 5 === 0 ? 0.014 : 0.007;
+    g.add(mesh(`Grad_${i}`, new THREE.BoxGeometry(long, 0.0006, 0.0012), trait, [-L / 2 + 0.01 + long / 2, 0.0625, -P / 2 + 0.02 + i * 0.0095]));
+  }
+  // Pile de feuilles posée contre la butée arrière, qui dépasse sous la lame
+  const yPile = 0.062;
+  for (let i = 0; i < 12; i++) {
+    g.add(mesh(`Feuille_${i + 1}`, new THREE.BoxGeometry(0.21, 0.0028, 0.2), i % 4 === 3 ? papierRose : papier,
+      [0.01 + Math.sin(i * 1.7) * 0.0012, yPile + 0.0014 + i * 0.003, zCoupe - 0.07 + Math.cos(i * 1.3) * 0.0012]));
+  }
+  // Butée arrière réglable
+  g.add(mesh('Butee', new RoundedBoxGeometry(L * 0.8, 0.05, 0.014, 2, 0.004), corps, [0, yPile + 0.025, zCoupe - 0.18]));
+  g.add(mesh('Vis_butee', new THREE.CylinderGeometry(0.008, 0.008, 0.012, 20), accent, [0, yPile + 0.03, zCoupe - 0.192], [Math.PI / 2, 0, 0]));
+  // Deux montants et la traverse
+  const hCadre = 0.2;
+  for (const s of [-1, 1]) {
+    g.add(mesh(s < 0 ? 'Montant_gauche' : 'Montant_droit', new RoundedBoxGeometry(0.03, hCadre, 0.05, 3, 0.006), corps,
+      [s * (L / 2 - 0.005), yPile + hCadre / 2, zCoupe]));
+  }
+  g.add(mesh('Traverse', new RoundedBoxGeometry(L + 0.02, 0.035, 0.055, 3, 0.008), corps, [0, yPile + hCadre, zCoupe]));
+  // Presse-papier (barre qui serre la pile) et lame biseautée juste devant
+  const yLame = yPile + 0.055;
+  g.add(mesh('Presse', new RoundedBoxGeometry(L - 0.05, 0.02, 0.022, 2, 0.004), table, [0, yLame, zCoupe - 0.022]));
+  g.add(mesh('Porte_lame', new RoundedBoxGeometry(L - 0.05, 0.05, 0.016, 2, 0.003), corps, [0, yLame + 0.012, zCoupe + 0.006]));
+  const lame = mesh('Lame', new THREE.BoxGeometry(L - 0.06, 0.03, 0.003), acier, [0, yLame - 0.022, zCoupe + 0.01]);
+  lame.rotation.z = -0.05; // coupe en biais, comme une vraie guillotine
+  g.add(lame);
+  g.add(mesh('Liseré', new THREE.BoxGeometry(L - 0.06, 0.004, 0.0035), accent, [0, yLame + 0.03, zCoupe + 0.015]));
+  // Grand levier à droite, pivot sur le montant, poignée corail
+  const levier = new THREE.Group(); levier.name = 'Levier';
+  levier.position.set(L / 2 + 0.022, yPile + hCadre - 0.02, zCoupe);
+  levier.rotation.x = -0.55;
+  levier.add(mesh('Pivot', new THREE.CylinderGeometry(0.016, 0.016, 0.02, 28), acier, [0, 0, 0], [0, 0, Math.PI / 2]));
+  levier.add(mesh('Bras', new THREE.CylinderGeometry(0.007, 0.009, 0.3, 20), corps, [0.004, 0, 0.15], [Math.PI / 2, 0, 0]));
+  levier.add(mesh('Poignee', new THREE.CapsuleGeometry(0.014, 0.05, 6, 20), accent, [0.004, 0, 0.32], [Math.PI / 2, 0, 0]));
+  g.add(levier);
+  // Protection transparente devant la lame
+  const vitre = new THREE.MeshPhysicalMaterial({ name: 'Protection', color: '#bcd3f0', transparent: true, opacity: 0.35, roughness: 0.1 });
+  g.add(mesh('Protection', new THREE.BoxGeometry(L - 0.04, 0.07, 0.003), vitre, [0, yPile + 0.05, zCoupe + 0.05]));
+  return g;
+}
+
 // --------------------------------------------- Informatique : boîtier Raspberry Pi
 function raspberry() {
   const g = new THREE.Group(); g.name = 'Raspberry_Pi_Informatique';
@@ -278,11 +337,15 @@ const objets = {
   'sas_cle.glb': cle,
   'multimedia_camera.glb': camera,
   'design_regle-cutter.glb': regleCutter,
+  'design_massicot.glb': massicot,
   'informatique_raspberry-pi.glb': raspberry,
   'marketing_parchemin.glb': parchemin,
 };
 
+// `npm run build -- massicot` ne régénère que les fichiers dont le nom contient « massicot »
+const filtre = process.argv[2];
 for (const [fichier, fabrique] of Object.entries(objets)) {
+  if (filtre && !fichier.includes(filtre)) continue;
   const scene = new THREE.Scene();
   scene.add(poser(fabrique()));
   const glb = await exporter.parseAsync(scene, { binary: true });

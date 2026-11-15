@@ -169,7 +169,62 @@ function lecteurYoutubeFenetre(v, ecran) {
   };
 }
 
-// ---------------------------------------------------------------- Design : jeu des 7 différences
+// ---------------------------------------------------------------- Design : visiter un e-portfolio
+// Bibliothèque de portfolios ; celui choisi s'affiche dans le jeu. Après `duree` secondes de visite, on peut valider.
+export function epreuvePortfolios(portfolios, duree = 30) {
+  return new Promise((fin) => {
+    const zone = ouvrir(t('Les e-portfolios'), t('Choisis un e-portfolio et visite-le : clique, fais défiler, découvre les projets.'));
+    const liste = document.createElement('div');
+    liste.className = 'mj-videos';
+    for (const p of portfolios) {
+      const b = document.createElement('button');
+      b.className = 'mj-video';
+      b.disabled = !p.url;
+      b.innerHTML = `<span class="mj-video-icone">${p.icone}</span><span>${p.url ? p.nom : t('E-portfolio à venir')}</span><small>${p.url ? new URL(p.url).hostname : t('Bientôt')}</small>`;
+      b.onclick = () => visiter(p);
+      liste.append(b);
+    }
+    const plusTard = bouton(t('Plus tard'), 'bouton secondaire');
+    plusTard.onclick = () => { fermer(); fin(false); };
+    const actions = document.createElement('div');
+    actions.className = 'mj-actions';
+    actions.append(plusTard);
+    zone.append(liste, actions);
+
+    function visiter(p) {
+      zone.innerHTML = '';
+      $('minijeu-sous-titre').textContent = t('Visite de l’e-portfolio de {nom}', { nom: p.nom });
+      const ecran = document.createElement('div');
+      ecran.className = 'mj-site';
+      ecran.append(Object.assign(document.createElement('iframe'), { src: p.url, title: p.nom }));
+      const barre = document.createElement('div');
+      barre.className = 'mj-progression';
+      const remplissage = document.createElement('div');
+      barre.append(remplissage);
+      const aide = document.createElement('p');
+      aide.className = 'mj-credit';
+      aide.textContent = `${t('Le site ne s’affiche pas ?')} `;
+      aide.append(Object.assign(document.createElement('a'), { href: p.url, target: '_blank', rel: 'noopener', textContent: t('Ouvre-le dans un nouvel onglet') }));
+      zone.append(ecran, barre, aide);
+      const debut = performance.now();
+      const tic = () => {
+        if ($('minijeu').hidden) return;
+        const ecoule = (performance.now() - debut) / 1000;
+        remplissage.style.width = `${Math.min(100, (ecoule / duree) * 100)}%`;
+        if (ecoule >= duree) {
+          const ok = bouton(t('J’ai fini la visite !'));
+          ok.onclick = () => { fermer(); fin(true); };
+          zone.append(ok);
+          return;
+        }
+        requestAnimationFrame(tic);
+      };
+      requestAnimationFrame(tic);
+    }
+  });
+}
+
+// ---------------------------------------------------------------- Design (ancienne épreuve, plus utilisée) : jeu des 7 différences
 // Deux paysages japonais dessinés à l'identique, sauf 7 détails sur l'image de droite.
 const DIFFERENCES = [
   { x: 80, y: 60, r: 26 },   // soleil : corail ↔ jaune

@@ -9,7 +9,7 @@ export const PALETTE = {
 export const OBJETS = {
   sas: { nom: 'Clé du Sas', fichier: 'sas_cle.glb', icone: '🔑' },
   multimedia: { nom: 'Caméra à micro et haut-parleur', fichier: 'multimedia_camera.glb', icone: '📷' },
-  design: { nom: 'Règle tranchante comme un cutter', fichier: 'design_regle-cutter.glb', icone: '📐' },
+  design: { nom: 'Massicot', fichier: 'design_massicot.glb', icone: '✂️' },
   informatique: { nom: 'Raspberry Pi', fichier: 'informatique_raspberry-pi.glb', icone: '💻' },
   marketing: { nom: 'Parchemin aux puissantes statistiques', fichier: 'marketing_parchemin.glb', icone: '📜' },
   admin: { nom: 'Bouteille Gaïa', fichier: 'admin_bouteille-gaia.glb', icone: '🧃' },
@@ -68,7 +68,15 @@ export const NIVEAUX = {
     pvJoueur: 80, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Design', lieu: 'Parc national de Daisetsuzan', biome: 'automne', jouable: true,
     ciel: '#f4b98a', brume: '#f2c29a', sol: '#c9884e', chemin: PALETTE.creme, accent: '#e8672c',
-    miniJeu: '7-differences', suivant: 'informatique',
+    miniJeu: 'portfolios', suivant: 'informatique',
+    // E-portfolios à visiter (4 au total) : ajoute `url` quand un portfolio est prêt ; sans url, la case affiche « Bientôt »
+    dureeVisite: 30, // secondes de visite avant de pouvoir valider l'épreuve
+    portfolios: [
+      { nom: 'Rémy Martinez', url: 'https://remymartinez.ch', icone: '🎨' },
+      { nom: 'E-portfolio 2', url: null, icone: '🖌️' },
+      { nom: 'E-portfolio 3', url: null, icone: '✏️' },
+      { nom: 'E-portfolio 4', url: null, icone: '📐' },
+    ],
     boss: {
       nom: 'Ariane Nicollier', titre: 'Boss Design', pv: 85, pa: 6, pm: 3,
       apparence: { espece: 'humain', coiffure: 'tresses', cheveux: '#7a4a2a', kimono: '#e8672c', geta: PALETTE.creme },

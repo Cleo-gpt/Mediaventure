@@ -5,7 +5,7 @@ import { QUESTIONS, SEUIL } from './quiz.js';
 import { construireNiveau, RAYON_ILE, ARENE, POS } from './monde.js';
 import { creerPersonnage, animerPersonnage, APPARENCE_DEFAUT } from './personnage.js';
 import { Combat } from './combat.js';
-import { epreuveVideo, epreuveDifferences, epreuveEtapes, epreuveCodeGaia } from './minijeux.js';
+import { epreuveVideo, epreuvePortfolios, epreuveEtapes, epreuveCodeGaia } from './minijeux.js';
 import { creerVestiaire } from './vestiaire.js';
 import { ECRAN_TACTILE, joystick, installerCommandes, majBoutonAction } from './tactile.js';
 import { t, choisirLangue } from './i18n.js';
@@ -70,7 +70,7 @@ let mode = 'creation'; // creation | exploration | dialogue | quiz | epreuve | c
 
 // Gardien·ne du milieu de chaque île, selon son épreuve
 const NOMS_PNJ = {
-  quiz: 'Gardien·ne du Réseau', video: 'Projectionniste', '7-differences': 'Esprit des couleurs',
+  quiz: 'Gardien·ne du Réseau', video: 'Projectionniste', portfolios: 'Esprit des couleurs',
   'etapes-projet': 'Stratège de Nara', 'stand-gaia': 'Gardien·ne du stand', 'combat-final': 'Esprit du château',
 };
 const nomPnj = () => t(NOMS_PNJ[niveau.miniJeu] ?? 'Esprit du biome');
@@ -359,9 +359,9 @@ function lancerMiniJeu() {
   } else if (niveau.miniJeu === 'video') {
     epreuve(t('Bienvenue au cinéma des tournesols ! Choisis une vidéo dans la bibliothèque et regarde-la jusqu’au bout.'),
       () => epreuveVideo(niveau.videos.map((v) => ({ ...v, titre: t(v.titre) }))), t('Belle séance ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens quand tu veux finir ta vidéo.'));
-  } else if (niveau.miniJeu === '7-differences') {
-    epreuve(t('Un bon designer a l’œil : trouve les 7 différences entre ces deux paysages.'),
-      epreuveDifferences, t('Quel regard ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens me voir pour réessayer.'));
+  } else if (niveau.miniJeu === 'portfolios') {
+    epreuve(t('Un bon designer s’inspire du travail des autres : choisis un e-portfolio et prends le temps de le visiter.'),
+      () => epreuvePortfolios(niveau.portfolios, niveau.dureeVisite), t('Quel regard ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens me voir quand tu veux visiter un portfolio.'));
   } else if (niveau.miniJeu === 'etapes-projet') {
     epreuve(t('Un projet marketing se construit dans l’ordre. Remets ses étapes dans le bon ordre.'),
       () => epreuveEtapes(niveau.etapes.map((e) => t(e))), t('Stratégie validée ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens quand ton plan sera prêt.'));
