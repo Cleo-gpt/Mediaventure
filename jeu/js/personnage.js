@@ -97,6 +97,15 @@ const MOTIF_SEIGAIHA = `
   diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.25 + 0.06, vagues * 0.45);
   diffuseColor.rgb *= 0.95 + 0.07 * bruit(vPosObj * 500.0);`;
 
+// Chemise à carreaux (M. Haenssler) : bandes de couleur qui se croisent sur fond blanc, plus un fin filet sombre
+const MOTIF_CARREAUX = `
+  vec2 q = vec2(vPosObj.x + vPosObj.z * 0.6, vPosObj.y) * 15.0;
+  float bx = 1.0 - smoothstep(0.4, 0.44, fract(q.x)), by = 1.0 - smoothstep(0.4, 0.44, fract(q.y));
+  float filet = max(1.0 - smoothstep(0.02, 0.05, abs(fract(q.x) - 0.66)), 1.0 - smoothstep(0.02, 0.05, abs(fract(q.y) - 0.66)));
+  vec3 rouge = diffuseColor.rgb;
+  diffuseColor.rgb = mix(vec3(0.97, 0.95, 0.93), rouge, clamp(0.6 * (bx + by), 0.0, 1.0));
+  diffuseColor.rgb = mix(diffuseColor.rgb, rouge * 0.55, filet * 0.6);`;
+
 // ---------------------------------------------------------------- Squelette chibi (≈ 2 têtes)
 const J = (() => {
   const s2 = (x, y, z) => [[-x, y, z], [x, y, z]];
@@ -928,7 +937,9 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     couches.push([v.chemise, materiau('#b8323a', { liseré: 0.12, cle: 'uni' })], [v.veste, daim], [v.revers, daim],
       [v.pantalon, materiau('#2e3346', { liseré: 0.12, cle: 'uni' })], [v.chaussures, materiau('#4a3226', { liseré: 0.2, cle: 'uni' })]);
   } else if (a.tenue === 'polo') {
-    const v = geometriesVille(), q = geometriesPolo(), tissu = materiau(a.polo ?? '#f2a25a', { liseré: 0.12, cle: 'uni' });
+    const v = geometriesVille(), q = geometriesPolo();
+    // `carreaux` : chemise à carreaux dont `polo` est la couleur des bandes (M. Haenssler)
+    const tissu = a.carreaux ? materiau(a.polo ?? '#c8383d', { motif: MOTIF_CARREAUX, liseré: 0.12, cle: 'carreaux' }) : materiau(a.polo ?? '#f2a25a', { liseré: 0.12, cle: 'uni' });
     couches.push([q.polo, tissu], [q.col, tissu], [q.patte, tissu],
       [v.pantalon, materiau(a.pantalon ?? '#2e3346', { liseré: 0.12, cle: 'uni' })], [v.chaussures, materiau('#3a2c24', { liseré: 0.2, cle: 'uni' })]);
   } else if (a.tenue === 'samourai') {
@@ -1013,14 +1024,14 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     });
   }
 
-  // Polo : deux boutons sur la patte et le petit micro-cravate accroché au col (comme sur la photo de M. Droz)
+  // Polo : deux boutons sur la patte et, sauf `micro: false`, le petit micro-cravate accroché au col (photos de M. Droz et M. Forestier)
   if (a.tenue === 'polo') {
     const bouton = uni('#f6efe4');
     for (const y of [0.47, 0.425]) fixer('poitrine', sans(piece(new THREE.SphereGeometry(0.009, 10, 8), bouton)), 0, y, 0.19);
     const micro = new THREE.Group();
     const bonnette = piece(new THREE.SphereGeometry(0.024, 14, 10), materiau('#5c6270', { motif: MOTIF_FOURRURE, liseré: 0.2, cle: 'fourrure-uni' }));
     micro.add(bonnette, piece(new RoundedBoxGeometry(0.02, 0.014, 0.012, 2, 0.003), uni('#2a2d34'), 0.026, -0.004, 0));
-    fixer('poitrine', micro, -0.05, 0.47, 0.17);
+    if (a.micro !== false) fixer('poitrine', micro, -0.05, 0.47, 0.17);
   }
 
   // Lunettes de soleil accrochées à l'ouverture de la chemise

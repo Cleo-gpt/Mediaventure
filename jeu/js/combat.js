@@ -7,7 +7,9 @@ import { animerPersonnage } from './personnage.js';
 
 const PV_JOUEUR = 60, PA_JOUEUR = 6, PM_JOUEUR = 3;
 const N = ARENE.cases, S = ARENE.taille;
-const OBSTACLES = [[2, 3], [6, 3], [3, 5], [5, 5]];
+// Murs de bois d'une case, nombreux et en quinconce : ils arrêtent les sorts à distance.
+// Toutes les cases libres restent reliées (on peut toujours contourner un mur pour rejoindre l'adversaire).
+const OBSTACLES = [[2, 2], [6, 2], [4, 3], [0, 4], [2, 4], [6, 4], [8, 4], [4, 5], [3, 6], [5, 6]];
 const cle = (c) => `${c.i},${c.j}`;
 const dist = (a, b) => Math.abs(a.i - b.i) + Math.abs(a.j - b.j);
 const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -45,7 +47,7 @@ export class Combat {
     if (tutoriel) {
       this.log(t('Cases bleues : clique pour te déplacer (PM). Choisis un sort puis clique sur la cible (PA).'));
       this.log(t('Touches 1, 2, 3 pour les sorts, Entrée pour finir le tour.'));
-      this.log(t('Abrite-toi derrière les pierres : elles arrêtent les shurikens et les sorts à distance.'));
+      this.log(t('Abrite-toi derrière les murs de bois : ils arrêtent les shurikens et les sorts à distance.'));
     }
     this.debutTourJoueur();
   }
@@ -75,16 +77,29 @@ export class Combat {
         this.cases.push(m);
       }
     }
-    const pierre = new THREE.MeshStandardMaterial({ color: '#8b93a3', roughness: 1, flatShading: true });
+    // Murs de bois : planches horizontales entre deux poteaux, un tronçon par case (les tronçons voisins se touchent)
+    const tons = ['#9a6a44', '#8a5c3a', '#a8774e'].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 }));
+    const poteau = new THREE.MeshStandardMaterial({ color: '#5c3c26', roughness: 0.9 });
+    const H = S * 0.8, PLANCHES = 4;
     for (const [i, j] of OBSTACLES) {
-      const r = new THREE.Mesh(new THREE.DodecahedronGeometry(S * 0.42), pierre);
-      r.position.copy(this.monde({ i, j }, S * 0.3));
-      r.castShadow = true;
-      this.groupe.add(r);
+      const mur = new THREE.Group();
+      mur.position.copy(this.monde({ i, j }, 0));
+      for (let k = 0; k < PLANCHES; k++) {
+        const planche = new THREE.Mesh(new THREE.BoxGeometry(S * 1.0, H / PLANCHES - S * 0.02, S * 0.18), tons[(i + j + k) % 3]);
+        planche.position.y = (k + 0.5) * (H / PLANCHES);
+        mur.add(planche);
+      }
+      for (const s of [-1, 1]) {
+        const p = new THREE.Mesh(new THREE.BoxGeometry(S * 0.12, H + S * 0.08, S * 0.24), poteau);
+        p.position.set(s * S * 0.44, (H + S * 0.08) / 2, 0);
+        mur.add(p);
+      }
+      mur.traverse((m) => { if (m.isMesh) m.castShadow = true; });
+      this.groupe.add(mur);
     }
   }
 
-  // Ligne de vue : aucune pierre entre les deux cases (les cases de départ et d'arrivée ne comptent pas)
+  // Ligne de vue : aucun mur entre les deux cases (les cases de départ et d'arrivée ne comptent pas)
   vue(a, b) {
     const n = Math.max(Math.abs(b.i - a.i), Math.abs(b.j - a.j)) * 4;
     for (let k = 1; k < n; k++) {
@@ -285,7 +300,7 @@ export class Combat {
     if (this.sort) {
       const d = dist(c, this.j.c);
       if (d < this.sort.portee[0] || d > this.sort.portee[1]) return;
-      if (!this.atteint(this.sort, this.j.c, c)) { this.log(t('🪨 Une pierre bloque la ligne de vue.')); return; }
+      if (!this.atteint(this.sort, this.j.c, c)) { this.log(t('🪵 Un mur de bois bloque la ligne de vue.')); return; }
       const cible = cle(c) === cle(this.b.c) ? this.b : null;
       const s = this.sort;
       this.sort = null;

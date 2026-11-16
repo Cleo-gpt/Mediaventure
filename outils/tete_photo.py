@@ -1,6 +1,6 @@
 # Prépare la texture de la tête « photo » d'un boss : recadrage autour de la tête,
 # hors silhouette rempli en couleur cheveux (haut) ou peau (bas) pour des bords propres en 3D.
-# usage : python3 outils/tete_photo.py graber   (ou droz ; sans argument : tous)
+# usage : python3 outils/tete_photo.py graber   (ou droz, forestier, haenssler ; sans argument : tous)
 # Les valeurs affichées (cadre, contour, cheveux, peau) se recopient dans `tetePhoto` du boss (jeu/js/niveaux.js).
 from PIL import Image, ImageDraw, ImageFilter
 import numpy as np, json, sys
@@ -31,6 +31,31 @@ PERSONNES = {
         'zone_cheveux': (100, 125, 290, 370),
         'zone_peau': (200, 228, 275, 345),
         'limite': 250,
+    },
+    'forestier': {
+        'src': 'références/personnages/forestier_photo.png',
+        'detourage': None,
+        'dst': 'portraits/forestier_tete.png',
+        'cadre': (190, 55, 425, 410),
+        # cheveux bruns + visage + grande barbe, sans le cou
+        'contour': [(240, 95), (290, 70), (345, 72), (385, 100), (402, 140), (408, 190), (410, 240), (400, 290), (392, 330),
+                    (375, 365), (345, 390), (310, 395), (275, 385), (248, 360), (230, 320), (222, 280), (210, 240), (202, 190),
+                    (205, 140), (220, 110)],
+        'zone_cheveux': (78, 98, 285, 345),
+        'zone_peau': (150, 172, 270, 340),
+        'limite': 200,
+    },
+    'haenssler': {
+        'src': 'références/personnages/haenssler_photo.png',
+        'detourage': None,
+        'dst': 'portraits/haenssler_tete.png',
+        'cadre': (125, 25, 365, 320),
+        # crâne dégarni, lunettes, oreilles, sans le cou
+        'contour': [(195, 45), (245, 33), (295, 40), (330, 70), (345, 115), (355, 165), (352, 215), (338, 255), (315, 285),
+                    (280, 305), (245, 310), (210, 300), (180, 275), (160, 240), (142, 200), (135, 160), (140, 110), (160, 70)],
+        'zone_cheveux': (85, 115, 148, 168),
+        'zone_peau': (60, 85, 215, 280),
+        'limite': 150,
     },
 }
 

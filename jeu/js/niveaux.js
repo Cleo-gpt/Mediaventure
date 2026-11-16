@@ -42,8 +42,7 @@ export const NIVEAUX = {
     videos: [
       { titre: 'Projet vidéo', credit: 'Rémy Martinez', src: '../videos/projet-video.mp4', youtube: 'Ne7nYNzBqcg', duree: 114, icone: '🎬' },
       { titre: 'La vidéo en bref', credit: 'Cléo Ana Forclaz', src: '../videos/la-video-en-bref.mp4', youtube: 'at5eeLY0Xyw', duree: 136, icone: '🎞️' },
-      { titre: 'Prise de son en extérieur', duree: 12, icone: '🎙️' },
-      { titre: 'Lumière : la règle des 3 points', duree: 12, icone: '💡' },
+      { titre: 'Au-delà du sang', credit: 'Salomé Duperrex', src: '../videos/au-dela-du-sang.mp4', youtube: 'K6EnqKqhGyk', duree: 135, icone: '🎥' },
     ],
     boss: {
       nom: 'Roderick Graber', titre: 'Boss Multimédia', pv: 85, pa: 6, pm: 3,
@@ -69,13 +68,12 @@ export const NIVEAUX = {
     titre: 'Design', lieu: 'Parc national de Daisetsuzan', biome: 'automne', jouable: true,
     ciel: '#f4b98a', brume: '#f2c29a', sol: '#c9884e', chemin: PALETTE.creme, accent: '#e8672c',
     miniJeu: 'portfolios', suivant: 'informatique',
-    // E-portfolios à visiter (4 au total) : ajoute `url` quand un portfolio est prêt ; sans url, la case affiche « Bientôt »
+    // E-portfolios à visiter : sans `url`, la case affiche « Bientôt »
     dureeVisite: 30, // secondes de visite avant de pouvoir valider l'épreuve
     portfolios: [
       { nom: 'Rémy Martinez', url: 'https://remymartinez.ch', icone: '🎨' },
-      { nom: 'E-portfolio 2', url: null, icone: '🖌️' },
       { nom: 'Samuel Porchet', url: 'https://samuelporchet.ch', icone: '✏️' },
-      { nom: 'E-portfolio 4', url: null, icone: '📐' },
+      { nom: 'Salomé Duperrex', url: 'https://sduperrex.eleves.mediamatique.ch/portfolio/', icone: '🖌️' },
     ],
     boss: {
       nom: 'Ariane Nicollier', titre: 'Boss Design', pv: 85, pa: 6, pm: 3,
@@ -144,7 +142,19 @@ export const NIVEAUX = {
     // Le code donné par la vendeuse du stand Gaïa change toutes les heures : voir js/code-gaia.js et codes-gaia.html
     boss: {
       nom: 'Baptiste Forestier', titre: 'Boss Admin', pv: 105, pa: 6, pm: 3,
-      apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'rejetes', cheveux: '#2a2a2e', kimono: PALETTE.rosePale, hakama: '#4b3470', obi: PALETTE.marine, hachimaki: '#8a5fb4', katana: true, geta: PALETTE.marine },
+      apparence: {
+        // comme M. Graber et M. Droz : la tenue de sa photo (polo bleu-vert) et sa vraie tête
+        espece: 'humain', genre: 'homme', tenue: 'polo', polo: '#2f5557', cheveux: '#3a2a22',
+        // texture préparée par outils/tete_photo.py forestier
+        tetePhoto: {
+          texture: '../portraits/forestier_tete.png', cadre: [190, 55, 425, 410], nez: 305, cheveux: '#3a2a22', peau: '#3f2c24', hauteur: 0.6, decalage: 0.07, // peau = couleur de la barbe sur les côtés
+          contour: [[240, 95], [290, 70], [345, 72], [385, 100], [402, 140], [408, 190], [410, 240], [400, 290], [392, 330],
+            [375, 365], [345, 390], [310, 395], [275, 385], [248, 360], [230, 320], [222, 280], [210, 240], [202, 190],
+            [205, 140], [220, 110]],
+        },
+      },
+      portrait: '../portraits/forestier.png', // photo affichée à côté de ses dialogues
+      defi: 'Ah, te voilà ! Ici, tout doit être en ordre : dossiers classés, factures réglées… Voyons si tu sais gérer la pression !',
       sorts: [
         { nom: 'Facture surprise', pa: 3, portee: [1, 1], degats: [10, 14] },
         { nom: 'Pile de dossiers', pa: 4, portee: [2, 5], degats: [8, 12] },
@@ -159,7 +169,18 @@ export const NIVEAUX = {
     gain: 'Passe au stand Médiaventure : ton gain t’attend (goodies, print spécial PO ou rabais sur une Gaïa) !',
     boss: {
       nom: 'Christophe Haenssler', titre: 'Boss final', pv: 160, pa: 7, pm: 3,
-      apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'samourai', cheveux: '#6b5a4a', kimono: '#b8323a', hakama: '#1f2433', obi: '#e2b552', hachimaki: PALETTE.corail, katana: true, geta: PALETTE.corail },
+      apparence: {
+        // comme les autres boss photo : la tenue de sa photo (chemise à carreaux rouges) et sa vraie tête
+        espece: 'humain', genre: 'homme', tenue: 'polo', carreaux: true, polo: '#c8383d', micro: false, cheveux: '#7a6458',
+        // texture préparée par outils/tete_photo.py haenssler
+        tetePhoto: {
+          texture: '../portraits/haenssler_tete.png', cadre: [125, 25, 365, 320], nez: 248, cheveux: '#7a6458', peau: '#d39c86', hauteur: 0.6, decalage: 0.07,
+          contour: [[195, 45], [245, 33], [295, 40], [330, 70], [345, 115], [355, 165], [352, 215], [338, 255], [315, 285],
+            [280, 305], [245, 310], [210, 300], [180, 275], [160, 240], [142, 200], [135, 160], [140, 110], [160, 70]],
+        },
+      },
+      portrait: '../portraits/haenssler.png', // photo affichée à côté de ses dialogues
+      defi: 'Te voilà enfin ! Tu as réuni les six objets de quête… Mais pour terminer Médiaventure, il faudra d’abord passer par moi !',
       sorts: [
         { nom: 'Coup de maître', pa: 3, portee: [1, 1], degats: [12, 16] },
         { nom: 'Onde médiatique', pa: 4, portee: [2, 5], degats: [9, 13] },
