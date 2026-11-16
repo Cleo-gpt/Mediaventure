@@ -384,6 +384,17 @@ function epreuve(intro, lancer, succes, echec) {
   });
 }
 
+// ------------------------------------------------------------------ Bouton provisoire « Passer l'épreuve »
+// Pour tester avant les portes ouvertes : débloque l'arène sans faire l'épreuve. Il disparaît tout seul
+// le 27 novembre 2026 à 17 h (heure de l'ordinateur), au début des portes ouvertes.
+const FIN_BOUTON_PASSER = new Date(2026, 10, 27, 17, 0, 0); // mois 10 = novembre
+const peutPasserEpreuve = () => new Date() < FIN_BOUTON_PASSER && mode === 'exploration' && niveau && !etatNiveau.miniJeuReussi;
+$('passer-epreuve').onclick = () => {
+  if (!peutPasserEpreuve()) return;
+  ouvrirArene();
+  dialogue([{ nom: nomPnj(), texte: t('Épreuve passée (bouton de test). {boss} t’attend dans l’arène.', { boss: niveau.boss.nom }) }]);
+};
+
 function ouvrirArene() {
   etatNiveau.miniJeuReussi = true;
   monde.ouvrirArene();
@@ -753,6 +764,8 @@ function majExploration(dt) {
     joueur.position.z = tmp.z;
   }
   animerPersonnage(joueur, dt, joueur.position.y > 0 ? 0 : vitesse);
+
+  $('passer-epreuve').hidden = !peutPasserEpreuve();
 
   // Portail
   if (monde.portail.visible && joueur.position.distanceTo(monde.portail.position) < 1.8 && mode === 'exploration') {
