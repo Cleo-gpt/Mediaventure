@@ -117,7 +117,17 @@ export const NIVEAUX = {
     ],
     boss: {
       nom: 'Olivier Droz', titre: 'Boss Marketing', pv: 95, pa: 6, pm: 3,
-      apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'samourai', cheveux: '#5a3a2a', kimono: PALETTE.creme, hakama: '#7a3470', obi: PALETTE.corail, katana: true, geta: PALETTE.corail },
+      apparence: {
+        espece: 'humain', genre: 'homme', tenue: 'samourai', cheveux: '#8a8682', kimono: PALETTE.creme, hakama: '#7a3470', obi: PALETTE.corail, katana: true, geta: PALETTE.corail,
+        // vraie tête tirée de la photo (texture préparée par outils/tete_photo.py droz)
+        tetePhoto: {
+          texture: '../portraits/droz_tete.png', cadre: [120, 80, 510, 620], nez: 305, cheveux: '#8a8682', peau: '#c99a86', hauteur: 0.6, decalage: 0.07,
+          contour: [[215, 130], [270, 98], [330, 92], [395, 105], [445, 140], [478, 190], [488, 260], [492, 340], [482, 410],
+            [462, 470], [430, 530], [385, 580], [330, 603], [275, 595], [232, 565], [205, 520], [180, 460], [150, 420],
+            [138, 350], [140, 270], [155, 205], [180, 160]],
+        },
+      },
+      portrait: '../portraits/droz.png', // photo affichée à côté de ses dialogues
       sorts: [
         { nom: 'Argument choc', pa: 3, portee: [1, 1], degats: [10, 14] },
         { nom: 'Campagne virale', pa: 4, portee: [2, 5], degats: [8, 12] },
