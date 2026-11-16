@@ -74,7 +74,7 @@ export const NIVEAUX = {
     portfolios: [
       { nom: 'Rémy Martinez', url: 'https://remymartinez.ch', icone: '🎨' },
       { nom: 'E-portfolio 2', url: null, icone: '🖌️' },
-      { nom: 'E-portfolio 3', url: null, icone: '✏️' },
+      { nom: 'Samuel Porchet', url: 'https://samuelporchet.ch', icone: '✏️' },
       { nom: 'E-portfolio 4', url: null, icone: '📐' },
     ],
     boss: {
