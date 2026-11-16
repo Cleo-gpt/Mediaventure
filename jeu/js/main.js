@@ -440,7 +440,7 @@ function lancerCombat() {
   $('invite').hidden = true;
   $('aide').hidden = true;
   combat = new Combat({
-    scene, camera, canvas, joueur, boss, def: niveau.boss, pvJoueur: niveau.pvJoueur, tutoriel: niveau.id === 'sas',
+    scene, camera, canvas, joueur, boss, def: niveau.boss, pvJoueur: niveau.pvJoueur, tutoriel: niveau.id === 'sas', murs: niveau.murs,
     onFin: (victoire) => {
       combat = null;
       document.body.classList.remove('en-combat');
@@ -799,6 +799,18 @@ function majExploration(dt) {
   if (cameraInstantanee) { camera.position.copy(voulu); cameraInstantanee = false; }
   else camera.position.lerp(voulu, 1 - Math.exp(-dt * 10));
   camera.lookAt(cible);
+  masquerEntreCameraEtJoueur(cible);
+}
+
+// Un bambou (ou autre décor haut) entre la caméra et le joueur est masqué le temps qu'il gêne
+function masquerEntreCameraEtJoueur(cible) {
+  const ax = camera.position.x, az = camera.position.z, dx = cible.x - ax, dz = cible.z - az;
+  const l2 = dx * dx + dz * dz || 1;
+  for (const o of monde.masquables) {
+    const t = ((o.position.x - ax) * dx + (o.position.z - az) * dz) / l2; // position le long du segment caméra → joueur
+    const px = ax + dx * Math.min(1, Math.max(0, t)) - o.position.x, pz = az + dz * Math.min(1, Math.max(0, t)) - o.position.z;
+    o.visible = !(t > -0.05 && t < 0.97 && px * px + pz * pz < 0.7 * 0.7);
+  }
 }
 
 // ------------------------------------------------------------------ Boucle

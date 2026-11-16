@@ -7,8 +7,8 @@ import { animerPersonnage } from './personnage.js';
 
 const PV_JOUEUR = 60, PA_JOUEUR = 6, PM_JOUEUR = 3;
 const N = ARENE.cases, S = ARENE.taille;
-// Murs de bois d'une case, nombreux et en quinconce : ils arrêtent les sorts à distance.
-// Toutes les cases libres restent reliées (on peut toujours contourner un mur pour rejoindre l'adversaire).
+// Murs de bois d'une case : ils arrêtent les sorts à distance. Chaque île a sa disposition (`murs` dans niveaux.js) ;
+// celle-ci sert si une île n'en a pas. Toutes les cases libres doivent rester reliées et les cases de départ (4,1) et (4,7) libres.
 const OBSTACLES = [[2, 2], [6, 2], [4, 3], [0, 4], [2, 4], [6, 4], [8, 4], [4, 5], [3, 6], [5, 6]];
 const cle = (c) => `${c.i},${c.j}`;
 const dist = (a, b) => Math.abs(a.i - b.i) + Math.abs(a.j - b.j);
@@ -16,7 +16,7 @@ const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
 const alea = ([min, max]) => min + Math.floor(Math.random() * (max - min + 1));
 
 export class Combat {
-  constructor({ scene, camera, canvas, joueur, boss, def, pvJoueur, tutoriel, onFin }) {
+  constructor({ scene, camera, canvas, joueur, boss, def, pvJoueur, tutoriel, murs, onFin }) {
     Object.assign(this, { scene, camera, canvas, joueur, boss, def, tutoriel, onFin });
     this.ui = {
       racine: document.getElementById('combat'),
@@ -31,7 +31,8 @@ export class Combat {
     this.raycaster = new THREE.Raycaster();
     this.souris = new THREE.Vector2();
     this.anims = [];
-    this.obstacles = new Set(OBSTACLES.map(([i, j]) => `${i},${j}`));
+    this.murs = murs ?? OBSTACLES;
+    this.obstacles = new Set(this.murs.map(([i, j]) => `${i},${j}`));
 
     this.j = { c: { i: 4, j: 7 }, pv: pvJoueur ?? PV_JOUEUR, max: pvJoueur ?? PV_JOUEUR, pa: PA_JOUEUR, pm: PM_JOUEUR, mesh: joueur, vitesse: 0 };
     this.b = { c: { i: 4, j: 1 }, pv: def.pv, max: def.pv, pa: def.pa ?? 6, pm: def.pm ?? 3, mesh: boss, vitesse: 0 };
@@ -81,7 +82,7 @@ export class Combat {
     const tons = ['#9a6a44', '#8a5c3a', '#a8774e'].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 }));
     const poteau = new THREE.MeshStandardMaterial({ color: '#5c3c26', roughness: 0.9 });
     const H = S * 0.8, PLANCHES = 4;
-    for (const [i, j] of OBSTACLES) {
+    for (const [i, j] of this.murs) {
       const mur = new THREE.Group();
       mur.position.copy(this.monde({ i, j }, 0));
       for (let k = 0; k < PLANCHES; k++) {

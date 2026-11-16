@@ -130,10 +130,12 @@ export function construireNiveau(scene, niveau, chargeurTexture) {
   // Décor propre au biome
   const decor = { bambou: decorBambou, ciel: decorCiel, tournesol: decorTournesols, automne: decorAutomne,
     glycine: decorGlycines, sakura: decorSakura, final: decorMatsue }[niveau.biome] ?? decorGenerique;
-  decor({ groupe, scene, niveau, colliders, animations, chargeurTexture });
+  // Décors hauts (bambous…) que la caméra masque quand ils passent entre elle et le joueur
+  const masquables = [];
+  decor({ groupe, scene, niveau, colliders, animations, chargeurTexture, masquables });
 
   return {
-    groupe, colliders, animations, portail,
+    groupe, colliders, animations, portail, masquables,
     ouvrirArene() {
       barriere.visible = false;
       colliders.splice(colliders.indexOf(colliderBarriere), 1);
@@ -396,7 +398,7 @@ function koi(chargeurTexture, longueur = 1.3) {
 }
 
 // ------------------------------------------------------------------ Sas : forêt de bambous
-function decorBambou({ groupe, scene, niveau, colliders, animations, chargeurTexture }) {
+function decorBambou({ groupe, scene, niveau, colliders, animations, chargeurTexture, masquables }) {
   // Fond dessiné de la forêt de bambous, tout autour de l'île
   if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 75, repetitions: 4, bas: -9 });
   // Brume verte : les bambous lointains se fondent dans le dessin
@@ -451,7 +453,8 @@ function decorBambou({ groupe, scene, niveau, colliders, animations, chargeurTex
   // Forêt dense tout autour de la clairière
   for (let i = 0; i < 560; i++) {
     const a = Math.random() * Math.PI * 2, r = RAYON_ILE + 0.5 + Math.random() ** 0.8 * 30;
-    planter(Math.cos(a) * r, Math.sin(a) * r, false);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (horsCouloirCamera(x, z)) planter(x, z, false); // rien derrière l'arrivée, où se trouve la caméra au début
   }
   // Lisière : bambous qui débordent dans la clairière
   for (let i = 0; i < 90; i++) {
@@ -466,6 +469,7 @@ function decorBambou({ groupe, scene, niveau, colliders, animations, chargeurTex
       if (libre(x, z)) planter(x, z, true);
     }
   }
+  masquables.push(...balancent);
   animations.push((dt, t) => {
     for (const b of balancent) b.rotation.x = Math.sin(t * 0.8 + b.userData.phase) * 0.015;
   });
