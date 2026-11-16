@@ -118,7 +118,8 @@ export const NIVEAUX = {
     boss: {
       nom: 'Olivier Droz', titre: 'Boss Marketing', pv: 95, pa: 6, pm: 3,
       apparence: {
-        espece: 'humain', genre: 'homme', tenue: 'samourai', cheveux: '#8a8682', kimono: PALETTE.creme, hakama: '#7a3470', obi: PALETTE.corail, katana: true, geta: PALETTE.corail,
+        // comme M. Graber : la tenue de sa photo (polo orange) plutôt qu'un costume de samouraï
+        espece: 'humain', genre: 'homme', tenue: 'polo', polo: '#f2a25a', cheveux: '#8a8682',
         // vraie tête tirée de la photo (texture préparée par outils/tete_photo.py droz)
         tetePhoto: {
           texture: '../portraits/droz_tete.png', cadre: [120, 80, 510, 620], nez: 305, cheveux: '#8a8682', peau: '#c99a86', hauteur: 0.6, decalage: 0.07,
@@ -128,6 +129,7 @@ export const NIVEAUX = {
         },
       },
       portrait: '../portraits/droz.png', // photo affichée à côté de ses dialogues
+      defi: 'Ah, te voilà ! En marketing, tout est une question de stratégie… Voyons si la tienne résiste à mes arguments.',
       sorts: [
         { nom: 'Argument choc', pa: 3, portee: [1, 1], degats: [10, 14] },
         { nom: 'Campagne virale', pa: 4, portee: [2, 5], degats: [8, 12] },

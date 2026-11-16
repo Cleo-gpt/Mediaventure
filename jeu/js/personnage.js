@@ -326,6 +326,35 @@ function geometriesVille() {
   return ville;
 }
 
+// Tenue de ville (M. Droz) : polo orange à manches courtes, col rabattu, patte boutonnée ; pantalon et chaussures de la tenue de ville
+const polo = (x, y, z) => {
+  let d = Math.max(torse(x, y, z) - 0.018, 0.17 - y);
+  for (let i = 0; i < 2; i++) {
+    // manches courtes : elles s'arrêtent au-dessus du coude
+    const a = J.epaule[i], b = a.map((v, k) => v + (J.coude[i][k] - v) * 0.75);
+    const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    d = smin(d, Math.max(cone(x, y, z, a, b, 0.074, 0.068), (le_long(x, y, z, a, b) - 1) * l), 0.02);
+  }
+  return Math.max(d, y - 0.535);
+};
+// Col rabattu tout autour du cou, ouvert devant
+const colPolo = (x, y, z) => {
+  const t = torse(x, y, z);
+  const d = Math.max(t - 0.034, 0.012 - t, 0.475 - y, y - 0.54);
+  return Math.max(d, -Math.max(Math.abs(x) - 0.03, 0.05 - z));
+};
+// Patte de boutonnage sur le devant
+const pattePolo = (x, y, z) => Math.max(torse(x, y, z) - 0.024, Math.abs(x) - 0.017, Math.abs(y - 0.45) - 0.055, 0.05 - z);
+let tenuePolo = null;
+function geometriesPolo() {
+  tenuePolo ??= memo('polo', () => ({
+    polo: ponderer(extraire(polo, [-0.3, 0.15, -0.22], [0.3, 0.56, 0.25], PAS), SEGMENTS, { surcharge: poidsManches }),
+    col: ponderer(extraire(colPolo, [-0.2, 0.46, -0.2], [0.2, 0.56, 0.24], 0.004), SEGMENTS),
+    patte: ponderer(extraire(pattePolo, [-0.04, 0.38, 0.0], [0.04, 0.52, 0.24], 0.003), SEGMENTS),
+  }));
+  return tenuePolo;
+}
+
 // Samouraï (kamishimo) : kosode à manches courtes, hakama-pantalon large et plissé,
 // kataginu (gilet aux épaules en ailes, ajoutées en pièces rigides) et obi
 const kosode = (x, y, z) => {
@@ -898,6 +927,10 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     const v = geometriesVille(), daim = materiau('#9a7048', { motif: MOTIF_FOURRURE, liseré: 0.15, cle: 'daim' });
     couches.push([v.chemise, materiau('#b8323a', { liseré: 0.12, cle: 'uni' })], [v.veste, daim], [v.revers, daim],
       [v.pantalon, materiau('#2e3346', { liseré: 0.12, cle: 'uni' })], [v.chaussures, materiau('#4a3226', { liseré: 0.2, cle: 'uni' })]);
+  } else if (a.tenue === 'polo') {
+    const v = geometriesVille(), q = geometriesPolo(), tissu = materiau(a.polo ?? '#f2a25a', { liseré: 0.12, cle: 'uni' });
+    couches.push([q.polo, tissu], [q.col, tissu], [q.patte, tissu],
+      [v.pantalon, materiau(a.pantalon ?? '#2e3346', { liseré: 0.12, cle: 'uni' })], [v.chaussures, materiau('#3a2c24', { liseré: 0.2, cle: 'uni' })]);
   } else if (a.tenue === 'samourai') {
     const s = geometriesSamourai(), sombre = a.hakama ?? '#2e3346';
     const motif = materiau(sombre, { motif: MOTIF_SEIGAIHA, liseré: 0.12, cle: 'kimono' });
@@ -978,6 +1011,16 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       geta.add(lanière, piece(new THREE.SphereGeometry(0.012, 10, 8), hanao, 0, 0.03, 0.1));
       fixer('cheville' + c, geta, J.orteil[i][0], -0.012, 0.05);
     });
+  }
+
+  // Polo : deux boutons sur la patte et le petit micro-cravate accroché au col (comme sur la photo de M. Droz)
+  if (a.tenue === 'polo') {
+    const bouton = uni('#f6efe4');
+    for (const y of [0.47, 0.425]) fixer('poitrine', sans(piece(new THREE.SphereGeometry(0.009, 10, 8), bouton)), 0, y, 0.19);
+    const micro = new THREE.Group();
+    const bonnette = piece(new THREE.SphereGeometry(0.024, 14, 10), materiau('#5c6270', { motif: MOTIF_FOURRURE, liseré: 0.2, cle: 'fourrure-uni' }));
+    micro.add(bonnette, piece(new RoundedBoxGeometry(0.02, 0.014, 0.012, 2, 0.003), uni('#2a2d34'), 0.026, -0.004, 0));
+    fixer('poitrine', micro, -0.05, 0.47, 0.17);
   }
 
   // Lunettes de soleil accrochées à l'ouverture de la chemise

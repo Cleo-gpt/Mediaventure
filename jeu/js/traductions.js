@@ -188,6 +188,7 @@ const L = [
   ["Sayo — champs de tournesols", "Sayo — sunflower fields", "Sayo — Sonnenblumenfelder", "Sayo — campi di girasoli"],
   ["Boss Multimédia", "Multimedia Boss", "Multimedia-Boss", "Boss Multimedia"],
   ["Ah, te voilà ! Silence sur le plateau… moteur… action ! Voyons si tu tiens la lumière.", "Ah, there you are! Quiet on set… rolling… action! Let's see if you can handle the spotlight.", "Ah, da bist du ja! Ruhe am Set… Kamera läuft… Action! Mal sehen, ob du das Scheinwerferlicht aushältst.", "Ah, eccoti! Silenzio in scena… motore… azione! Vediamo se reggi la luce dei riflettori."],
+  ["Ah, te voilà ! En marketing, tout est une question de stratégie… Voyons si la tienne résiste à mes arguments.", "Ah, there you are! In marketing, it's all about strategy… Let's see if yours stands up to my arguments.", "Ah, da bist du ja! Im Marketing ist alles eine Frage der Strategie… Mal sehen, ob deine meinen Argumenten standhält.", "Ah, eccoti! Nel marketing è tutta una questione di strategia… Vediamo se la tua regge ai miei argomenti."],
   ["Coupe franche", "Clean cut", "Harter Schnitt", "Taglio netto"],
   ["Flash aveuglant", "Blinding flash", "Blendender Blitz", "Flash accecante"],
   ["Design", "Design", "Design", "Design"],
