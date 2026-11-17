@@ -66,3 +66,10 @@ writeFileSync(join(jeu, 'ressources.js'),
   '// Fichier généré par outils/construire.mjs — décors et objets 3D intégrés pour fonctionner sans serveur.\n' +
   'window.RESSOURCES = ' + JSON.stringify(ressources) + ';\n');
 console.log(`ressources.js : ${Object.keys(ressources).length} fichiers intégrés`);
+
+// Numéro de version dans index.html (?v=…) : le navigateur recharge jeu.js et ressources.js à chaque construction
+// au lieu de garder une ancienne copie en mémoire (Safari le fait même en ouvrant le fichier par double-clic).
+const version = Date.now().toString(36);
+const page = join(jeu, 'index.html');
+writeFileSync(page, readFileSync(page, 'utf8').replace(/(\.\/(?:ressources|jeu)\.js)\?v=[\w]*/g, `$1?v=${version}`));
+console.log(`index.html : version ${version}`);
