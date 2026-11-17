@@ -161,7 +161,6 @@
 
   /* HUD */
   #hud { position: fixed; inset: 0; pointer-events: none; }
-  #bouton-son { position: absolute; top: 140px; left: 16px; pointer-events: auto; border: 0; border-radius: 999px; width: 40px; height: 36px; background: var(--marine); color: var(--creme); font-size: 1.1rem; }
   #ouvrir-carte { position: absolute; top: 96px; left: 16px; pointer-events: auto; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--marine); color: var(--creme); font-weight: 900; }
   .carte-iles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
   .ile { border: 2px solid var(--marine); background: #fff; border-radius: 14px; padding: 12px; text-align: left; color: var(--marine); display: grid; gap: 4px; }
@@ -325,8 +324,7 @@
     #inventaire { top: 66px; left: 10px; right: auto; gap: 4px; }
     .case-inv { width: 34px; height: 34px; font-size: 1.05rem; border-radius: 9px; }
     #ouvrir-carte { top: 108px; left: 10px; padding: 6px 12px; font-size: .9rem; }
-    #bouton-son { top: 108px; left: auto; right: 10px; height: 32px; width: 36px; font-size: 1rem; }
-    #combat-haut { top: 8px; padding: 8px 12px; }
+      #combat-haut { top: 8px; padding: 8px 12px; }
     #journal { display: none; }
     #combat-bas { bottom: 8px; padding: 8px; gap: 8px; }
     .sort { padding: 5px 8px; }
@@ -401,7 +399,6 @@
 <section id="hud" hidden>
   <div id="hud-niveau"><span id="hud-titre"></span><span id="hud-lieu"></span></div>
   <button id="ouvrir-carte" title="Carte des îles (touche M)" data-i18n-attr="title" data-i18n>🗺️ Îles</button>
-  <button id="bouton-son" title="Couper le son">🔊</button>
   <div id="inventaire"></div>
   <div id="invite" hidden></div>
   <div id="aide" data-i18n><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> / flèches : bouger · <kbd>Espace</kbd> sauter · <kbd>Maj</kbd> courir · <kbd>E</kbd> interagir · glisser la souris : caméra · molette : zoom</div>
@@ -512,7 +509,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwktzy6d"></script>
-<script src="./jeu.js?v=mwktzy6d"></script>
+<script src="./ressources.js?v=mwku4upy"></script>
+<script src="./jeu.js?v=mwku4upy"></script>
 </body>
 </html>

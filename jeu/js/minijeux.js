@@ -3,7 +3,6 @@
 import { PALETTE } from './niveaux.js';
 import { codeGaiaValide } from './code-gaia.js';
 import { t } from './i18n.js';
-import { couperSon, sonCoupe } from './musique.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -47,10 +46,6 @@ export function epreuveVideo(videos) {
       const remplissage = document.createElement('div');
       barre.append(remplissage);
       let duree = v.duree, ecoule = 0, video = null, youtube = null;
-      // la musique du jeu se tait pendant la vidéo, puis reprend comme avant
-      const sonAvant = sonCoupe();
-      const remettreSon = () => couperSon(sonAvant);
-      couperSon(true);
       zone.append(ecran, barre);
       const passerSurYoutube = () => {
         youtube = lecteurYoutube(v, ecran);
@@ -72,13 +67,13 @@ export function epreuveVideo(videos) {
       }
       const debut = performance.now();
       const tic = () => {
-        if ($('minijeu').hidden) { youtube?.arreter(); remettreSon(); return; }
+        if ($('minijeu').hidden) { youtube?.arreter(); return; }
         ecoule = youtube ? youtube.ecoule() : video ? video.currentTime : (performance.now() - debut) / 1000;
         if (youtube?.duree()) duree = youtube.duree();
         remplissage.style.width = `${Math.min(100, (ecoule / duree) * 100)}%`;
         if (ecoule >= duree - 0.05 || video?.ended || youtube?.fini()) {
           const ok = bouton(t('J’ai tout vu !'));
-          ok.onclick = () => { youtube?.arreter(); remettreSon(); fermer(); fin(true); };
+          ok.onclick = () => { youtube?.arreter(); fermer(); fin(true); };
           zone.append(ok);
           return;
         }

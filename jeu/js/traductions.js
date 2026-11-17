@@ -23,6 +23,7 @@ const L = [
   ["Il rejoint ton inventaire, en haut à droite.", "It goes into your inventory, top right.", "Er kommt in dein Inventar, oben rechts.", "Finisce nel tuo inventario, in alto a destra."],
   ["Objet de quête obtenu", "Quest item obtained", "Questgegenstand erhalten", "Oggetto della missione ottenuto"],
   ["Continuer", "Continue", "Weiter", "Continua"],
+  ["Dernière étape : écris ton prénom, les gardiens des îles t’appelleront ainsi. Quand tu es prêt·e, clique sur « Entrer dans le Sas » pour commencer l’aventure !", "Last step: write your first name, the island guardians will call you by it. When you’re ready, click “Enter the Gateway” to start the adventure!", "Letzter Schritt: Schreib deinen Vornamen, so werden dich die Inselwächter nennen. Wenn du bereit bist, klick auf „Die Schleuse betreten“, um das Abenteuer zu beginnen!", "Ultimo passo: scrivi il tuo nome, i guardiani delle isole ti chiameranno così. Quando sei pronto·a, clicca su «Entra nel Passaggio» per iniziare l’avventura!"],
   ["Chargement", "Loading", "Wird geladen", "Caricamento"],
   ["Espace / clic pour continuer", "Space / click to continue", "Leertaste / Klick zum Fortfahren", "Spazio / clic per continuare"],
   ["Touche la bulle pour continuer", "Tap the bubble to continue", "Tippe auf die Blase, um fortzufahren", "Tocca il fumetto per continuare"],

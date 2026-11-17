@@ -9,7 +9,6 @@ import { epreuveVideo, epreuvePortfolios, epreuveEtapes, epreuveCodeGaia } from 
 import { creerVestiaire } from './vestiaire.js';
 import { ECRAN_TACTILE, joystick, installerCommandes, majBoutonAction } from './tactile.js';
 import { t, choisirLangue } from './i18n.js';
-import { jouerMusique, couperSon, sonCoupe } from './musique.js';
 
 const $ = (id) => document.getElementById(id);
 const DOSSIER_OBJETS = '../objets-quete/';
@@ -25,23 +24,8 @@ function sauver() {
 let partie = charger() ?? { prenom: '', apparence: { ...APPARENCE_DEFAUT }, objets: [], niveau: 'sas' };
 partie.apparence = { ...APPARENCE_DEFAUT, ...partie.apparence };
 partie.langue ??= 'fr';
-partie.musique ??= 'zen';
 choisirLangue(partie.langue);
 
-// ------------------------------------------------------------------ Musique
-// Le navigateur n'autorise le son qu'après une action du joueur : la musique démarre au premier clic ou à la première touche.
-{
-  const lancer = () => { jouerMusique(partie.musique); removeEventListener('pointerdown', lancer, true); removeEventListener('keydown', lancer, true); };
-  addEventListener('pointerdown', lancer, true);
-  addEventListener('keydown', lancer, true);
-}
-function majBoutonSon() {
-  const b = $('bouton-son');
-  b.textContent = sonCoupe() || partie.musique === 'aucune' ? '🔇' : '🔊';
-  b.title = sonCoupe() ? t('Remettre le son') : t('Couper le son');
-}
-$('bouton-son').onclick = () => { couperSon(!sonCoupe()); majBoutonSon(); };
-majBoutonSon();
 
 // ------------------------------------------------------------------ Rendu
 const canvas = $('scene');
@@ -198,10 +182,9 @@ creerVestiaire({
     lancerNiveau('sas');
   },
   surReprendre: () => { quitterVestiaire(); lancerNiveau(partie.niveau); },
-  // langue et musique choisies dans l'onglet Identité
+  // langue choisie dans l'onglet Identité
   surChoixPartie: (champ, valeur) => {
-    if (champ === 'langue') { choisirLangue(valeur); majReprendre(); majBoutonSon(); }
-    if (champ === 'musique') { couperSon(false); jouerMusique(valeur); majBoutonSon(); }
+    if (champ === 'langue') { choisirLangue(valeur); majReprendre(); }
     sauver();
   },
 });

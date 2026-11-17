@@ -2,7 +2,6 @@
 import { OPTIONS, CATEGORIES_DISPONIBLES, MOTIF_PAR_COULEUR, motifDe, accessoireDe, armeDe, ceintureDe } from './personnage.js';
 import { PALETTE } from './niveaux.js';
 import { t, LANGUES, langueActuelle } from './i18n.js';
-import { MUSIQUES } from './musique.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -162,11 +161,6 @@ function catalogue(a) {
         cartes: LANGUES.map((l) => ({ valeur: l.id, nom: l.nom, etoiles: 3, visuel: ICONES.codeLangue(l.code), brut: true })),
       },
       { id: 'prenom', titre: 'Identité – Prénom', icone: ICONES.identite, champ: null, info: 'Le prénom sous lequel les gardiens t’appelleront.' },
-      {
-        id: 'musique', titre: 'Identité – Musique', icone: ICONES.musique, champ: 'musique', partie: true,
-        info: 'La musique qui t’accompagne pendant l’aventure. Clique sur une carte pour l’écouter.',
-        cartes: MUSIQUES.map((m) => ({ valeur: m.id, nom: m.nom, etoiles: m.id === 'aucune' ? 1 : 3, visuel: ICONES.emoji(m.icone) })),
-      },
     ],
   };
 }
@@ -185,8 +179,7 @@ const ETAPES = [
   { onglet: 'tenue', categorie: 'geta', texte: 'Les geta sont des sandales japonaises en bois. Choisis les tiennes.' },
   { onglet: 'tenue', categorie: 'accessoire', texte: 'Un sac pour transporter tes objets de quête ? Choisis celui qui t’accompagnera.' },
   { onglet: 'tenue', categorie: 'arme', texte: 'Que tiens-tu à la main ? Un katana, une ombrelle ou un éventail : un seul au choix !' },
-  { onglet: 'identite', categorie: 'prenom', texte: 'Écris maintenant ton prénom : les gardiens des îles t’appelleront ainsi.' },
-  { onglet: 'identite', categorie: 'musique', texte: 'Dernière étape : choisis ta musique, ou joue sans le son. Quand tu es prêt·e, clique sur « Entrer dans le Sas » pour commencer l’aventure !' },
+  { onglet: 'identite', categorie: 'prenom', texte: 'Dernière étape : écris ton prénom, les gardiens des îles t’appelleront ainsi. Quand tu es prêt·e, clique sur « Entrer dans le Sas » pour commencer l’aventure !' },
 ];
 
 // ---------------------------------------------------------------- Vestiaire
@@ -199,7 +192,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
 
   function appliquer(champ, valeur, surPartie = false) {
     if (surPartie) {
-      // langue et musique : réglages de la partie, pas de l'apparence (on rejoue la musique même si elle est déjà choisie)
+      // langue : réglage de la partie, pas de l'apparence
       partie[champ] = valeur;
       surChoixPartie?.(champ, valeur);
       rendre();
