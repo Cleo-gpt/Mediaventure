@@ -132,10 +132,13 @@ export function construireNiveau(scene, niveau, chargeurTexture) {
     glycine: decorGlycines, sakura: decorSakura, final: decorMatsue }[niveau.biome] ?? decorGenerique;
   // Décors hauts (bambous…) que la caméra masque quand ils passent entre elle et le joueur
   const masquables = [];
-  decor({ groupe, scene, niveau, colliders, animations, chargeurTexture, masquables });
+  // Toits de végétation (pergolas, grandes glycines) où la caméra ne doit pas entrer :
+  // boîtes { x0, x1, z0, z1, y0, y1 } ou cylindres { x, z, r, y0, y1 }
+  const plafonds = [];
+  decor({ groupe, scene, niveau, colliders, animations, chargeurTexture, masquables, plafonds });
 
   return {
-    groupe, colliders, animations, portail, masquables,
+    groupe, colliders, animations, portail, masquables, plafonds,
     ouvrirArene() {
       barriere.visible = false;
       colliders.splice(colliders.indexOf(colliderBarriere), 1);
@@ -716,7 +719,7 @@ function decorAutomne({ groupe, scene, niveau, colliders, animations, chargeurTe
 }
 
 // ------------------------------------------------------------------ Marketing : Nara, glycines et cerfs
-function decorGlycines({ groupe, scene, colliders, animations }) {
+function decorGlycines({ groupe, scene, colliders, animations, plafonds }) {
   scene.fog = new THREE.Fog('#dcbde3', 35, 150);
   solExterieur(groupe, '#8fa860', '#7c9a56');
   const bois = '#5c4030';
@@ -757,6 +760,7 @@ function decorGlycines({ groupe, scene, colliders, animations }) {
   }
   for (const x of [-2.5, -1.25, 0, 1.25, 2.5]) pergola.push(colorer(new THREE.BoxGeometry(0.14, 0.14, debut - fin + 1).translate(x, 3.3, (debut + fin) / 2), bois));
   groupe.add(fusionner(pergola));
+  plafonds.push({ x0: -3.4, x1: 3.4, z0: fin - 0.8, z1: debut + 0.8, y0: 1.6, y1: 4.2 }); // grappes et toit du tunnel
   for (let i = 0; i < 420; i++) {
     const x = auHasard(-2.9, 2.9), z = auHasard(fin - 0.5, debut + 0.5);
     suspendre(x, 3.25, z);
@@ -778,6 +782,7 @@ function decorGlycines({ groupe, scene, colliders, animations }) {
   // toit de treillis porté par des poteaux, feuillage vert clair dessus et rideau de grappes jusqu'au sol
   for (const [x0, z0, R, palette] of [[-15.5, -8, 4.6, MAUVES], [15.5, -8.5, 4.4, MAUVES], [-16, 7.5, 4.2, BLANCHES], [16, 5, 4.8, MAUVES]]) {
     const H = 2.7; // hauteur du treillis
+    plafonds.push({ x: x0, z: z0, r: R + 0.4, y0: 0.6, y1: H + 1.2 }); // rideau de grappes et feuillage
     // tronc tordu : plusieurs segments qui se décalent
     let px = x0, pz = z0, py = 0;
     for (let k = 0; k < 4; k++) {

@@ -888,10 +888,30 @@ function majExploration(dt) {
     Math.cos(cam.yaw) * Math.cos(cam.pitch) * cam.dist,
   ));
   voulu.y = Math.max(voulu.y, 0.5);
+  eviterPlafonds(cible, voulu);
   if (cameraInstantanee) { camera.position.copy(voulu); cameraInstantanee = false; }
   else camera.position.lerp(voulu, 1 - Math.exp(-dt * 10));
   camera.lookAt(cible);
   masquerEntreCameraEtJoueur(cible, dt);
+}
+
+// La caméra n'entre pas dans un toit de végétation (pergola de glycines, grande glycine) : elle descend
+// d'abord sous le toit en gardant sa distance, puis, si ça ne suffit pas, se rapproche du joueur.
+function dansPlafond(p) {
+  return (monde.plafonds ?? []).some((b) => p.y > b.y0 && p.y < b.y1
+    && (b.r ? Math.hypot(p.x - b.x, p.z - b.z) < b.r : p.x > b.x0 && p.x < b.x1 && p.z > b.z0 && p.z < b.z1));
+}
+function eviterPlafonds(cible, voulu) {
+  if (!dansPlafond(voulu)) return;
+  const d = voulu.clone().sub(cible);
+  for (let y = d.y; y > -0.3; y -= 0.1) { // plus bas, même distance au sol
+    const p = cible.clone().add(new THREE.Vector3(d.x, Math.max(y, 0.5 - cible.y), d.z));
+    if (!dansPlafond(p)) { voulu.copy(p); return; }
+  }
+  for (let t = 0.95; t > 0.2; t -= 0.05) { // plus près
+    const p = cible.clone().addScaledVector(d, t);
+    if (!dansPlafond(p)) { voulu.copy(p); return; }
+  }
 }
 
 // Un bambou (ou autre décor haut) proche de la caméra qui cache le joueur devient translucide en douceur,

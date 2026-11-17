@@ -343,6 +343,7 @@ function memo(cle, construire) {
 function formes() {
   return [
     ...Object.keys(coiffures).map((id) => ['coiffure.' + id, () => geometrieCoiffure(id)]),
+    ...COUPES_JOUEUR.map((id) => ['coiffure.' + id + '.capy', () => geometrieCoiffure(id, 'capy')]),
     ['espece.humain', () => geometries('humain')], ['espece.panda', () => geometries('panda')],
     ['tissus', geometriesTissus], ['miko', geometriesMiko], ['samourai', geometriesSamourai], ['ville', geometriesVille],
     ['espece.shiba', () => geometries('shiba')],
@@ -864,10 +865,17 @@ const coiffures = {
   },
 };
 const cacheCoiffures = new Map();
-function geometrieCoiffure(id) {
+// Variante « capy » : la coupe est posée sur le crâne du capybara (plus petit et plus bas) ; on retire ce qui
+// passerait devant ses yeux (devant, sous y 0,105) : la frange s'arrête juste au-dessus.
+const COUPES_JOUEUR = ['tresses', 'chignon', 'chonmage', 'frange'];
+function geometrieCoiffure(id, variante) {
   if (!coiffures[id]) return null;
-  if (!cacheCoiffures.has(id)) cacheCoiffures.set(id, memo('coiffure.' + id, () => {
-    const geo = extraire(coiffures[id], [-0.4, id === 'longs' ? -0.5 : -0.42, -0.4], [0.4, 0.36, 0.33], 0.0095);
+  const cle = 'coiffure.' + id + (variante ? '.' + variante : '');
+  if (!cacheCoiffures.has(cle)) cacheCoiffures.set(cle, memo(cle, () => {
+    const f = variante === 'capy'
+      ? (x, y, z) => Math.max(coiffures[id](x, y, z), -Math.max(y - 0.105, 0.12 - z))
+      : coiffures[id];
+    const geo = extraire(f, [-0.4, id === 'longs' ? -0.5 : -0.42, -0.4], [0.4, 0.36, 0.33], 0.0095);
     // Dégradé des longs cheveux : châtain foncé en haut, caramel aux pointes
     if (id === 'longs') {
       const p = geo.attributes.position, col = new Float32Array(p.count * 3);
@@ -880,7 +888,7 @@ function geometrieCoiffure(id) {
     }
     return geo;
   }));
-  return cacheCoiffures.get(id);
+  return cacheCoiffures.get(cle);
 }
 
 // ---------------------------------------------------------------- Pelage (couleur par sommet)
@@ -1589,7 +1597,8 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   os.hanches.add(queue);
   const cheveux = materiau(a.cheveux, { motif: MOTIF_CHEVEUX, liseré: 0.25, cle: 'cheveux' });
   const touffe = new THREE.Group();
-  const geoCoiffure = geometrieCoiffure(a.coiffure);
+  const capy = espece === 'capybara' && COUPES_JOUEUR.includes(a.coiffure);
+  const geoCoiffure = geometrieCoiffure(a.coiffure, capy ? 'capy' : undefined);
   if (geoCoiffure) touffe.add(new THREE.Mesh(geoCoiffure, geoCoiffure.attributes.color
       ? materiau('#ffffff', { vertexColors: true, motif: MOTIF_FOURRURE, liseré: 0.25, cle: 'cheveux-degrade' }) : cheveux));
   if (a.coiffure === 'tresses') {
@@ -1663,7 +1672,8 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     }
   }
   // Le capybara a les yeux plus haut que les autres animaux : sa coiffure remonte pour ne pas les cacher
-  if (espece === 'capybara') { touffe.position.set(0, 0.095, -0.025); touffe.scale.setScalar(1.05); }
+  if (capy) { touffe.position.set(0, 0.03, -0.015); touffe.scale.set(0.93, 0.95, 0.97); } // ajustée à son crâne
+  else if (espece === 'capybara') { touffe.position.set(0, 0.095, -0.025); touffe.scale.setScalar(1.05); }
   tete.add(touffe);
   contourner(tete);
   contourner(queue);
