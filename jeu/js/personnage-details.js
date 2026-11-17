@@ -43,9 +43,9 @@ export function piece(geo, mat, x = 0, y = 0, z = 0) {
 export const sph = (r, theta, phi) => new THREE.Vector3(-r * Math.cos(phi) * Math.sin(theta), r * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta));
 
 // Mèche : balayage d'une section elliptique le long d'une courbe, qui s'affine vers la pointe
-export function geoMeche(points, largeur, epaisseur, cote, { affiner = true } = {}) {
+export function geoMeche(points, largeur, epaisseur, cote, { affiner = true, segments = 14 } = {}) {
   const courbe = new THREE.CatmullRomCurve3(points);
-  const N = 14, M = 8, pos = [], idx = [], uv = [];
+  const N = segments, M = 8, pos = [], idx = [], uv = [];
   const W = new THREE.Vector3(), E = new THREE.Vector3();
   for (let i = 0; i <= N; i++) {
     const t = i / N;
