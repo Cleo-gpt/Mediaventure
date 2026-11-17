@@ -30,7 +30,11 @@ const ICONES = {
   neutre: svg('<circle cx="32" cy="18" r="9" fill="currentColor"/><path d="M19 56l2-18q1-10 11-10t11 10l2 18z" fill="currentColor"/>'),
   // Tête de l'animal choisi (shiba ou panda) + coiffure dessinée dans la couleur c
   tete: (c, coiffure, espece = 'shiba') => {
-    const base = espece === 'panda'
+    const base = espece === 'pandaRoux'
+      ? '<path d="M12 28l5-17 13 9M52 28l-5-17-13 9" fill="#c45a26"/><path d="M15 25l3-10 7 6M49 25l-3-10-7 6" fill="#fbf5ec"/><ellipse cx="32" cy="38" rx="20" ry="17" fill="#c45a26"/><ellipse cx="32" cy="46" rx="12" ry="7.5" fill="#fbf5ec"/><ellipse cx="17" cy="44" rx="6" ry="5" fill="#fbf5ec"/><ellipse cx="47" cy="44" rx="6" ry="5" fill="#fbf5ec"/><circle cx="25" cy="30" r="3" fill="#fbf5ec"/><circle cx="39" cy="30" r="3" fill="#fbf5ec"/><circle cx="25" cy="37" r="2.4" fill="#2a1d1a"/><circle cx="39" cy="37" r="2.4" fill="#2a1d1a"/><ellipse cx="32" cy="43" rx="2.6" ry="1.8" fill="#2a1d1a"/>'
+      : espece === 'capybara'
+      ? '<circle cx="18" cy="20" r="5" fill="#6e4a32"/><circle cx="46" cy="20" r="5" fill="#6e4a32"/><ellipse cx="32" cy="34" rx="19" ry="16" fill="#9a6d4b"/><rect x="18" y="36" width="28" height="18" rx="9" fill="#8a5f40"/><circle cx="23" cy="31" r="2.2" fill="#3a2a22"/><circle cx="41" cy="31" r="2.2" fill="#3a2a22"/><rect x="25" y="42" width="14" height="6" rx="3" fill="#3a2a22"/>'
+      : espece === 'panda'
       ? '<circle cx="15" cy="20" r="7" fill="#1f1f24"/><circle cx="49" cy="20" r="7" fill="#1f1f24"/><ellipse cx="32" cy="38" rx="20" ry="17" fill="#fbfaf6" stroke="#3b3360" stroke-width="2"/><ellipse cx="24.5" cy="38" rx="4.5" ry="6" transform="rotate(25 24.5 38)" fill="#1f1f24"/><ellipse cx="39.5" cy="38" rx="4.5" ry="6" transform="rotate(-25 39.5 38)" fill="#1f1f24"/><circle cx="25" cy="37" r="1.4" fill="#fff"/><circle cx="39" cy="37" r="1.4" fill="#fff"/><ellipse cx="32" cy="44" rx="2.6" ry="1.8" fill="#1f1f24"/>'
       : '<path d="M14 26l6-16 10 10M50 26l-6-16-10 10" fill="#eba04e"/><ellipse cx="32" cy="38" rx="20" ry="17" fill="#eba04e"/><ellipse cx="32" cy="45" rx="12" ry="8" fill="#fbf1e2"/><circle cx="25" cy="37" r="2.4" fill="#3a2a26"/><circle cx="39" cy="37" r="2.4" fill="#3a2a26"/><ellipse cx="32" cy="43" rx="2.6" ry="1.8" fill="#3a2a26"/>';
     const extra = {
@@ -42,6 +46,8 @@ const ICONES = {
     return svg(base + extra);
   },
   shiba: svg('<path d="M14 8l12 14M50 8L38 22" stroke="#e48a3c" stroke-width="10" stroke-linecap="round"/><circle cx="32" cy="34" r="22" fill="#e48a3c"/><path d="M14 40q18 22 36 0q-6 14-18 14t-18-14z" fill="#f7ead8"/><ellipse cx="32" cy="44" rx="10" ry="8" fill="#f7ead8"/><circle cx="24" cy="32" r="4" fill="#2b2224"/><circle cx="40" cy="32" r="4" fill="#2b2224"/><ellipse cx="32" cy="40" rx="4" ry="2.6" fill="#2b2224"/><circle cx="23" cy="31" r="1.4" fill="#fff"/><circle cx="39" cy="31" r="1.4" fill="#fff"/>'),
+  pandaRoux: svg('<path d="M10 22l6-16 14 10M54 22l-6-16-14 10" fill="#c45a26"/><path d="M14 19l3-8 8 6M50 19l-3-8-8 6" fill="#fbf5ec"/><circle cx="32" cy="34" r="22" fill="#c45a26"/><ellipse cx="32" cy="44" rx="13" ry="9" fill="#fbf5ec"/><ellipse cx="14" cy="40" rx="7" ry="6" fill="#fbf5ec"/><ellipse cx="50" cy="40" rx="7" ry="6" fill="#fbf5ec"/><circle cx="23" cy="24" r="3.5" fill="#fbf5ec"/><circle cx="41" cy="24" r="3.5" fill="#fbf5ec"/><path d="M24 34l-3 8M40 34l3 8" stroke="#7a2e14" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="31" r="3.6" fill="#2a1d1a"/><circle cx="40" cy="31" r="3.6" fill="#2a1d1a"/><circle cx="23" cy="30" r="1.2" fill="#fff"/><circle cx="39" cy="30" r="1.2" fill="#fff"/><ellipse cx="32" cy="40" rx="4" ry="2.6" fill="#2a1d1a"/>'),
+  capybara: svg('<circle cx="17" cy="15" r="6" fill="#6e4a32"/><circle cx="47" cy="15" r="6" fill="#6e4a32"/><ellipse cx="32" cy="30" rx="21" ry="19" fill="#9a6d4b"/><rect x="15" y="32" width="34" height="24" rx="12" fill="#8a5f40"/><circle cx="22" cy="26" r="2.8" fill="#3a2a22"/><circle cx="42" cy="26" r="2.8" fill="#3a2a22"/><circle cx="21" cy="25" r="1" fill="#fff"/><circle cx="41" cy="25" r="1" fill="#fff"/><rect x="23" y="40" width="18" height="7" rx="3.5" fill="#3a2a22"/><path d="M28 51q4 3 8 0" stroke="#3a2a22" stroke-width="2" fill="none" stroke-linecap="round"/>'),
   panda: svg('<circle cx="15" cy="14" r="8" fill="#2a2a30"/><circle cx="49" cy="14" r="8" fill="#2a2a30"/><circle cx="32" cy="34" r="22" fill="#f6f5f0" stroke="#3b3360" stroke-width="2"/><ellipse cx="23" cy="33" rx="6" ry="8" transform="rotate(25 23 33)" fill="#2a2a30"/><ellipse cx="41" cy="33" rx="6" ry="8" transform="rotate(-25 41 33)" fill="#2a2a30"/><circle cx="24" cy="32" r="3" fill="#fff"/><circle cx="40" cy="32" r="3" fill="#fff"/><circle cx="24" cy="32" r="2" fill="#1f1f24"/><circle cx="40" cy="32" r="2" fill="#1f1f24"/><ellipse cx="32" cy="42" rx="4" ry="2.6" fill="#1f1f24"/>'),
   langue: svg('<circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-width="4"/><path d="M12 32h40M32 12q-12 20 0 40M32 12q12 20 0 40" fill="none" stroke="currentColor" stroke-width="3"/>'),
   musique: svg('<path d="M24 46V14l26-6v32" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><ellipse cx="18" cy="46" rx="8" ry="6" fill="currentColor"/><ellipse cx="44" cy="40" rx="8" ry="6" fill="currentColor"/>'),
@@ -85,7 +91,7 @@ function catalogue(a) {
     visage: [
       {
         id: 'espece', titre: 'Silhouette – Espèce', icone: ICONES[a.espece] ?? ICONES.shiba, champ: 'espece',
-        info: 'Shiba roux au ventre crème, ou panda noir et blanc.',
+        info: 'Shiba roux au ventre crème, panda noir et blanc, panda roux à la queue annelée ou capybara tout tranquille.',
         cartes: OPTIONS.espece.map((e) => ({ valeur: e.id, nom: e.nom, etoiles: 3, visuel: ICONES[e.id] })),
       },
       {

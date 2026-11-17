@@ -1,4 +1,4 @@
-// Avatars animaux chibi (style kawaii) : shiba ou panda.
+// Avatars animaux chibi (style kawaii) : shiba, panda, panda roux ou capybara.
 // Grosse tête ronde « mochi » posée sur un petit corps rond, pattes courtes à coussinets roses,
 // petits yeux, joues roses, bouche en ω. Pelage peint par sommet, corps animé par un squelette.
 // Habits (kimono, obi, geta), touffe coiffée et accessoires (sac, sacoche, katana) en option.
@@ -10,7 +10,7 @@ import { smin, ellipsoide, cone, le_long, extraire, ponderer } from './sculpture
 import { toon, matContour, contourner, piece, geoMeche } from './personnage-details.js';
 
 export const OPTIONS = {
-  espece: [{ id: 'shiba', nom: 'Shiba' }, { id: 'panda', nom: 'Panda' }],
+  espece: [{ id: 'shiba', nom: 'Shiba' }, { id: 'panda', nom: 'Panda' }, { id: 'pandaRoux', nom: 'Panda roux' }, { id: 'capybara', nom: 'Capybara' }],
   genre: [
     { id: 'homme', nom: 'Homme' }, { id: 'femme', nom: 'Femme' }, { id: 'neutre', nom: 'Neutre' },
   ],
@@ -43,6 +43,10 @@ const PAS_TETE = 0.0095;
 const PELAGE = {
   shiba: { base: '#eba04e', clair: '#fbf1e2', oreille: '#f6bfae', truffe: '#3a2a26' },
   panda: { base: '#fbfaf6', noir: '#1f1f24', truffe: '#1f1f24' },
+  // panda roux : roux vif, masque blanc, pattes et ventre brun-noir, queue annelée
+  pandaRoux: { base: '#c45a26', clair: '#fbf5ec', sombre: '#2e1d18', anneau: '#e7a466', truffe: '#2a1d1a' },
+  // capybara : brun doux, dessous un peu plus clair, museau et pattes plus foncés
+  capybara: { base: '#9a6d4b', clair: '#b98f6a', sombre: '#6e4a32', truffe: '#3a2a22' },
   // Humain chibi (personnages non joueurs, comme Cléo) : peau, chaussettes tabi blanches
   humain: { base: '#f6d5bf', clair: '#fbf8f2', truffe: '#3a2a26' },
 };
@@ -158,6 +162,21 @@ const queueShiba = (x, y, z) => {
   return d;
 };
 
+// Queue du panda roux : longue et touffue, elle descend derrière puis remonte, avec des anneaux clairs
+const courbeQueueRoux = new THREE.CatmullRomCurve3([
+  [0, 0, 0.02], [0, -0.05, -0.07], [0.0, -0.08, -0.17], [0.02, -0.05, -0.27], [0.05, 0.03, -0.33], [0.07, 0.12, -0.34],
+].map((v) => new THREE.Vector3(...v)));
+const POINTS_QUEUE_ROUX = courbeQueueRoux.getSpacedPoints(40).map((v, i, t) => ({ v, t: i / (t.length - 1) }));
+const rayonQueueRoux = (t) => (t < 0.15 ? 0.038 + t * 0.12 : t < 0.8 ? 0.056 : 0.056 - ((t - 0.8) / 0.2) * 0.03);
+const queuePandaRoux = (x, y, z) => {
+  let d = Infinity;
+  for (let i = 1; i < POINTS_QUEUE_ROUX.length; i++) {
+    const a = POINTS_QUEUE_ROUX[i - 1], b = POINTS_QUEUE_ROUX[i];
+    d = smin(d, cone(x, y, z, a.v.toArray(), b.v.toArray(), rayonQueueRoux(a.t), rayonQueueRoux(b.t)), 0.012);
+  }
+  return d;
+};
+
 // ---------------------------------------------------------------- Formes calculées en arrière-plan
 // Sculpter une coiffure, un corps ou un habit prend jusqu'à 1-2 s. Dès l'ouverture du jeu, un worker
 // (second fil d'exécution) les calcule toutes et les renvoie ici : le vestiaire n'a plus rien à calculer
@@ -189,6 +208,7 @@ function formes() {
     ['espece.humain', () => geometries('humain')], ['espece.panda', () => geometries('panda')],
     ['tissus', geometriesTissus], ['miko', geometriesMiko], ['samourai', geometriesSamourai], ['ville', geometriesVille],
     ['espece.shiba', () => geometries('shiba')],
+    ['espece.pandaRoux', () => geometries('pandaRoux')], ['espece.capybara', () => geometries('capybara')],
   ];
 }
 // Côté worker : calcule chaque forme et l'envoie (les tableaux sont transférés, pas copiés)
@@ -442,6 +462,26 @@ const tetes = {
     for (const [dx, dz, h] of [[-0.03, 0.06, 0.05], [0.0, 0.08, 0.06], [0.03, 0.05, 0.045]]) {
       d = smin(d, cone(x, y, z, [dx, 0.22, dz], [dx * 1.6, 0.22 + h, dz + 0.02], 0.016, 0.003), 0.012);
     }
+    return d;
+  },
+  pandaRoux: (x, y, z) => {
+    let d = ellipsoide(x, y, z, [0, 0.02, 0], [0.29, 0.235, 0.25]);
+    for (const s of [-1, 1]) d = smin(d, ellipsoide(x, y, z, [s * 0.16, -0.075, 0.07], [0.15, 0.11, 0.12]), 0.06); // joues rondes
+    d = smin(d, ellipsoide(x, y, z, [0, -0.065, 0.2], [0.08, 0.055, 0.07]), 0.05);                                // museau
+    // oreilles larges et arrondies (moins pointues que celles du shiba)
+    for (const s of [-1, 1]) d = smin(d, cone(x, y, z * 2.2, [s * 0.16, 0.15, -0.02], [s * 0.22, 0.3, -0.05], 0.09, 0.035) / 2.2, 0.04);
+    // touffes blanches sur les joues
+    for (const s of [-1, 1]) {
+      d = smin(d, cone(x, y, z, [s * 0.25, -0.08, 0.03], [s * 0.325, -0.13, 0.02], 0.035, 0.006), 0.02);
+      d = smin(d, cone(x, y, z, [s * 0.23, -0.14, 0.05], [s * 0.29, -0.2, 0.045], 0.03, 0.005), 0.02);
+    }
+    return d;
+  },
+  capybara: (x, y, z) => {
+    let d = ellipsoide(x, y, z, [0, 0.04, -0.02], [0.26, 0.22, 0.24]);
+    d = smin(d, ellipsoide(x, y, z, [0, -0.04, 0.16], [0.17, 0.15, 0.17]), 0.09);                 // long museau carré
+    d = smin(d, ellipsoide(x, y, z, [0, -0.04, 0.27], [0.135, 0.11, 0.08]), 0.05);                // bout du museau, plat
+    for (const s of [-1, 1]) d = smin(d, ellipsoide(x, y, z, [s * 0.165, 0.215, -0.07], [0.055, 0.05, 0.035]), 0.025); // petites oreilles rondes
     return d;
   },
 };
@@ -719,6 +759,23 @@ function couleursCorps(espece) {
       return melange(p.base, p.clair, Math.max(pieds, pattes, ventre));
     };
   }
+  if (espece === 'pandaRoux') {
+    return (x, y, z) => {
+      const jambes = lisse(0.23, 0.19, y);
+      const bras = lisse(0.16, 0.2, Math.abs(x)) * lisse(0.44, 0.38, y); // seulement les bras, pas les flancs
+      const e = (x / 0.095) ** 2 + ((y - 0.27) / 0.13) ** 2;
+      const ventre = lisse(1.15, 0.8, e) * lisse(0.05, 0.1, z) * 0.85;
+      return melange(p.base, p.sombre, Math.max(jambes, bras, ventre));
+    };
+  }
+  if (espece === 'capybara') {
+    return (x, y, z) => {
+      const pieds = lisse(0.1, 0.07, y);
+      const e = (x / 0.13) ** 2 + ((y - 0.28) / 0.18) ** 2;
+      const ventre = lisse(1.1, 0.8, e) * lisse(0.03, 0.08, z);
+      return melange(p.base, p.clair, ventre).lerp(C(p.sombre), pieds);
+    };
+  }
   return (x, y, z) => {
     const jambes = lisse(0.225, 0.195, y) * lisse(0.02, 0.04, Math.abs(x));
     const bras = lisse(0.135, 0.16, Math.abs(x)) * lisse(0.17, 0.2, y);
@@ -739,6 +796,29 @@ function couleursTete(espece) {
       const oreille = lisse(0.15, 0.18, y) * lisse(-0.04, -0.025, z)
         * lisse(0.06 - (y - 0.16) * 0.3, 0.045 - (y - 0.16) * 0.3, Math.abs(Math.abs(x) - (0.16 + (y - 0.16) * 0.28)));
       return c.lerp(C(p.oreille), oreille);
+    };
+  }
+  if (espece === 'pandaRoux') {
+    return (x, y, z) => {
+      // masque blanc : museau, bas des joues, taches au-dessus des yeux, intérieur et bord des oreilles
+      const museau = lisse(1.25, 0.85, (x / 0.12) ** 2 + ((y + 0.075) / 0.085) ** 2) * lisse(0.12, 0.18, z);
+      const joues = lisse(0.13, 0.18, Math.abs(x)) * lisse(-0.01, -0.05, y) * lisse(-0.03, 0.03, z);
+      let sourcils = 0;
+      for (const s of [-1, 1]) sourcils = Math.max(sourcils, lisse(0.04, 0.028, Math.hypot(x - s * 0.095, y - 0.095)) * lisse(0.12, 0.16, z));
+      const oreille = lisse(0.15, 0.18, y) * lisse(-0.045, -0.025, z)
+        * lisse(0.065 - (y - 0.16) * 0.25, 0.05 - (y - 0.16) * 0.25, Math.abs(Math.abs(x) - (0.165 + (y - 0.16) * 0.38)));
+      // « larmes » roux foncé qui descendent des yeux vers les joues
+      let larmes = 0;
+      for (const s of [-1, 1]) larmes = Math.max(larmes, lisse(0.026, 0.012, Math.abs((x - s * 0.11) - s * (0.02 - y) * 0.35)) * lisse(0.02, -0.005, y) * lisse(-0.11, -0.08, y) * lisse(0.12, 0.17, z));
+      const c = melange(p.base, p.clair, Math.max(museau, joues, sourcils, oreille));
+      return c.lerp(C('#7a2e14'), larmes * 0.8);
+    };
+  }
+  if (espece === 'capybara') {
+    return (x, y, z) => {
+      const museau = lisse(0.22, 0.32, z) * 0.45; // bout du museau un peu plus sombre
+      const oreille = lisse(0.18, 0.2, y) * lisse(0.13, 0.15, Math.abs(x)) * lisse(-0.04, -0.03, z);
+      return melange(p.base, p.sombre, Math.max(museau, oreille));
     };
   }
   return (x, y, z) => {
@@ -765,6 +845,18 @@ function couleursQueue() {
     const dessous = lisse(-0.15, 0.35, dehors.dot(versCentre)) * lisse(0.08, 0.2, proche.t);
     const pointe = lisse(0.8, 0.94, proche.t);
     return melange(p.base, p.clair, Math.max(dessous, pointe));
+  };
+}
+function couleursQueueRoux() {
+  const p = PELAGE.pandaRoux;
+  const v = new THREE.Vector3();
+  return (x, y, z) => {
+    v.set(x, y, z);
+    let proche = POINTS_QUEUE_ROUX[0];
+    for (const q of POINTS_QUEUE_ROUX) if (q.v.distanceToSquared(v) < proche.v.distanceToSquared(v)) proche = q;
+    const anneau = lisse(0.42, 0.5, Math.abs(((proche.t * 5.5 + 0.3) % 1) - 0.5) * 2) * lisse(0.12, 0.2, proche.t);
+    const pointe = lisse(0.9, 0.98, proche.t);
+    return melange(p.base, p.anneau, anneau).lerp(C(p.sombre), pointe * 0.7);
   };
 }
 function peindre(geo, f) {
@@ -811,9 +903,10 @@ function geometries(espece) {
   const geos = memo('espece.' + espece, () => {
   const geos = {
     corps: peindre(ponderer(extraire(corps, [-0.32, -0.005, -0.2], [0.32, 0.56, 0.24], PAS), SEGMENTS), couleursCorps(espece)),
-    tete: peindre(extraire(tetes[espece], [-0.34, -0.24, -0.29], [0.34, 0.38, 0.31], PAS_TETE), couleursTete(espece)),
+    tete: peindre(extraire(tetes[espece], [-0.34, -0.24, -0.29], [0.34, 0.38, espece === 'capybara' ? 0.37 : 0.31], PAS_TETE), couleursTete(espece)), // le capybara a un long museau
   };
   if (espece === 'shiba') geos.queue = peindre(extraire(queueShiba, [-0.07, -0.06, -0.21], [0.14, 0.3, 0.09], 0.004), couleursQueue());
+  if (espece === 'pandaRoux') geos.queue = peindre(extraire(queuePandaRoux, [-0.08, -0.16, -0.42], [0.15, 0.2, 0.09], 0.006), couleursQueueRoux());
   return geos;
   });
   cache.set(espece, geos);
@@ -1131,7 +1224,14 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   else if (!photo) for (const s of [-1, 1]) {
     const oeil = new THREE.Group();
     oeil.rotation.y = s * 0.42;
-    if (espece === 'shiba') {
+    if (espece === 'capybara') {
+      // petits yeux placés haut et sur les côtés, l'air tranquille
+      oeil.position.set(s * 0.115, 0.09, 0.2);
+      oeil.rotation.y = s * 0.5;
+      const globe = piece(new THREE.SphereGeometry(0.027, 16, 12), noir);
+      globe.scale.set(1, 1.05, 0.4);
+      oeil.add(sans(globe), sans(piece(new THREE.SphereGeometry(0.009, 10, 8), blanc, -s * 0.007, 0.01, 0.01)));
+    } else if (espece === 'shiba' || espece === 'pandaRoux') {
       // petits yeux noirs ovales avec un reflet
       oeil.position.set(s * 0.1, 0.02, 0.232);
       const globe = piece(new THREE.SphereGeometry(0.022, 16, 12), noir);
@@ -1195,15 +1295,16 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   }
   // Truffe et bouche en ω
   if (!a.masque && espece !== 'humain') {
-  const zMuseau = 0.282;
-  const truffe = piece(new THREE.SphereGeometry(0.02, 16, 12), noir, 0, -0.045, zMuseau);
-  truffe.scale.set(1.25, 0.8, 0.6);
+  const capy = espece === 'capybara'; // grosse truffe large au bout du museau plat
+  const zMuseau = capy ? 0.345 : 0.282;
+  const truffe = piece(new THREE.SphereGeometry(0.02, 16, 12), noir, 0, capy ? -0.012 : -0.045, zMuseau);
+  truffe.scale.set(capy ? 1.9 : 1.25, capy ? 0.75 : 0.8, 0.6);
   tete.add(sans(truffe));
   const refletTruffe = piece(new THREE.SphereGeometry(0.006, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.8 }), -0.008, -0.038, zMuseau + 0.01);
   refletTruffe.scale.set(1.4, 0.7, 0.5);
   tete.add(sans(refletTruffe));
   for (const s of [-1, 1]) {
-    const arc = piece(new THREE.TorusGeometry(0.014, 0.003, 6, 14, Math.PI), noir, s * 0.014, -0.07, zMuseau - 0.012);
+    const arc = piece(new THREE.TorusGeometry(0.014, 0.003, 6, 14, Math.PI), noir, s * 0.014, capy ? -0.07 : -0.07, zMuseau - (capy ? 0.016 : 0.012));
     arc.rotation.z = Math.PI;
     tete.add(sans(arc));
   }
@@ -1215,6 +1316,10 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     queue.add(new THREE.Mesh(g.queue, fourrure));
     queue.position.set(QUEUE_BASE[0] - J.hanches[0], QUEUE_BASE[1] - J.hanches[1], QUEUE_BASE[2] - J.hanches[2]);
     queue.scale.setScalar(1.35); // panache bien visible derrière la grosse tête
+  } else if (espece === 'pandaRoux') {
+    queue.add(new THREE.Mesh(g.queue, fourrure));
+    queue.position.set(QUEUE_BASE[0] - J.hanches[0], QUEUE_BASE[1] - J.hanches[1], QUEUE_BASE[2] - J.hanches[2]);
+    queue.scale.setScalar(1.2);
   } else if (espece === 'panda') {
     queue.add(piece(new THREE.SphereGeometry(0.045, 16, 12), materiau(p.base, { motif: MOTIF_FOURRURE, cle: 'fourrure-uni' })));
     queue.position.set(0, 0.2 - J.hanches[1], -0.17);
@@ -1298,6 +1403,8 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       touffe.add(pan);
     }
   }
+  // Le capybara a les yeux plus haut que les autres animaux : sa coiffure remonte pour ne pas les cacher
+  if (espece === 'capybara') { touffe.position.set(0, 0.095, -0.025); touffe.scale.setScalar(1.05); }
   tete.add(touffe);
   contourner(tete);
   contourner(queue);

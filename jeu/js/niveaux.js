@@ -143,7 +143,7 @@ export const NIVEAUX = {
     murs: [[1, 2], [7, 2], [3, 3], [5, 3], [4, 4], [0, 5], [2, 5], [6, 5], [8, 5], [3, 6], [5, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 110, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Admin & gestion', lieu: 'Tokyo — sakura', biome: 'sakura', jouable: true,
-    ciel: '#e2c9ec', brume: '#e6d0ef', sol: '#b49ac8', chemin: PALETTE.creme, accent: '#8a5fb4',
+    ciel: '#f2d9e8', brume: '#efd9ea', sol: '#b9cc8f', chemin: PALETTE.creme, accent: '#8a5fb4', // herbe de printemps sous les cerisiers
     miniJeu: 'stand-gaia', suivant: 'final',
     // Le code donné par la vendeuse du stand Gaïa change toutes les heures : voir js/code-gaia.js et codes-gaia.html
     boss: {
@@ -170,8 +170,8 @@ export const NIVEAUX = {
   final: {
     murs: [[2, 2], [4, 2], [6, 2], [1, 4], [3, 4], [5, 4], [7, 4], [2, 6], [4, 6], [6, 6], [0, 7], [8, 7]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 130, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Boss final — Média global', lieu: 'Matsue — château au bord du lac', biome: 'final', jouable: true,
-    ciel: '#bfdcf0', brume: '#cfe6f5', sol: '#9fc4dc', chemin: PALETTE.creme, accent: PALETTE.corail,
+    titre: 'Boss final — Média global', lieu: 'Kyoto — le pavillon d’or (Kinkaku-ji)', biome: 'final', jouable: true,
+    ciel: '#c3cdd2', brume: '#c9d3d6', sol: '#8fa477', chemin: PALETTE.creme, accent: PALETTE.corail, // ciel gris et mousse du jardin du pavillon d'or
     miniJeu: 'combat-final', suivant: null,
     gain: 'Passe au stand Médiaventure : ton gain t’attend (goodies, print spécial PO ou rabais sur une Gaïa) !',
     boss: {

@@ -51,7 +51,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap; // ombres filtrées, moins coûteuses que PCFSoft
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
-const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 800);
+const camera = new THREE.PerspectiveCamera(55, 1, 0.25, 800); // plan proche à 25 cm : plus de précision de profondeur au loin (moins de scintillement)
 // Décors et objets 3D intégrés (jeu/ressources.js) : le jeu marche aussi ouvert par double-clic, sans serveur
 THREE.DefaultLoadingManager.setURLModifier((url) => window.RESSOURCES?.[url] ?? url);
 const chargeurTexture = new THREE.TextureLoader();
@@ -812,17 +812,44 @@ function majExploration(dt) {
   if (cameraInstantanee) { camera.position.copy(voulu); cameraInstantanee = false; }
   else camera.position.lerp(voulu, 1 - Math.exp(-dt * 10));
   camera.lookAt(cible);
-  masquerEntreCameraEtJoueur(cible);
+  masquerEntreCameraEtJoueur(cible, dt);
 }
 
-// Un bambou (ou autre décor haut) entre la caméra et le joueur est masqué le temps qu'il gêne
-function masquerEntreCameraEtJoueur(cible) {
+// Un bambou (ou autre décor haut) proche de la caméra qui cache le joueur devient translucide en douceur,
+// puis redevient opaque quand il ne gêne plus. Seuils différents pour entrer et sortir : pas de clignotement.
+const OPACITE_ESTOMPE = 0.2, PORTEE_ESTOMPE = 7; // mètres devant la caméra
+function masquerEntreCameraEtJoueur(cible, dt) {
   const ax = camera.position.x, az = camera.position.z, dx = cible.x - ax, dz = cible.z - az;
-  const l2 = dx * dx + dz * dz || 1;
+  const longueur = Math.hypot(dx, dz) || 1, l2 = longueur * longueur;
   for (const o of monde.masquables) {
+    const u = o.userData;
     const t = ((o.position.x - ax) * dx + (o.position.z - az) * dz) / l2; // position le long du segment caméra → joueur
-    const px = ax + dx * Math.min(1, Math.max(0, t)) - o.position.x, pz = az + dz * Math.min(1, Math.max(0, t)) - o.position.z;
-    o.visible = !(t > -0.05 && t < 0.97 && px * px + pz * pz < 0.7 * 0.7);
+    const tc = Math.min(1, Math.max(0, t));
+    const px = ax + dx * tc - o.position.x, pz = az + dz * tc - o.position.z;
+    const base = u.rayonMasque ?? 0.6; // bambou fin ; les arbres à large couronne donnent leur propre rayon
+    const rayon = u.estompe ? base * 1.6 : base; // il faut s'écarter franchement pour qu'il revienne
+    u.estompe = t > -0.05 && t < 0.95 && t * longueur < PORTEE_ESTOMPE && px * px + pz * pz < rayon * rayon;
+    const voulu = u.estompe ? OPACITE_ESTOMPE : 1;
+    u.opacite ??= 1;
+    if (u.opacite === voulu) continue;
+    u.opacite += (voulu - u.opacite) * Math.min(1, dt * 10);
+    if (Math.abs(u.opacite - voulu) < 0.02) u.opacite = voulu;
+    if (u.opacite < 1) {
+      // matériau propre à ce bambou le temps de l'estomper (les autres gardent le matériau partagé)
+      if (!u.matOpaque) {
+        u.matOpaque = o.material;
+        o.material = o.material.clone();
+        o.material.onBeforeCompile = u.matOpaque.onBeforeCompile; // garde le grain de papier du dessin
+        o.material.customProgramCacheKey = u.matOpaque.customProgramCacheKey;
+        o.material.transparent = true;
+      }
+      o.material.opacity = u.opacite;
+      o.material.depthWrite = u.opacite > 0.9;
+    } else if (u.matOpaque) {
+      o.material.dispose();
+      o.material = u.matOpaque;
+      u.matOpaque = null;
+    }
   }
 }
 
