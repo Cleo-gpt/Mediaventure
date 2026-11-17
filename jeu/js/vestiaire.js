@@ -67,10 +67,6 @@ const ICONES = {
       chonmage: `<path d="M12 40l2-14q4-12 18-12t18 12l2 14-5-6-1 8-4-9-3 7-3-9-3 7-3-9-4 9-1-8z" fill="${c}"/><path d="M40 16l12-6-4 8z" fill="${c}"/><path d="M26 14l2-8 3 7 3-8 2 9z" fill="${c}"/>`,
       chignon: `<path d="M13 32q2-18 19-18t19 18q-6-8-19-8t-19 8z" fill="${c}"/><circle cx="32" cy="58" r="7" fill="${c}"/><path d="M20 50l24 14M44 50L20 64" stroke="#c9a46a" stroke-width="2.4"/><circle cx="21" cy="51" r="2" fill="${PALETTE.corail}"/><circle cx="43" cy="51" r="2" fill="${PALETTE.corail}"/>`,
       frange: `<path d="M13 32q0-20 19-21t19 21q-2-5-5-8l-2 9-3-10-3 11-3-11-3 11-3-11-2 10-3-9q-3 3-5 8z" fill="${c}"/><path d="M26 10l3-5 3 5 3-5 2 6z" fill="${c}"/>`,
-      chignonBas: `<path d="M13 32q2-18 19-18t19 18q-4-9-19-9t-19 9z" fill="${c}"/><path d="M14 30q-3 10 0 20M50 30q3 10 0 20" stroke="${c}" stroke-width="2.5" fill="none"/><circle cx="48" cy="54" r="7" fill="${c}"/><path d="M40 60L58 46" stroke="#3a2620" stroke-width="2.4"/><circle cx="57" cy="45" r="3.4" fill="#f8a0ab"/>`,
-      wolf: `<path d="M11 44l2-16q4-16 19-16t19 16l2 16-5-8-1 10-4-12-2 6-2-10-4 10-2-10-3 7-1-8-4 8-1-9-3 11z" fill="${c}"/><path d="M18 30l4 8 3-9 4 10 3-10 4 9 3-8 5 8" fill="${c}"/>`,
-      manbun: `<path d="M14 28q3-14 18-14t18 14q-6-6-18-6t-18 6z" fill="${c}"/><circle cx="32" cy="9" r="6" fill="${c}"/><path d="M27 14h10" stroke="${PALETTE.corail}" stroke-width="2.5"/>`,
-      coreen: `<path d="M12 36q-2-24 20-24t20 24l-3-4q-4-12-11-12l4 12-10-10-10 10 4-12q-7 0-11 12z" fill="${c}"/>`,
       tresses: `<path d="M13 34q2-20 19-20t19 20h-4q0-8-15-8t-15 8z" fill="${c}"/><path d="M18 30h28v5H18z" fill="${c}"/><circle cx="10" cy="42" r="4" fill="${c}"/><circle cx="11" cy="50" r="3.6" fill="${c}"/><circle cx="12" cy="57" r="3" fill="${c}"/><circle cx="54" cy="42" r="4" fill="${c}"/><circle cx="53" cy="50" r="3.6" fill="${c}"/><circle cx="52" cy="57" r="3" fill="${c}"/><circle cx="48" cy="20" r="4" fill="#fbf8f2"/>`,
     }[coiffure] ?? '';
     return svg(base + extra);
@@ -140,11 +136,11 @@ function catalogue(a) {
       },
       {
         id: 'coiffure', titre: 'Coiffure – Coupe de cheveux', icone: ICONES.tete(a.cheveux, 'chignon', a.espece), champ: 'coiffure',
-        info: 'Frange et tresses, chignons, wolf cut, chignon samouraï ou coupe coréenne.',
+        info: 'Franges et tresses, chignon et baguettes, chonmage moderne ou coupe courte à frange.',
         cartes: (Array.isArray(OPTIONS.coiffure) ? OPTIONS.coiffure : OPTIONS.coiffure[a.genre]).map((c) => ({ valeur: c.id, nom: c.nom, etoiles: 3, visuel: ICONES.tete(a.cheveux, c.id, a.espece) })),
       },
       {
-        id: 'baguettes', titre: 'Coiffure – Baguettes', icone: ICONES.baguetteSakura, champ: 'baguettes', visible: a.coiffure === 'chignon' || a.coiffure === 'chignonBas',
+        id: 'baguettes', titre: 'Coiffure – Baguettes', icone: ICONES.baguetteSakura, champ: 'baguettes', visible: a.coiffure === 'chignon',
         info: 'Les baguettes plantées dans ton chignon.',
         cartes: OPTIONS.baguettes.map((b) => ({ valeur: b.id, nom: b.nom, etoiles: b.id === 'bois' ? 2 : 3, visuel: ICONES['baguette' + b.id[0].toUpperCase() + b.id.slice(1)] })),
       },

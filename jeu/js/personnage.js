@@ -154,17 +154,20 @@ const MOTIF_CARREAUX = `
   diffuseColor.rgb = mix(vec3(0.97, 0.95, 0.93), rouge, clamp(0.6 * (bx + by), 0.0, 1.0));
   diffuseColor.rgb = mix(diffuseColor.rgb, rouge * 0.55, filet * 0.6);`;
 
-// Cheveux en mèches : fines stries le long de chaque mèche, racine un peu plus sombre, reflet brillant en anneau
+// Cheveux : texture de mèches fines dessinée sur la coupe (pas de relief) — des traits qui descendent du sommet
+// du crâne en suivant les méridiens, légèrement ondulés, et un reflet brillant en anneau au bord dentelé (style anime).
+// Coordonnées locales de la tête : crâne centré en y 0,015.
 const MOTIF_CHEVEUX = `
-  float stries = 0.5 + 0.5 * sin(vMeche.x * 18.85 + bruit(vPosObj * 90.0) * 2.5);
-  float fil = bruit(vec3(vMeche.x * 40.0, vMeche.y * 3.0, 0.0));
-  diffuseColor.rgb *= 0.84 + 0.12 * stries + 0.08 * fil;
-  diffuseColor.rgb *= mix(1.0, 0.82, smoothstep(0.75, 1.0, vMeche.y)); // racines
-  diffuseColor.rgb *= 0.62 + 0.38 * pow(vMeche.x, 0.6); // sillon sombre au bord de chaque mèche
-  float trait = smoothstep(0.82, 0.97, sin(vMeche.x * 31.4 + vMeche.y * 4.0 + bruit(vPosObj * 70.0) * 3.0));
-  diffuseColor.rgb *= 1.0 - 0.22 * trait * step(0.001, vMeche.y); // fins traits de cheveux
-  float reflet = smoothstep(0.42, 0.52, vMeche.y) * (1.0 - smoothstep(0.58, 0.7, vMeche.y)) * step(0.001, vMeche.y);
-  diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.3 + 0.07, reflet * (0.35 + 0.35 * stries));`;
+  vec3 pc = vPosObj - vec3(0.0, 0.015, 0.0);
+  float az = atan(pc.x, pc.z), el = asin(clamp(pc.y / max(length(pc), 1e-4), -1.0, 1.0));
+  float u = az * 40.0 + sin(el * 9.0 + az * 3.0) * 0.7 + bruit(pc * 35.0) * 1.6;
+  float fil = 0.5 + 0.5 * sin(u * 2.0);
+  float trait = smoothstep(0.78, 0.96, sin(u * 0.5 + bruit(pc * 22.0) * 2.0));
+  diffuseColor.rgb *= (0.9 + 0.12 * fil) * (1.0 - 0.16 * trait);
+  float bande = el - 0.6 - 0.07 * sin(az * 14.0);
+  float reflet = smoothstep(-0.1, -0.035, bande) * (1.0 - smoothstep(0.035, 0.1, bande));
+  diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.35 + 0.08, reflet * 0.4 * (0.6 + 0.4 * fil));
+  diffuseColor.rgb *= 0.97 + 0.05 * bruit(vPosObj * 400.0);`;
 
 // Kimono : teintes d'accompagnement tirées de la couleur du tissu (clair, moyen ou foncé), communes à tous les motifs
 const TEINTES_KIMONO = `
@@ -1584,43 +1587,48 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     queue.position.set(0, 0.2 - J.hanches[1], -0.17);
   }
   os.hanches.add(queue);
-  const cheveux = materiau(a.cheveux, { motif: MOTIF_FOURRURE, liseré: 0.25, cle: 'cheveux' });
+  const cheveux = materiau(a.cheveux, { motif: MOTIF_CHEVEUX, liseré: 0.25, cle: 'cheveux' });
   const touffe = new THREE.Group();
-  const geoCoiffure = geometrieCoiffure(a.coiffure, espece === 'capybara' ? 'capy' : undefined);
-  if (geoCoiffure) touffe.add(new THREE.Mesh(geoCoiffure, geoCoiffure.attributes.meche
-    ? materiau(a.cheveux, { motif: MOTIF_CHEVEUX, liseré: 0.22, cle: 'cheveux-meches', meche: true })
-    : geoCoiffure.attributes.color
+  const geoCoiffure = geometrieCoiffure(a.coiffure);
+  if (geoCoiffure) touffe.add(new THREE.Mesh(geoCoiffure, geoCoiffure.attributes.color
       ? materiau('#ffffff', { vertexColors: true, motif: MOTIF_FOURRURE, liseré: 0.25, cle: 'cheveux-degrade' }) : cheveux));
-  const lien = uni(a.kimono ?? PALETTE.corail);
   if (a.coiffure === 'tresses') {
-    // liens assortis au kimono au bout des tresses + petite fleur blanche sur le côté de la frange
-    for (const A of ANCRES.tresses) {
-      const l = piece(new THREE.TorusGeometry(0.02, 0.01, 8, 16), lien, A.x, A.y + 0.005, A.z);
-      l.rotation.x = Math.PI / 2 - 0.3;
-      touffe.add(l);
+    // liens corail au bout des tresses + fleur blanche sur le côté
+    for (const s of [-1, 1]) touffe.add(piece(new THREE.SphereGeometry(0.02, 12, 10), corail, s * 0.28, -0.35, 0.075));
+    // fleur blanche posée sur la coiffure, tournée vers l'extérieur, avec deux feuilles
+    const fleur = new THREE.Group();
+    const blancFleur = uni('#ffffff');
+    for (const [dx, dy, rz] of [[-0.035, -0.03, 0.9], [0.035, -0.035, -0.9]]) {
+      const feuille = piece(new THREE.SphereGeometry(0.03, 10, 8), uni('#6aa845'), dx, dy, -0.01);
+      feuille.scale.set(1.6, 0.6, 0.3);
+      feuille.rotation.z = rz;
+      fleur.add(feuille);
     }
-    const fleur = fleurSakura(uni, '#fbf8f2', '#f3cf6a');
-    fleur.position.set(0.22, 0.17, 0.15);
-    fleur.rotation.set(-0.5, 0.85, 0);
-    fleur.scale.setScalar(1.1);
+    for (let i = 0; i < 16; i++) {
+      const an = (i / 16) * Math.PI * 2, r = i % 2 ? 0.042 : 0.03;
+      const petale = piece(new THREE.SphereGeometry(0.02, 10, 8), blancFleur, Math.cos(an) * r, Math.sin(an) * r, (i % 2) * -0.008);
+      petale.scale.set(1.25, 0.8, 0.5);
+      petale.rotation.z = an;
+      fleur.add(petale);
+    }
+    fleur.add(piece(new THREE.SphereGeometry(0.02, 12, 10), uni('#f3cf6a'), 0, 0, 0.01));
+    fleur.position.set(0.18, 0.195, 0.165); // sur le dessus de la frange, côté droit, bien visible de face
+    fleur.rotation.set(-0.6, 0.75, 0);
+    fleur.scale.setScalar(1.3);
     touffe.add(fleur);
-  } else if (a.coiffure === 'chignon' || a.coiffure === 'chignonBas') {
-    // baguettes plantées dans le chignon, au modèle choisi
-    const K = a.coiffure === 'chignon' ? ANCRES.chignon : ANCRES.chignonBas;
-    const poses = a.coiffure === 'chignon'
-      ? [[-0.05, 0.0, -0.06, 0.25, 0.1, 0.85], [0.05, -0.01, -0.06, 0.4, -0.1, -0.75]]
-      : [[0.0, 0.0, -0.06, 0.3, 0.2, -1.05]];
-    poses.forEach(([dx, dy, dz, rx, ry, rz], i) => {
-      const b = baguette(a.baguettes, uni, i === 0);
-      b.position.set(K.x + dx, K.y + dy, K.z + dz);
-      b.rotation.set(rx, ry, rz);
+  } else if (a.coiffure === 'chignon') {
+    // deux baguettes croisées dans le chignon bas, au modèle choisi (l'ornement sur la première seulement)
+    for (const s of [-1, 1]) {
+      const b = baguette(a.baguettes, uni, s < 0);
+      b.position.set(0, -0.05, -0.335);
+      b.rotation.set(0.25, 0, s * 0.75);
       touffe.add(b);
-    });
-  } else if (a.coiffure === 'manbun') {
-    const K = ANCRES.manbun;
-    const l = piece(new THREE.TorusGeometry(0.03, 0.009, 8, 16), lien, K.x, K.y + 0.0, K.z - 0.005);
-    l.rotation.x = Math.PI / 2 + 0.3;
-    touffe.add(l);
+    }
+  } else if (a.coiffure === 'chonmage') {
+    const lien = piece(new THREE.TorusGeometry(0.03, 0.009, 8, 16), corail, 0, 0.2, -0.22);
+    lien.rotation.y = Math.PI / 2;
+    lien.rotation.z = 0.3;
+    touffe.add(lien);
   } else if (a.coiffure === 'carre' || a.coiffure === 'longs') {
     for (const s of [-1, 1]) {
       // attaches sombres sur les mèches de côté (plus bas et plus larges sur les cheveux longs)
@@ -1655,13 +1663,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     }
   }
   // Le capybara a les yeux plus haut que les autres animaux : sa coiffure remonte pour ne pas les cacher
-  // (coupes en mèches : posées sur son crâne, plus bas et plus en avant, avec une frange plus courte)
-  if (espece === 'capybara') {
-    if (COUPES_MECHES.includes(a.coiffure)) { touffe.position.set(0, 0.035, -0.012); touffe.scale.set(0.95, 0.98, 1.07); }
-    else { touffe.position.set(0, 0.095, -0.025); touffe.scale.setScalar(1.05); }
-  }
-  // crâne humain un peu plus haut : les coupes en mèches montent d'autant
-  if (espece === 'humain' && COUPES_MECHES.includes(a.coiffure)) touffe.scale.set(1, 1.08, 1);
+  if (espece === 'capybara') { touffe.position.set(0, 0.095, -0.025); touffe.scale.setScalar(1.05); }
   tete.add(touffe);
   contourner(tete);
   contourner(queue);
