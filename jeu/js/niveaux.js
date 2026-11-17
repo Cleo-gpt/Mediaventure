@@ -79,8 +79,19 @@ export const NIVEAUX = {
       { nom: 'Salomé Duperrex', url: 'https://sduperrex.eleves.mediamatique.ch/portfolio/', icone: '🖌️' },
     ],
     boss: {
-      nom: 'Ariane Nicollier', titre: 'Boss Design', pv: 85, pa: 6, pm: 3,
-      apparence: { espece: 'humain', coiffure: 'tresses', cheveux: '#7a4a2a', kimono: '#e8672c', geta: PALETTE.creme },
+      nom: 'Jade Perroset', titre: 'Boss Design', pv: 85, pa: 6, pm: 3,
+      apparence: {
+        // comme M. Graber : la tenue de sa photo (haut noir) et sa vraie tête
+        espece: 'humain', genre: 'femme', tenue: 'polo', polo: '#2a2a30', pantalon: '#232326', micro: false, cheveux: '#524441',
+        // texture préparée par outils/tete_photo.py perroset
+        tetePhoto: {
+          texture: '../portraits/perroset_tete.png', cadre: [25, 10, 135, 150], nez: 80, cheveux: '#524441', peau: '#e2bcaa', hauteur: 0.6, decalage: 0.07,
+          contour: [[60, 24], [80, 20], [100, 24], [115, 34], [123, 50], [126, 70], [124, 90], [120, 108], [113, 122], [103, 133],
+            [90, 139], [78, 140], [66, 138], [55, 131], [46, 120], [40, 105], [36, 88], [36, 68], [40, 48], [48, 33]],
+        },
+      },
+      portrait: '../portraits/perroset.png', // photo affichée à côté de ses dialogues
+      defi: 'Bienvenue chez les designers ! Ici, chaque détail compte… Voyons si ton sens du style tient face au mien.',
       sorts: [
         { nom: 'Trait de cutter', pa: 3, portee: [1, 1], degats: [9, 13] },
         { nom: 'Palette de couleurs', pa: 4, portee: [2, 5], degats: [7, 11] },

@@ -1,6 +1,6 @@
 # Prépare la texture de la tête « photo » d'un boss : recadrage autour de la tête,
 # hors silhouette rempli en couleur cheveux (haut) ou peau (bas) pour des bords propres en 3D.
-# usage : python3 outils/tete_photo.py graber   (ou droz, forestier, haenssler ; sans argument : tous)
+# usage : python3 outils/tete_photo.py graber   (ou droz, forestier, haenssler, perroset ; sans argument : tous)
 # Les valeurs affichées (cadre, contour, cheveux, peau) se recopient dans `tetePhoto` du boss (jeu/js/niveaux.js).
 from PIL import Image, ImageDraw, ImageFilter
 import numpy as np, json, sys
@@ -57,11 +57,26 @@ PERSONNES = {
         'zone_peau': (60, 85, 215, 280),
         'limite': 150,
     },
+    'perroset': {
+        'src': 'références/personnages/perroset_photo.png',
+        'detourage': None,
+        'dst': 'portraits/perroset_tete.png',
+        'cadre': (25, 10, 135, 150),
+        # longs cheveux châtains, lunettes rondes, sans le cou (photo d'identité, petite : 155 × 200)
+        'contour': [(60, 24), (80, 20), (100, 24), (115, 34), (123, 50), (126, 70), (124, 90), (120, 108), (113, 122), (103, 133),
+                    (90, 139), (78, 140), (66, 138), (55, 131), (46, 120), (40, 105), (36, 88), (36, 68), (40, 48), (48, 33)],
+        'zone_cheveux': (22, 30, 70, 95),
+        'zone_peau': (45, 55, 65, 95),
+        'limite': 60,
+    },
 }
 
 
 def preparer(nom, p):
     img = np.array(Image.open(p['src']).convert('RGB')).astype(float)
+    if p.get('teinte'):
+        lum = img.mean(2, keepdims=True) / 255
+        img = np.clip(lum ** 0.85 * 1.15, 0, 1) * np.array(p['teinte'], float)
     masque = Image.new('L', (img.shape[1], img.shape[0]), 0)
     ImageDraw.Draw(masque).polygon(p['contour'], fill=255)
     m = np.array(masque)

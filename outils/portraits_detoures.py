@@ -6,7 +6,7 @@ import subprocess, sys, tempfile, os
 import numpy as np
 from PIL import Image
 
-PROFS = ['graber', 'droz', 'forestier', 'haenssler']
+PROFS = ['graber', 'droz', 'forestier', 'haenssler', 'perroset']
 
 
 def plus_grand_morceau(opaque):
