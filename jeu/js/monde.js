@@ -677,19 +677,12 @@ function decorTournesols({ groupe, scene, niveau, colliders, animations, chargeu
 }
 
 // ------------------------------------------------------------------ Design : Daisetsuzan en automne
-function decorAutomne({ groupe, scene, colliders, animations }) {
-  scene.fog = new THREE.Fog('#f2c29a', 40, 170);
-  solExterieur(groupe, '#c9884e', '#9a6a44');
-  // Montagnes au loin, versants orangés et sommets clairs
-  for (let i = 0; i < 11; i++) {
-    const a = (i / 11) * Math.PI * 2 + 0.3, h = auHasard(25, 45);
-    const mont = fusionner([
-      colorer(new THREE.ConeGeometry(h * 0.9, h, 7).translate(0, h / 2, 0), i % 2 ? '#b8714a' : '#9f6a52'),
-      colorer(new THREE.ConeGeometry(h * 0.25, h * 0.28, 7).translate(0, h * 0.86, 0), '#f3e6d6'),
-    ]);
-    mont.position.set(Math.cos(a) * 120, -2, Math.sin(a) * 120);
-    groupe.add(mont);
-  }
+function decorAutomne({ groupe, scene, niveau, colliders, animations, chargeurTexture }) {
+  // Fond dessiné (ciel bleu, arbres d'automne, herbe et feuilles mortes) tout autour de l'île ;
+  // brume et sol aux couleurs de son herbe pour que le décor 3D s'y fonde
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 6, bas: -12 });
+  scene.fog = new THREE.Fog('#7fae4c', 32, 118);
+  solExterieur(groupe, '#86b24f', '#6f9d42', 91);
   const TEINTES = ['#e8672c', '#d9482b', '#f2a33a', '#c9542f', '#f0b54a'];
   const erable = (x, z, echelle = 1) => {
     const h = auHasard(2.2, 3.4) * echelle, m = [colorer(new THREE.CylinderGeometry(0.15 * echelle, 0.25 * echelle, h, 7).translate(0, h / 2, 0), '#6b4a33')];

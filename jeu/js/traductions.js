@@ -23,6 +23,7 @@ const L = [
   ["Il rejoint ton inventaire, en haut à droite.", "It goes into your inventory, top right.", "Er kommt in dein Inventar, oben rechts.", "Finisce nel tuo inventario, in alto a destra."],
   ["Objet de quête obtenu", "Quest item obtained", "Questgegenstand erhalten", "Oggetto della missione ottenuto"],
   ["Continuer", "Continue", "Weiter", "Continua"],
+  ["⏭ Passer le combat", "⏭ Skip the fight", "⏭ Kampf überspringen", "⏭ Salta il combattimento"],
   ["Chargement", "Loading", "Wird geladen", "Caricamento"],
   ["Espace / clic pour continuer", "Space / click to continue", "Leertaste / Klick zum Fortfahren", "Spazio / clic per continuare"],
   ["Touche la bulle pour continuer", "Tap the bubble to continue", "Tippe auf die Blase, um fortzufahren", "Tocca il fumetto per continuare"],

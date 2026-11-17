@@ -396,6 +396,17 @@ $('passer-epreuve').onclick = () => {
   dialogue([{ nom: nomPnj(), texte: t('Épreuve passée (bouton de test). {boss} t’attend dans l’arène.', { boss: niveau.boss.nom }) }]);
 };
 
+// Même bouton provisoire pour le combat : le boss est vaincu d'office (pendant le combat ou avant de le lancer),
+// l'objet de quête apparaît comme après une vraie victoire. Disparaît aussi le 27 novembre 2026 à 17 h.
+const peutPasserCombat = () => new Date() < FIN_BOUTON_PASSER && niveau && etatNiveau.miniJeuReussi && !etatNiveau.bossVaincu
+  && (mode === 'exploration' || (mode === 'combat' && combat && combat.etat !== 'fin'));
+$('passer-combat').onclick = () => {
+  if (!peutPasserCombat()) return;
+  if (mode === 'exploration') lancerCombat();
+  combat.b.pv = 0;
+  combat.verifierFin();
+};
+
 function ouvrirArene() {
   etatNiveau.miniJeuReussi = true;
   monde.ouvrirArene();
@@ -924,6 +935,7 @@ function masquerEntreCameraEtJoueur(cible, dt) {
 // ------------------------------------------------------------------ Boucle
 function boucle() {
   requestAnimationFrame(boucle);
+  $('passer-combat').hidden = !peutPasserCombat();
   const dt = Math.min(horloge.getDelta(), 0.05);
   const t = horloge.elapsedTime;
   if (mode === 'creation') {
