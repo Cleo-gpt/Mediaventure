@@ -1,0 +1,3 @@
+Vidéos MP4 du niveau Multimédia (facultatif).
+Noms attendus : projet-video.mp4, la-video-en-bref.mp4, au-dela-du-sang.mp4.
+Sans fichier ici, le jeu lit la vidéo sur YouTube.

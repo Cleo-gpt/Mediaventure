@@ -33,7 +33,7 @@ def plus_grand_morceau(opaque):
 
 for nom in sys.argv[1:] or PROFS:
     src = f'références/personnages/{nom}_photo.png'
-    dst = f'portraits/{nom}.png'
+    dst = f'jeu/portraits/{nom}.png'
     with tempfile.TemporaryDirectory() as dossier:
         brut = os.path.join(dossier, 'brut.png')
         subprocess.run(['swift', 'outils/detourer.swift', src, brut], check=True, capture_output=True)

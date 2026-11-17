@@ -1,6 +1,6 @@
 // Détoure une photo de personne (fond transparent) avec la détection de personnes de macOS (framework Vision),
 // sans internet. Sert aux portraits des profs affichés à côté des dialogues.
-// usage : swift outils/detourer.swift références/personnages/droz_photo.png portraits/droz.png
+// usage : swift outils/detourer.swift références/personnages/droz_photo.png jeu/portraits/droz.png
 import AppKit
 import CoreImage
 import Vision

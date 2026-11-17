@@ -738,7 +738,7 @@ function avancerDialogue() {
 
 // Portrait illustré à côté de chaque bloc de texte : celui du personnage qui parle s'il en a un,
 // sinon celui de Cléo, la guide. `null` → portrait de la guide ; `false` → aucun portrait.
-const PORTRAIT_GUIDE = '../portraits/cleo_miko.png';
+const PORTRAIT_GUIDE = 'portraits/cleo_miko.png';
 function montrerPortrait(portrait) {
   const img = $('dialogue-portrait');
   if (portrait === false) {

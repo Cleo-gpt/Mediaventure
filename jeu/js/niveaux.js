@@ -26,7 +26,7 @@ export const NIVEAUX = {
       nom: 'Cléo Forclaz', titre: 'Gardienne du Sas (démo)', pv: 45, pa: 6, pm: 3,
       // Miko au masque de renard
       apparence: { espece: 'humain', coiffure: 'longs', cheveux: '#7a4a25', tenue: 'miko', masque: 'kitsune' },
-      portrait: '../portraits/cleo_miko.png', // illustration détourée, affichée à côté de ses dialogues
+      portrait: 'portraits/cleo_miko.png', // illustration détourée, affichée à côté de ses dialogues
       sorts: [
         { nom: 'Pichenette', pa: 3, portee: [1, 1], degats: [5, 8] },
         { nom: 'Feuille de bambou', pa: 4, portee: [2, 4], degats: [4, 7] },
@@ -40,11 +40,11 @@ export const NIVEAUX = {
     ciel: '#82ccfa', brume: '#7aa852', sol: '#77ab52', chemin: PALETTE.creme, accent: '#f2b632',
     fond: '../fonds/multimedia_tournesols.jpg', miniJeu: 'video', suivant: 'design',
     // Bibliothèque de vidéos : `youtube` = identifiant de la vidéo YouTube (il faut internet),
-    // ou `src: '../videos/fichier.mp4'` pour une vidéo en local ; sans les deux, un lecteur animé la remplace.
+    // ou `src: 'videos/fichier.mp4'` pour une vidéo en local ; sans les deux, un lecteur animé la remplace.
     videos: [
-      { titre: 'Projet vidéo', credit: 'Rémy Martinez', src: '../videos/projet-video.mp4', youtube: 'Ne7nYNzBqcg', duree: 114, icone: '🎬' },
-      { titre: 'La vidéo en bref', credit: 'Cléo Ana Forclaz', src: '../videos/la-video-en-bref.mp4', youtube: 'at5eeLY0Xyw', duree: 136, icone: '🎞️' },
-      { titre: 'Au-delà du sang', credit: 'Salomé Duperrex', src: '../videos/au-dela-du-sang.mp4', youtube: 'K6EnqKqhGyk', duree: 135, icone: '🎥' },
+      { titre: 'Projet vidéo', credit: 'Rémy Martinez', src: 'videos/projet-video.mp4', youtube: 'Ne7nYNzBqcg', duree: 114, icone: '🎬' },
+      { titre: 'La vidéo en bref', credit: 'Cléo Ana Forclaz', src: 'videos/la-video-en-bref.mp4', youtube: 'at5eeLY0Xyw', duree: 136, icone: '🎞️' },
+      { titre: 'Au-delà du sang', credit: 'Salomé Duperrex', src: 'videos/au-dela-du-sang.mp4', youtube: 'K6EnqKqhGyk', duree: 135, icone: '🎥' },
     ],
     boss: {
       nom: 'Roderick Graber', titre: 'Boss Multimédia', pv: 85, pa: 6, pm: 3,
@@ -52,12 +52,12 @@ export const NIVEAUX = {
         espece: 'humain', tenue: 'veste', lunettes: true,
         // vraie tête tirée de la photo (texture préparée par outils/tete_photo.py)
         tetePhoto: {
-          texture: '../portraits/graber_tete.png', cadre: [95, 75, 415, 455], nez: 285, cheveux: '#b39a7c', peau: '#d3a58e', hauteur: 0.6, decalage: 0.07,
+          texture: 'portraits/graber_tete.png', cadre: [95, 75, 415, 455], nez: 285, cheveux: '#b39a7c', peau: '#d3a58e', hauteur: 0.6, decalage: 0.07,
           contour: [[193, 84], [250, 82], [293, 92], [358, 108], [390, 135], [400, 185], [398, 250], [390, 310], [372, 360], [335, 405],
             [295, 435], [258, 442], [215, 428], [170, 400], [132, 350], [110, 300], [105, 240], [113, 195], [150, 122], [172, 96]],
         },
       },
-      portrait: '../portraits/graber.png',
+      portrait: 'portraits/graber.png',
       defi: 'Ah, te voilà ! Silence sur le plateau… moteur… action ! Voyons si tu tiens la lumière.',
       sorts: [
         { nom: 'Coupe franche', pa: 3, portee: [1, 1], degats: [9, 13] },
@@ -85,12 +85,12 @@ export const NIVEAUX = {
         espece: 'humain', genre: 'femme', tenue: 'polo', polo: '#2a2a30', pantalon: '#232326', micro: false, cheveux: '#524441',
         // texture préparée par outils/tete_photo.py perroset
         tetePhoto: {
-          texture: '../portraits/perroset_tete.png', cadre: [25, 10, 135, 150], nez: 80, cheveux: '#524441', peau: '#e2bcaa', hauteur: 0.6, decalage: 0.07,
+          texture: 'portraits/perroset_tete.png', cadre: [25, 10, 135, 150], nez: 80, cheveux: '#524441', peau: '#e2bcaa', hauteur: 0.6, decalage: 0.07,
           contour: [[60, 24], [80, 20], [100, 24], [115, 34], [123, 50], [126, 70], [124, 90], [120, 108], [113, 122], [103, 133],
             [90, 139], [78, 140], [66, 138], [55, 131], [46, 120], [40, 105], [36, 88], [36, 68], [40, 48], [48, 33]],
         },
       },
-      portrait: '../portraits/perroset.png', // photo affichée à côté de ses dialogues
+      portrait: 'portraits/perroset.png', // photo affichée à côté de ses dialogues
       defi: 'Bienvenue chez les designers ! Ici, chaque détail compte… Voyons si ton sens du style tient face au mien.',
       sorts: [
         { nom: 'Trait de cutter', pa: 3, portee: [1, 1], degats: [9, 13] },
@@ -136,13 +136,13 @@ export const NIVEAUX = {
         espece: 'humain', genre: 'homme', tenue: 'polo', polo: '#f2a25a', cheveux: '#8a8682',
         // vraie tête tirée de la photo (texture préparée par outils/tete_photo.py droz)
         tetePhoto: {
-          texture: '../portraits/droz_tete.png', cadre: [120, 80, 510, 620], nez: 305, cheveux: '#8a8682', peau: '#c99a86', hauteur: 0.6, decalage: 0.07,
+          texture: 'portraits/droz_tete.png', cadre: [120, 80, 510, 620], nez: 305, cheveux: '#8a8682', peau: '#c99a86', hauteur: 0.6, decalage: 0.07,
           contour: [[215, 130], [270, 98], [330, 92], [395, 105], [445, 140], [478, 190], [488, 260], [492, 340], [482, 410],
             [462, 470], [430, 530], [385, 580], [330, 603], [275, 595], [232, 565], [205, 520], [180, 460], [150, 420],
             [138, 350], [140, 270], [155, 205], [180, 160]],
         },
       },
-      portrait: '../portraits/droz.png', // photo affichée à côté de ses dialogues
+      portrait: 'portraits/droz.png', // photo affichée à côté de ses dialogues
       defi: 'Ah, te voilà ! En marketing, tout est une question de stratégie… Voyons si la tienne résiste à mes arguments.',
       sorts: [
         { nom: 'Argument choc', pa: 3, portee: [1, 1], degats: [10, 14] },
@@ -164,13 +164,13 @@ export const NIVEAUX = {
         espece: 'humain', genre: 'homme', tenue: 'polo', polo: '#2f5557', cheveux: '#3a2a22',
         // texture préparée par outils/tete_photo.py forestier
         tetePhoto: {
-          texture: '../portraits/forestier_tete.png', cadre: [190, 55, 425, 410], nez: 305, cheveux: '#3a2a22', peau: '#3f2c24', hauteur: 0.6, decalage: 0.07, // peau = couleur de la barbe sur les côtés
+          texture: 'portraits/forestier_tete.png', cadre: [190, 55, 425, 410], nez: 305, cheveux: '#3a2a22', peau: '#3f2c24', hauteur: 0.6, decalage: 0.07, // peau = couleur de la barbe sur les côtés
           contour: [[240, 95], [290, 70], [345, 72], [385, 100], [402, 140], [408, 190], [410, 240], [400, 290], [392, 330],
             [375, 365], [345, 390], [310, 395], [275, 385], [248, 360], [230, 320], [222, 280], [210, 240], [202, 190],
             [205, 140], [220, 110]],
         },
       },
-      portrait: '../portraits/forestier.png', // photo affichée à côté de ses dialogues
+      portrait: 'portraits/forestier.png', // photo affichée à côté de ses dialogues
       defi: 'Ah, te voilà ! Ici, tout doit être en ordre : dossiers classés, factures réglées… Voyons si tu sais gérer la pression !',
       sorts: [
         { nom: 'Facture surprise', pa: 3, portee: [1, 1], degats: [10, 14] },
@@ -192,12 +192,12 @@ export const NIVEAUX = {
         espece: 'humain', genre: 'homme', tenue: 'polo', carreaux: true, polo: '#c8383d', micro: false, cheveux: '#7a6458',
         // texture préparée par outils/tete_photo.py haenssler
         tetePhoto: {
-          texture: '../portraits/haenssler_tete.png', cadre: [125, 25, 365, 320], nez: 248, cheveux: '#7a6458', peau: '#d39c86', hauteur: 0.6, decalage: 0.07,
+          texture: 'portraits/haenssler_tete.png', cadre: [125, 25, 365, 320], nez: 248, cheveux: '#7a6458', peau: '#d39c86', hauteur: 0.6, decalage: 0.07,
           contour: [[195, 45], [245, 33], [295, 40], [330, 70], [345, 115], [355, 165], [352, 215], [338, 255], [315, 285],
             [280, 305], [245, 310], [210, 300], [180, 275], [160, 240], [142, 200], [135, 160], [140, 110], [160, 70]],
         },
       },
-      portrait: '../portraits/haenssler.png', // photo affichée à côté de ses dialogues
+      portrait: 'portraits/haenssler.png', // photo affichée à côté de ses dialogues
       defi: 'Te voilà enfin ! Tu as réuni les six objets de quête… Mais pour terminer Médiaventure, il faudra d’abord passer par moi !',
       sorts: [
         { nom: 'Coup de maître', pa: 3, portee: [1, 1], degats: [12, 16] },

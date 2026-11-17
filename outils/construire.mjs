@@ -55,11 +55,12 @@ await build({
 
 const TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.glb': 'model/gltf-binary' };
 const ressources = {};
-for (const dossier of ['fonds', 'objets-quete', 'portraits', 'carpes']) {
+// [dossier sur le disque, chemin utilisé par le jeu] (les portraits sont rangés dans jeu/portraits)
+for (const [dossier, chemin] of [['fonds', '../fonds'], ['objets-quete', '../objets-quete'], ['jeu/portraits', 'portraits'], ['carpes', '../carpes']]) {
   for (const f of readdirSync(join(racine, dossier))) {
     const type = TYPES[extname(f).toLowerCase()];
     if (!type) continue;
-    ressources[`../${dossier}/${f}`] = `data:${type};base64,` + readFileSync(join(racine, dossier, f)).toString('base64');
+    ressources[`${chemin}/${f}`] = `data:${type};base64,` + readFileSync(join(racine, dossier, f)).toString('base64');
   }
 }
 writeFileSync(join(jeu, 'ressources.js'),

@@ -9,7 +9,7 @@ PERSONNES = {
     'graber': {
         'src': 'références/personnages/graber_photo.png',
         'detourage': 'références/personnages/graber_masque.png',  # masque du détourage (GrabCut) de la photo
-        'dst': 'portraits/graber_tete.png',
+        'dst': 'jeu/portraits/graber_tete.png',
         'cadre': (95, 75, 415, 455),  # x0, y0, x1, y1 dans la photo
         # silhouette de la tête (cheveux + visage, sans le cou), coordonnées de la photo
         'contour': [(193, 84), (250, 82), (293, 92), (358, 108), (390, 135), (400, 185), (398, 250), (390, 310), (372, 360),
@@ -22,7 +22,7 @@ PERSONNES = {
     'droz': {
         'src': 'références/personnages/droz_photo.png',
         'detourage': None,  # pas de masque : la silhouette dessinée suffit (fond uni derrière la tête)
-        'dst': 'portraits/droz_tete.png',
+        'dst': 'jeu/portraits/droz_tete.png',
         'cadre': (120, 80, 510, 620),
         # cheveux gris + visage + barbe, sans le cou
         'contour': [(215, 130), (270, 98), (330, 92), (395, 105), (445, 140), (478, 190), (488, 260), (492, 340), (482, 410),
@@ -35,7 +35,7 @@ PERSONNES = {
     'forestier': {
         'src': 'références/personnages/forestier_photo.png',
         'detourage': None,
-        'dst': 'portraits/forestier_tete.png',
+        'dst': 'jeu/portraits/forestier_tete.png',
         'cadre': (190, 55, 425, 410),
         # cheveux bruns + visage + grande barbe, sans le cou
         'contour': [(240, 95), (290, 70), (345, 72), (385, 100), (402, 140), (408, 190), (410, 240), (400, 290), (392, 330),
@@ -48,7 +48,7 @@ PERSONNES = {
     'haenssler': {
         'src': 'références/personnages/haenssler_photo.png',
         'detourage': None,
-        'dst': 'portraits/haenssler_tete.png',
+        'dst': 'jeu/portraits/haenssler_tete.png',
         'cadre': (125, 25, 365, 320),
         # crâne dégarni, lunettes, oreilles, sans le cou
         'contour': [(195, 45), (245, 33), (295, 40), (330, 70), (345, 115), (355, 165), (352, 215), (338, 255), (315, 285),
@@ -60,7 +60,7 @@ PERSONNES = {
     'perroset': {
         'src': 'références/personnages/perroset_photo.png',
         'detourage': None,
-        'dst': 'portraits/perroset_tete.png',
+        'dst': 'jeu/portraits/perroset_tete.png',
         'cadre': (25, 10, 135, 150),
         # longs cheveux châtains, lunettes rondes, sans le cou (photo d'identité, petite : 155 × 200)
         'contour': [(60, 24), (80, 20), (100, 24), (115, 34), (123, 50), (126, 70), (124, 90), (120, 108), (113, 122), (103, 133),
