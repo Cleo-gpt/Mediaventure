@@ -46,9 +46,9 @@ majBoutonSon();
 // ------------------------------------------------------------------ Rendu
 const canvas = $('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, ECRAN_TACTILE ? 1.5 : 2)); // plus léger sur téléphone
+renderer.setPixelRatio(Math.min(devicePixelRatio, ECRAN_TACTILE ? 1.25 : 1.5)); // au-delà, l'écran Retina coûte beaucoup pour un gain à peine visible
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap; // ombres filtrées, moins coûteuses que PCFSoft
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 800);
@@ -876,4 +876,4 @@ if (params.has('niveau') && NIVEAUX[params.get('niveau')]) {
 if (partie.termine && !params.has('niveau')) afficherFin();
 
 // Pour le débogage depuis la console
-window.jeu = { partie, lancerMiniJeu, tourner: (r) => { rotationApercu = r; rotationAuto = false; }, essayer: (ap) => { Object.assign(partie.apparence, ap); majApercu(); }, zoom: (v) => { zoomVoulu = zoomApercu = v; }, get mode() { return mode; }, get combat() { return combat; }, etatNiveau, lancerNiveau, ouvrirArene, lancerCombat, joueur: () => joueur, camera, cam };
+window.jeu = { partie, renderer, get monde() { return monde; }, lancerMiniJeu, tourner: (r) => { rotationApercu = r; rotationAuto = false; }, essayer: (ap) => { Object.assign(partie.apparence, ap); majApercu(); }, zoom: (v) => { zoomVoulu = zoomApercu = v; }, get mode() { return mode; }, get combat() { return combat; }, etatNiveau, lancerNiveau, ouvrirArene, lancerCombat, joueur: () => joueur, camera, cam };

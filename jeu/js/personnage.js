@@ -35,8 +35,10 @@ export const APPARENCE_DEFAUT = {
 // Étape actuelle : avatars animaux. Le vestiaire ne propose que ce qui est déjà modélisé.
 export const CATEGORIES_DISPONIBLES = ['espece', 'coiffure', 'cheveux', 'kimono', 'geta', 'accessoire', 'arme', 'prenom'];
 
-const PAS = 0.006;
-const PAS_TETE = 0.0045;
+// Pas des grandes surfaces (corps, tête, coiffures) : ~1 cm suffit à l'écran et divise les triangles par ~2,5.
+// Les petites pièces (col, boutons, obi, queue…) gardent leur pas fin pour ne pas disparaître.
+const PAS = 0.012;
+const PAS_TETE = 0.0095;
 
 const PELAGE = {
   shiba: { base: '#eba04e', clair: '#fbf1e2', oreille: '#f6bfae', truffe: '#3a2a26' },
@@ -684,7 +686,7 @@ const cacheCoiffures = new Map();
 function geometrieCoiffure(id) {
   if (!coiffures[id]) return null;
   if (!cacheCoiffures.has(id)) cacheCoiffures.set(id, memo('coiffure.' + id, () => {
-    const geo = extraire(coiffures[id], [-0.4, id === 'longs' ? -0.5 : -0.42, -0.4], [0.4, 0.36, 0.33], 0.0055);
+    const geo = extraire(coiffures[id], [-0.4, id === 'longs' ? -0.5 : -0.42, -0.4], [0.4, 0.36, 0.33], 0.0095);
     // Dégradé des longs cheveux : châtain foncé en haut, caramel aux pointes
     if (id === 'longs') {
       const p = geo.attributes.position, col = new Float32Array(p.count * 3);

@@ -427,11 +427,11 @@ function decorBambou({ groupe, scene, niveau, colliders, animations, chargeurTex
 
   const bambou = (x, z) => {
     const h = 10 + Math.random() * 8, r = 0.1 + Math.random() * 0.13;
-    const morceaux = [colorer(new THREE.CylinderGeometry(r, r * 1.06, h, 12).translate(0, h / 2, 0), VERTS[Math.floor(Math.random() * VERTS.length)])];
+    const morceaux = [colorer(new THREE.CylinderGeometry(r, r * 1.06, h, 8).translate(0, h / 2, 0), VERTS[Math.floor(Math.random() * VERTS.length)])];
     const pas = 1.1 + r * 3;
     for (let y = 0.6 + Math.random() * pas; y < h; y += pas) {
-      morceaux.push(colorer(new THREE.CylinderGeometry(r * 1.04, r * 1.04, 0.035, 12).translate(0, y, 0), '#53782e'));
-      morceaux.push(colorer(new THREE.TorusGeometry(r * 1.03, 0.012, 3, 12, Math.PI * 0.75).rotateX(Math.PI / 2).rotateY(Math.random() * 6.28).translate(0, y - 0.16, 0), '#c6ef8e'));
+      morceaux.push(colorer(new THREE.CylinderGeometry(r * 1.04, r * 1.04, 0.035, 8, 1, true).translate(0, y, 0), '#53782e'));
+      morceaux.push(colorer(new THREE.TorusGeometry(r * 1.03, 0.012, 3, 6, Math.PI * 0.75).rotateX(Math.PI / 2).rotateY(Math.random() * 6.28).translate(0, y - 0.16, 0), '#c6ef8e'));
     }
     const b = new THREE.Mesh(mergeGeometries(morceaux), matBambou);
     morceaux.forEach((m) => m.dispose());
@@ -447,14 +447,16 @@ function decorBambou({ groupe, scene, niveau, colliders, animations, chargeurTex
   // Cases à laisser libres : le chemin (x ≈ 0), l'arène du boss et l'arrivée
   const libre = (x, z) => Math.abs(x) > 4.5 && !(Math.abs(x) < 8 && z > -17 && z < -3);
   const planter = (x, z, solide) => {
-    balancent.push(bambou(x, z));
+    const b = bambou(x, z);
+    balancent.push(b);
     if (solide) colliders.push({ x, z, r: 0.35 });
+    return b;
   };
   // Forêt dense tout autour de la clairière
   for (let i = 0; i < 560; i++) {
     const a = Math.random() * Math.PI * 2, r = RAYON_ILE + 0.5 + Math.random() ** 0.8 * 30;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    if (horsCouloirCamera(x, z)) planter(x, z, false); // rien derrière l'arrivée, où se trouve la caméra au début
+    if (horsCouloirCamera(x, z)) planter(x, z, false).castShadow = false; // rien derrière l'arrivée ; hors de l'île : pas d'ombre (coûteux, invisible)
   }
   // Lisière : bambous qui débordent dans la clairière
   for (let i = 0; i < 90; i++) {
