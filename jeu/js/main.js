@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { NIVEAUX, OBJETS, ORDRE, PALETTE } from './niveaux.js';
 import { QUESTIONS, SEUIL } from './quiz.js';
 import { construireNiveau, RAYON_ILE, ARENE, POS } from './monde.js';
-import { creerPersonnage, animerPersonnage, APPARENCE_DEFAUT } from './personnage.js';
+import { creerPersonnage, animerPersonnage, APPARENCE_DEFAUT, ombrelleTranslucide } from './personnage.js';
 import { Combat } from './combat.js';
 import { epreuveVideo, epreuvePortfolios, epreuveEtapes, epreuveCodeGaia } from './minijeux.js';
 import { creerVestiaire } from './vestiaire.js';
@@ -269,6 +269,7 @@ async function lancerNiveau(id) {
   monde = construireNiveau(scene, niveau, chargeurTexture);
 
   joueur = creerPersonnage(partie.apparence);
+  ombrelleTranslucide(joueur);
   joueur.position.copy(POS.depart);
   joueur.rotation.y = Math.PI;
   joueur.userData.vy = 0;
@@ -564,6 +565,70 @@ $('code-staff').addEventListener('keydown', (e) => {
 $('staff').addEventListener('click', (e) => { if (e.target === $('staff')) fermerStaff(); });
 
 // ------------------------------------------------------------------ Objet de quête
+// Le vrai modèle 3D de l'objet (pas un émoji) : il tourne dans la fenêtre « objet obtenu »
+// et sert à fabriquer les vignettes de l'inventaire. Un petit moteur de rendu séparé, fond transparent.
+const apercuObjet = (() => {
+  let rendu = null, scene3d = null, cam = null, modele = null, anime = 0;
+  const modeles = new Map(), vignettes = new Map();
+  function preparer() {
+    if (rendu) return;
+    rendu = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    rendu.setPixelRatio(Math.min(devicePixelRatio, 2));
+    rendu.setSize(200, 200);
+    rendu.toneMapping = THREE.ACESFilmicToneMapping;
+    rendu.domElement.className = 'objet-3d';
+    scene3d = new THREE.Scene();
+    scene3d.add(new THREE.HemisphereLight('#ffffff', '#b9a98c', 2.2));
+    const soleil = new THREE.DirectionalLight('#ffffff', 2.4);
+    soleil.position.set(2, 3, 4);
+    scene3d.add(soleil);
+    cam = new THREE.PerspectiveCamera(30, 1, 0.1, 20);
+    cam.position.set(0, 0.45, 2.3);
+    cam.lookAt(0, 0, 0);
+  }
+  async function charger(id) {
+    if (!modeles.has(id)) {
+      modeles.set(id, chargeurGLB.loadAsync(DOSSIER_OBJETS + OBJETS[id].fichier).then((g) => {
+        const m = g.scene;
+        const taille = new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3());
+        m.scale.setScalar(1 / Math.max(taille.x, taille.y, taille.z));
+        m.position.sub(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()));
+        const pivot = new THREE.Group();
+        pivot.add(m);
+        return pivot;
+      }));
+    }
+    return modeles.get(id);
+  }
+  function montrer(m, angle) {
+    if (modele) scene3d.remove(modele);
+    modele = m;
+    modele.rotation.y = angle;
+    scene3d.add(modele);
+    rendu.render(scene3d, cam);
+  }
+  return {
+    // fait tourner l'objet dans `conteneur` jusqu'à `arreter()`
+    async tourner(id, conteneur) {
+      preparer();
+      cancelAnimationFrame(anime);
+      const m = await charger(id);
+      conteneur.replaceChildren(rendu.domElement);
+      const t0 = performance.now();
+      const boucle = () => { montrer(m, -0.6 + (performance.now() - t0) / 1400); anime = requestAnimationFrame(boucle); };
+      boucle();
+    },
+    arreter() { cancelAnimationFrame(anime); },
+    // image fixe de l'objet (data URL), pour l'inventaire
+    async vignette(id) {
+      if (!vignettes.has(id)) {
+        vignettes.set(id, charger(id).then((m) => { preparer(); cancelAnimationFrame(anime); montrer(m, -0.6); return rendu.domElement.toDataURL('image/png'); }));
+      }
+      return vignettes.get(id);
+    },
+  };
+})();
+
 async function apparaitreObjet() {
   const def = OBJETS[niveau.id];
   const support = new THREE.Group();
@@ -600,12 +665,14 @@ function ramasser(def) {
   if (!partie.objets.includes(niveau.id)) partie.objets.push(niveau.id);
   sauver();
   majInventaire();
-  $('obtenu-icone').textContent = def?.icone ?? '✨';
+  $('obtenu-icone').textContent = '';
+  if (def) apercuObjet.tourner(niveau.id, $('obtenu-icone')).catch(() => { $('obtenu-icone').textContent = def.icone; });
   $('obtenu-nom').textContent = t(def?.nom ?? '');
   $('obtenu').hidden = false;
   montrerPortrait(null);
   mode = 'dialogue';
   $('obtenu-ok').onclick = () => {
+    apercuObjet.arreter();
     $('obtenu').hidden = true;
     montrerPortrait(false);
     mode = 'exploration';
@@ -625,7 +692,8 @@ function majInventaire() {
     const d = document.createElement('div');
     const a = partie.objets.includes(id);
     d.className = `case-inv${a ? ' acquis' : ''}`;
-    d.textContent = a ? OBJETS[id].icone : '';
+    d.textContent = '';
+    if (a) apercuObjet.vignette(id).then((url) => { d.innerHTML = `<img src="${url}" alt="">`; }).catch(() => { d.textContent = OBJETS[id].icone; });
     d.title = a ? t(OBJETS[id].nom) : t('{ile} — pas encore obtenu', { ile: t(NIVEAUX[id].titre) });
     inv.append(d);
   }

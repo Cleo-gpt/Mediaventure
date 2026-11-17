@@ -1,5 +1,5 @@
 // Le Sas : vestiaire de création du personnage (onglets, catégories, cartes à étoiles, historique).
-import { OPTIONS, CATEGORIES_DISPONIBLES } from './personnage.js';
+import { OPTIONS, CATEGORIES_DISPONIBLES, MOTIF_PAR_COULEUR, motifDe, accessoireDe, armeDe, ceintureDe } from './personnage.js';
 import { PALETTE } from './niveaux.js';
 import { t, LANGUES, langueActuelle } from './i18n.js';
 import { MUSIQUES } from './musique.js';
@@ -8,7 +8,8 @@ const $ = (id) => document.getElementById(id);
 
 const NOMS_COULEURS = {
   [PALETTE.corail]: 'Corail', [PALETTE.rose]: 'Rose sakura', [PALETTE.bleu]: 'Bleu ciel',
-  [PALETTE.marine]: 'Marine', [PALETTE.creme]: 'Crème', '#3f8f7a': 'Jade',
+  [PALETTE.marine]: 'Marine', [PALETTE.creme]: 'Crème', [PALETTE.rosePale]: 'Rose pâle',
+  '#1f1f24': 'Noir', '#3b3e45': 'Anthracite', '#d9c6a3': 'Beige', '#f7f4ee': 'Blanc',
   '#3b6fd1': 'Saphir', '#6b4a33': 'Noisette', '#c0506a': 'Grenat', '#7a5bc4': 'Améthyste',
   '#2a2a2e': 'Encre', '#5a3a2a': 'Châtain', '#a8643a': 'Roux', '#e8d2a6': 'Blond', '#f8a0ab': 'Rose',
 };
@@ -20,9 +21,34 @@ const ICONES = {
   visage: svg('<circle cx="32" cy="32" r="19" fill="none" stroke="currentColor" stroke-width="4"/><path d="M23 31q3 3 6 0M35 31q3 3 6 0M27 41q5 4 10 0" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/>'),
   identite: svg('<circle cx="30" cy="20" r="9" fill="currentColor"/><path d="M14 52q2-18 16-18t16 18z" fill="currentColor"/><path d="M50 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="currentColor"/>'),
   kimono: (c) => svg(`<path d="M20 8h24l14 14-8 8-6-6v34H20V24l-6 6-8-8z" fill="${c}" stroke="#243447" stroke-width="2"/><path d="M26 8l6 16 6-16" fill="none" stroke="${c === PALETTE.creme ? PALETTE.marine : PALETTE.creme}" stroke-width="3"/><rect x="20" y="34" width="24" height="6" fill="${c === PALETTE.marine ? PALETTE.corail : PALETTE.marine}"/>`),
+  // aperçu d'un motif de kimono dans la couleur c (teintes d'accompagnement comme dans le jeu)
+  motif: (c, id) => {
+    const lum = (() => { const n = parseInt((c.length === 7 ? c : '#ff696a').slice(1), 16); return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255; })();
+    const A = lum > 0.8 ? PALETTE.corail : lum > 0.45 ? '#fbf6ee' : PALETTE.rose;
+    const L = lum > 0.45 ? 'rgba(36,52,71,.65)' : 'rgba(155,179,214,.8)';
+    const fleur = (x, y, r, f) => [0, 1, 2, 3, 4].map((i) => `<circle cx="${(x + Math.cos(i * 1.2566 - 1.57) * r * 0.55).toFixed(1)}" cy="${(y + Math.sin(i * 1.2566 - 1.57) * r * 0.55).toFixed(1)}" r="${(r * 0.5).toFixed(1)}" fill="${f}"/>`).join('') + `<circle cx="${x}" cy="${y}" r="${r * 0.22}" fill="#e2b552"/>`;
+    const contenu = {
+      sakura: fleur(20, 20, 9, A) + fleur(44, 30, 7, PALETTE.creme) + fleur(26, 46, 8, A) + fleur(48, 52, 5, PALETTE.creme),
+      asanoha: [0, 1, 2].map((i) => [0, 1, 2, 3, 4, 5].map((k) => `<path d="M${12 + i * 20} 32l${(Math.cos(k * 1.047) * 10).toFixed(1)} ${(Math.sin(k * 1.047) * 10).toFixed(1)}" stroke="${L}" stroke-width="1.6"/>`).join('')).join('') + `<path d="M2 22h60M2 42h60M7 12l20 40M27 12l20 40M47 12l12 24M17 52l20-40M37 52l20-40" stroke="${L}" stroke-width="1.2" opacity=".7"/>`,
+      nuages: `<path d="M4 18q8-6 16 0t16 0 16 0 16 0M4 50q8-6 16 0t16 0 16 0" stroke="${L}" stroke-width="2" fill="none"/><g fill="${A}" stroke="#c9a24a" stroke-width="1.5"><path d="M10 38a6 6 0 0 1 8-6a8 8 0 0 1 14 2a5 5 0 0 1 2 8H12a4 4 0 0 1-2-4z"/><path d="M34 26a5 5 0 0 1 7-5a7 7 0 0 1 12 2a4 4 0 0 1 2 7H36a4 4 0 0 1-2-4z"/></g>`,
+      vagues: `<path d="M2 16q8-6 15 0t15 0 15 0 15 0M2 28q8-6 15 0t15 0 15 0 15 0M2 40q8-6 15 0t15 0 15 0 15 0M2 52q8-6 15 0t15 0 15 0 15 0" stroke="${L}" stroke-width="1.8" fill="none"/>` + fleur(20, 24, 8, A) + fleur(44, 44, 7, PALETTE.creme),
+      seigaiha: [[0, 52], [20, 52], [40, 52], [60, 52], [10, 40], [30, 40], [50, 40], [0, 28], [20, 28], [40, 28], [60, 28], [10, 16], [30, 16], [50, 16]].reverse()
+        .map(([x, y], i) => [10, 7, 4].map((r, k) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${k ? 'none' : [c, A, PALETTE.bleu, c][i % 4]}" stroke="${L}" stroke-width="1.2"/>`).join('')).join(''),
+      uni: '',
+    }[id] ?? '';
+    return svg(`<defs><clipPath id="cm-${id}"><path d="M20 8h24l14 14-8 8-6-6v34H20V24l-6 6-8-8z"/></clipPath></defs><g clip-path="url(#cm-${id})"><rect width="64" height="64" fill="${c}"/>${contenu}</g><path d="M20 8h24l14 14-8 8-6-6v34H20V24l-6 6-8-8z" fill="none" stroke="#243447" stroke-width="2"/>`);
+  },
   geta: (c) => svg(`<rect x="12" y="30" width="40" height="8" rx="3" fill="#7a5236"/><rect x="16" y="38" width="6" height="10" fill="#5c3c26"/><rect x="42" y="38" width="6" height="10" fill="#5c3c26"/><path d="M22 30q10-16 20 0" fill="none" stroke="${c}" stroke-width="4"/>`),
   sac: svg(`<rect x="16" y="14" width="32" height="40" rx="8" fill="${PALETTE.marine}"/><rect x="20" y="32" width="24" height="12" rx="3" fill="${PALETTE.corail}"/><path d="M24 14q8-10 16 0" stroke="${PALETTE.marine}" stroke-width="4" fill="none"/>`),
   sacoche: svg(`<path d="M10 6l38 30" stroke="${PALETTE.marine}" stroke-width="4"/><rect x="30" y="32" width="26" height="20" rx="4" fill="${PALETTE.marine}"/><rect x="30" y="32" width="26" height="8" rx="3" fill="${PALETTE.corail}"/>`),
+  // accessoires assortis : couleur du kimono c
+  ombrelle: (c) => svg(`<path d="M6 30Q32 0 58 30Z" fill="${c}" stroke="#243447" stroke-width="2"/><path d="M32 8L14 30M32 8L24 30M32 8L40 30M32 8L50 30" stroke="#5a3a26" stroke-width="1.4" opacity=".6"/><path d="M32 30v26q0 4-4 4" fill="none" stroke="#7a5236" stroke-width="3"/><circle cx="32" cy="9" r="3" fill="#243447"/>`),
+  eventail: (c) => svg(`<path d="M32 54L6 26A36 36 0 0 1 58 26Z" fill="${c}" stroke="#243447" stroke-width="2"/><path d="M32 54L12 20M32 54L22 13M32 54V11M32 54L42 13M32 54L52 20" stroke="#c9a46a" stroke-width="1.6" opacity=".8"/><circle cx="32" cy="54" r="3" fill="#3a2a24"/>`),
+  // baguettes à cheveux
+  baguetteBois: svg('<path d="M14 56L46 10" stroke="#c9a46a" stroke-width="4" stroke-linecap="round"/><path d="M50 56L18 10" stroke="#c9a46a" stroke-width="4" stroke-linecap="round"/><circle cx="44" cy="13" r="3" fill="#ff696a"/><circle cx="41" cy="18" r="3" fill="#ff696a"/><circle cx="20" cy="13" r="3" fill="#ff696a"/><circle cx="23" cy="18" r="3" fill="#ff696a"/>'),
+  baguetteSakura: svg(`<path d="M12 58L40 18" stroke="#3a2620" stroke-width="4" stroke-linecap="round"/>${[[40, 16, 9, '#fbf3f2'], [50, 24, 6, '#f5cacc'], [32, 10, 5, '#f8a0ab']].map(([x, y, r, c]) => [0, 1, 2, 3, 4].map((i) => `<circle cx="${x + Math.cos(i * 1.2566) * r * 0.6}" cy="${y + Math.sin(i * 1.2566) * r * 0.6}" r="${r * 0.55}" fill="${c}" stroke="#d98a9a" stroke-width=".6"/>`).join('') + `<circle cx="${x}" cy="${y}" r="${r * 0.25}" fill="#e2b552"/>`).join('')}<path d="M44 24v18" stroke="#e2b552" stroke-width="1.2"/><circle cx="44" cy="44" r="2.5" fill="#fbf8f2"/><path d="M41 52l3-6 3 6z" fill="#f08aa0"/>`),
+  baguetteMomiji: svg('<path d="M12 58L48 8" stroke="#e2b552" stroke-width="3.5" stroke-linecap="round"/><circle cx="46" cy="11" r="3.5" fill="#e2b552"/><path d="M42 16v34" stroke="#e2b552" stroke-width="1.2"/><path d="M42 20l3 4 4-1-2 4 3 3-4 1v4l-4-3-4 3v-4l-4-1 3-3-2-4 4 1z" fill="#d8452f"/><path d="M42 34l2.4 3 3-.7-1.5 3 2.3 2.3-3 .8v3l-3.2-2.3-3.2 2.3v-3l-3-.8 2.3-2.3-1.5-3 3 .7z" fill="#e98a2c"/><circle cx="42" cy="52" r="2.5" fill="#c0352b"/>'),
+  ceinture: (c) => svg(`<path d="M8 22h48v20H8z" fill="${c}" stroke="#243447" stroke-width="2"/><path d="M8 28h48" stroke="#243447" stroke-width="1" opacity=".35"/><rect x="38" y="18" width="12" height="28" rx="3" fill="${c}" stroke="#243447" stroke-width="2"/>`),
   aucun: svg('<circle cx="32" cy="32" r="18" fill="none" stroke="#9bb3d6" stroke-width="4"/><path d="M19 45l26-26" stroke="#9bb3d6" stroke-width="4"/>'),
   katana: svg(`<path d="M10 54L46 18" stroke="#1d1f24" stroke-width="5" stroke-linecap="round"/><path d="M42 14l8 8" stroke="#c9a24a" stroke-width="4"/><path d="M48 16l8-8" stroke="${PALETTE.corail}" stroke-width="5" stroke-linecap="round"/>`),
   homme: svg('<circle cx="32" cy="18" r="9" fill="currentColor"/><path d="M18 56V38q0-10 14-10t14 10v18z" fill="currentColor"/>'),
@@ -41,6 +67,10 @@ const ICONES = {
       chonmage: `<path d="M12 40l2-14q4-12 18-12t18 12l2 14-5-6-1 8-4-9-3 7-3-9-3 7-3-9-4 9-1-8z" fill="${c}"/><path d="M40 16l12-6-4 8z" fill="${c}"/><path d="M26 14l2-8 3 7 3-8 2 9z" fill="${c}"/>`,
       chignon: `<path d="M13 32q2-18 19-18t19 18q-6-8-19-8t-19 8z" fill="${c}"/><circle cx="32" cy="58" r="7" fill="${c}"/><path d="M20 50l24 14M44 50L20 64" stroke="#c9a46a" stroke-width="2.4"/><circle cx="21" cy="51" r="2" fill="${PALETTE.corail}"/><circle cx="43" cy="51" r="2" fill="${PALETTE.corail}"/>`,
       frange: `<path d="M13 32q0-20 19-21t19 21q-2-5-5-8l-2 9-3-10-3 11-3-11-3 11-3-11-2 10-3-9q-3 3-5 8z" fill="${c}"/><path d="M26 10l3-5 3 5 3-5 2 6z" fill="${c}"/>`,
+      chignonBas: `<path d="M13 32q2-18 19-18t19 18q-4-9-19-9t-19 9z" fill="${c}"/><path d="M14 30q-3 10 0 20M50 30q3 10 0 20" stroke="${c}" stroke-width="2.5" fill="none"/><circle cx="48" cy="54" r="7" fill="${c}"/><path d="M40 60L58 46" stroke="#3a2620" stroke-width="2.4"/><circle cx="57" cy="45" r="3.4" fill="#f8a0ab"/>`,
+      wolf: `<path d="M11 44l2-16q4-16 19-16t19 16l2 16-5-8-1 10-4-12-2 6-2-10-4 10-2-10-3 7-1-8-4 8-1-9-3 11z" fill="${c}"/><path d="M18 30l4 8 3-9 4 10 3-10 4 9 3-8 5 8" fill="${c}"/>`,
+      manbun: `<path d="M14 28q3-14 18-14t18 14q-6-6-18-6t-18 6z" fill="${c}"/><circle cx="32" cy="9" r="6" fill="${c}"/><path d="M27 14h10" stroke="${PALETTE.corail}" stroke-width="2.5"/>`,
+      coreen: `<path d="M12 36q-2-24 20-24t20 24l-3-4q-4-12-11-12l4 12-10-10-10 10 4-12q-7 0-11 12z" fill="${c}"/>`,
       tresses: `<path d="M13 34q2-20 19-20t19 20h-4q0-8-15-8t-15 8z" fill="${c}"/><path d="M18 30h28v5H18z" fill="${c}"/><circle cx="10" cy="42" r="4" fill="${c}"/><circle cx="11" cy="50" r="3.6" fill="${c}"/><circle cx="12" cy="57" r="3" fill="${c}"/><circle cx="54" cy="42" r="4" fill="${c}"/><circle cx="53" cy="50" r="3.6" fill="${c}"/><circle cx="52" cy="57" r="3" fill="${c}"/><circle cx="48" cy="20" r="4" fill="#fbf8f2"/>`,
     }[coiffure] ?? '';
     return svg(base + extra);
@@ -69,6 +99,16 @@ function catalogue(a) {
           ...OPTIONS.kimono.map((c, i) => ({ valeur: c, nom: NOMS_COULEURS[c], etoiles: COULEURS_KIMONO[i], visuel: ICONES.kimono(c) }))],
       },
       {
+        id: 'motif', titre: 'Kimono – Motif', icone: ICONES.motif(a.kimono ?? PALETTE.rose, motifDe(a)), champ: 'motif', visible: !!a.kimono,
+        info: 'Le motif du tissu. Chaque couleur a son motif, mais tu peux en choisir un autre.',
+        cartes: OPTIONS.motif.map((m) => ({ valeur: m.id, nom: m.nom, etoiles: m.id === 'uni' ? 1 : 3, visuel: ICONES.motif(a.kimono ?? PALETTE.rose, m.id), choisie: motifDe(a) === m.id })),
+      },
+      {
+        id: 'ceinture', titre: 'Kimono – Ceinture', icone: ICONES.ceinture('currentColor'), champ: 'ceinture', visible: !!a.kimono,
+        info: 'La couleur de la ceinture (obi) du kimono.',
+        cartes: OPTIONS.ceinture.map((c) => ({ valeur: c, nom: NOMS_COULEURS[c], etoiles: 2, visuel: ICONES.ceinture(c), choisie: ceintureDe(a) === c })),
+      },
+      {
         id: 'geta', titre: 'Chaussures – Geta', icone: ICONES.geta('currentColor'), champ: 'geta',
         info: 'Sandales japonaises en bois à deux dents. Choisis la couleur de la lanière.',
         cartes: [{ valeur: null, nom: 'Pieds nus', etoiles: 1, visuel: ICONES.aucun },
@@ -77,15 +117,14 @@ function catalogue(a) {
       {
         id: 'accessoire', titre: 'Accessoire – Sac', icone: ICONES.sac, champ: 'accessoire',
         info: 'Sac à dos ou sacoche pour ranger tes objets de quête.',
-        cartes: OPTIONS.accessoire.map((o) => ({ valeur: o.id, nom: o.nom, etoiles: o.id === 'aucun' ? 1 : 2, visuel: ICONES[o.id] })),
+        cartes: [...OPTIONS.accessoire, { id: 'aucun', nom: 'Aucun' }].map((o) => ({ valeur: o.id, nom: o.nom, etoiles: o.id === 'aucun' ? 1 : 2, visuel: ICONES[o.id], choisie: accessoireDe(a) === o.id })),
       },
       {
-        id: 'arme', titre: 'Arme – Katana', icone: ICONES.katana, champ: 'katana',
-        info: 'Le katana sert pendant les combats contre les boss de niveau.',
-        cartes: [
-          { valeur: true, nom: 'Katana', etoiles: 3, visuel: ICONES.katana },
-          { valeur: false, nom: 'Sans arme', etoiles: 1, visuel: ICONES.aucun },
-        ],
+        id: 'arme', titre: 'À la main', icone: ICONES.katana, champ: 'arme',
+        info: 'Un seul objet à la main : le katana, l’ombrelle ou l’éventail. L’ombrelle et l’éventail prennent la couleur de ton kimono.',
+        cartes: [...OPTIONS.arme.map((o) => ({ valeur: o.id, nom: o.nom, etoiles: 3,
+          visuel: typeof ICONES[o.id] === 'function' ? ICONES[o.id](a.kimono ?? PALETTE.corail) : ICONES[o.id], choisie: armeDe(a) === o.id })),
+        { valeur: null, nom: 'Les mains libres', etoiles: 1, visuel: ICONES.aucun, choisie: armeDe(a) === null }],
       },
     ],
     visage: [
@@ -101,8 +140,13 @@ function catalogue(a) {
       },
       {
         id: 'coiffure', titre: 'Coiffure – Coupe de cheveux', icone: ICONES.tete(a.cheveux, 'chignon', a.espece), champ: 'coiffure',
-        info: 'Franges et tresses, chignon et baguettes, chonmage moderne ou coupe courte à frange.',
+        info: 'Frange et tresses, chignons, wolf cut, chignon samouraï ou coupe coréenne.',
         cartes: (Array.isArray(OPTIONS.coiffure) ? OPTIONS.coiffure : OPTIONS.coiffure[a.genre]).map((c) => ({ valeur: c.id, nom: c.nom, etoiles: 3, visuel: ICONES.tete(a.cheveux, c.id, a.espece) })),
+      },
+      {
+        id: 'baguettes', titre: 'Coiffure – Baguettes', icone: ICONES.baguetteSakura, champ: 'baguettes', visible: a.coiffure === 'chignon' || a.coiffure === 'chignonBas',
+        info: 'Les baguettes plantées dans ton chignon.',
+        cartes: OPTIONS.baguettes.map((b) => ({ valeur: b.id, nom: b.nom, etoiles: b.id === 'bois' ? 2 : 3, visuel: ICONES['baguette' + b.id[0].toUpperCase() + b.id.slice(1)] })),
       },
       {
         id: 'cheveux', titre: 'Coiffure – Couleur', icone: ICONES.tete(a.cheveux, 'tresses', a.espece), champ: 'cheveux',
@@ -137,11 +181,14 @@ const ETAPES = [
   { onglet: 'identite', categorie: 'langue', texte: 'Bienvenue dans le Sas ! Je suis Cléo et je vais t’aider à préparer ton personnage. Choisis d’abord la langue du jeu.' },
   { onglet: 'visage', categorie: 'espece', texte: 'Choisis maintenant ton espèce parmi les cartes à gauche.' },
   { onglet: 'visage', categorie: 'coiffure', texte: 'Choisis maintenant ta coupe de cheveux. Astuce : fais glisser ton personnage pour le faire tourner, et zoome avec la molette pour voir son visage.' },
+  { onglet: 'visage', categorie: 'baguettes', texte: 'Ton chignon a besoin de baguettes ! Choisis leur modèle.' },
   { onglet: 'visage', categorie: 'cheveux', texte: 'Et la couleur de tes cheveux ? Prends celle qui te ressemble… ou pas du tout !' },
   { onglet: 'tenue', categorie: 'kimono', texte: 'Passons à la tenue ! Choisis la couleur de ton kimono. La carte 🎨 te laisse prendre n’importe quelle couleur.' },
+  { onglet: 'tenue', categorie: 'motif', texte: 'Chaque couleur de kimono a son motif. Garde-le ou choisis-en un autre.' },
+  { onglet: 'tenue', categorie: 'ceinture', texte: 'Et la ceinture (obi) : noire, anthracite, beige ou blanche ?' },
   { onglet: 'tenue', categorie: 'geta', texte: 'Les geta sont des sandales japonaises en bois. Choisis les tiennes.' },
   { onglet: 'tenue', categorie: 'accessoire', texte: 'Un sac pour transporter tes objets de quête ? Choisis celui qui t’accompagnera.' },
-  { onglet: 'tenue', categorie: 'arme', texte: 'Un katana pour les combats contre les boss… ou pas, c’est toi qui vois !' },
+  { onglet: 'tenue', categorie: 'arme', texte: 'Que tiens-tu à la main ? Un katana, une ombrelle ou un éventail : un seul au choix !' },
   { onglet: 'identite', categorie: 'prenom', texte: 'Écris maintenant ton prénom : les gardiens des îles t’appelleront ainsi.' },
   { onglet: 'identite', categorie: 'musique', texte: 'Dernière étape : choisis ta musique, ou joue sans le son. Quand tu es prêt·e, clique sur « Entrer dans le Sas » pour commencer l’aventure !' },
 ];
@@ -162,8 +209,12 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
       rendre();
       return;
     }
+    delete a().accessoires; // ancienne liste de test, remplacée par `accessoire` et `arme`
+    if (champ === 'arme') a().katana = valeur === 'katana';
     if (a()[champ] === valeur) return;
     a()[champ] = valeur;
+    // une nouvelle couleur de kimono reprend le motif qui lui va (on peut le changer ensuite)
+    if (champ === 'kimono') a().motif = MOTIF_PAR_COULEUR[valeur] ?? a().motif;
     surChangement();
     rendre();
   }
@@ -174,6 +225,8 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
       // On ne propose que ce qui est déjà modélisé ; le reste reviendra au fil des étapes
       for (const k of Object.keys(cat)) cat[k] = cat[k].filter((c) => CATEGORIES_DISPONIBLES.includes(c.id) || c.partie);
     }
+    // catégories qui n'ont de sens qu'avec un kimono ou un chignon
+    for (const k of Object.keys(cat)) cat[k] = cat[k].filter((c) => c.visible !== false);
     // Onglets
     for (const b of document.querySelectorAll('#onglets button')) {
       if (b.dataset.onglet === 'visage') b.innerHTML = ICONES[a().espece] ?? ICONES.visage;
@@ -205,7 +258,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
     if (c.cartes) {
       for (const carte of c.cartes) {
         const b = document.createElement('button');
-        const choisie = (c.partie ? partie[c.champ] : a()[c.champ]) === carte.valeur;
+        const choisie = carte.choisie ?? (c.partie ? partie[c.champ] : a()[c.champ]) === carte.valeur;
         const nom = carte.brut ? carte.nom : t(carte.nom); // les noms de langues restent dans leur propre langue
         b.className = `carte-objet etoiles-${carte.etoiles}${choisie ? ' choisie' : ''}`;
         b.title = nom;

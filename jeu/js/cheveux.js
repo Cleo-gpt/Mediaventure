@@ -15,6 +15,9 @@ const mix = (a, b, t) => a + (b - a) * t;
 const versAz = (az, cible) => cible + Math.PI * 2 * Math.round((az - cible) / (Math.PI * 2));
 const hasard = (i) => { const s = Math.sin(i * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
 
+// Réglages de la variante en cours (le capybara a les yeux plus haut : sa frange s'arrête plus haut)
+let REGLAGE = { frange: 0, k: 0, front: 0 };
+
 // Points d'accroche des ornements (baguettes, liens), utilisés aussi par personnage.js
 export const ANCRES = {
   chignon: V(0, 0.25, -0.2),
@@ -28,11 +31,13 @@ const CRANE = (x, y, z) => ellipsoide(x, y, z, [0, CY, 0], [RX, RY, RZ]);
 // Calotte : fine coque de cheveux sur le crâne, au-dessus de `ligne(x, z)` ; `extra` ajoute des volumes (chignon…)
 function calotte(ligne, epaisseur = 0.012, extra = null) {
   const f = (x, y, z) => {
-    let d = Math.max(CRANE(x, y, z) - epaisseur, ligne(x, z) - y);
+    // vraie coque (intérieur vide) : sa tranche ne traverse pas la tête, même quand elle est d'une autre forme (capybara)
+    const cr = CRANE(x, y, z);
+    let d = Math.max(cr - epaisseur, -cr - 0.016, ligne(x, z) + REGLAGE.front * Math.max(0, z / RZ) - y);
     if (extra) d = smin(d, extra(x, y, z), 0.03);
     return d;
   };
-  return extraire(f, [-0.36, -0.2, -0.38], [0.36, 0.33, 0.32], 0.0095);
+  return extraire(f, [-0.36, -0.2, -0.38], [0.36, 0.33, 0.32], 0.015);
 }
 // Ligne des cheveux classique : haute sur le front, basse sur la nuque, dégagée devant les oreilles
 const ligneClassique = (front = -0.1, nuque = 0.26) => (x, z) => front + nuque * Math.max(0, z / RZ) ** 1.5;
@@ -45,7 +50,7 @@ class Coupe {
   meche(points, larg = 0.02, ep = 0.007, cote = null, options) {
     const m = points[Math.floor(points.length / 2)];
     const c = cote ?? (Math.hypot(m.x, m.z) > 1e-3 ? V(m.z, 0, -m.x).normalize() : V(1, 0, 0));
-    this.geos.push(geoMeche(points, larg, ep, c, options));
+    this.geos.push(geoMeche(points, larg, ep, c, { segments: 10, cotes: 6, ...options }));
     this.n++;
   }
   // Boucle enroulée (chignon) autour d'un centre, dans le plan (u, w)
@@ -104,8 +109,9 @@ function frange(c, { n = 13, largeur = 0.62, bout = 0.3, k = 1.1, larg = 0.017, 
     const t = i / (n - 1), az = (t - 0.5) * 2 * largeur, h = hasard(i + graine);
     const cote = raie === null ? 0 : Math.sign(az - raie) || 1;
     const azB = az + balayage + cote * ecart * Math.abs(az - (raie ?? 0));
-    c.meche([P(az * 0.35 + (raie ?? 0) * 0.6, 1.08, 1.0), P(az * 0.75, 0.82, k + 0.02), P(mix(az, azB, 0.5), 0.55, k + 0.01),
-      P(azB, bout + 0.03 + varie * h + 0.06 * Math.abs(t - 0.5) + rideau * Math.max(0, 1 - Math.abs(az - (raie ?? 0)) / largeur) ** 1.5, k)], larg * (0.85 + 0.3 * h), 0.006);
+    const kk = k + REGLAGE.k;
+    c.meche([P(az * 0.35 + (raie ?? 0) * 0.6, 1.08, 1.0), P(az * 0.75, 0.82, kk + 0.02), P(mix(az, azB, 0.5), 0.55, kk + 0.01),
+      P(azB, bout + REGLAGE.frange + 0.03 + varie * h + 0.06 * Math.abs(t - 0.5) + rideau * Math.max(0, 1 - Math.abs(az - (raie ?? 0)) / largeur) ** 1.5, kk)], larg * (0.85 + 0.3 * h), 0.006);
   }
 }
 // Mèches du dessus et de l'arrière : du sommet vers le bas, jusqu'à `basArriere` (el) derrière
@@ -258,4 +264,8 @@ const COUPES = {
 };
 
 export const COUPES_MECHES = Object.keys(COUPES);
-export const coupeMeches = (id) => COUPES[id]?.();
+// `variante` 'capy' : frange raccourcie pour le capybara
+export function coupeMeches(id, variante) {
+  REGLAGE = variante === 'capy' ? { frange: 0.16, k: 0.07, front: 0.07 } : { frange: 0, k: 0, front: 0 };
+  try { return COUPES[id]?.(); } finally { REGLAGE = { frange: 0, k: 0, front: 0 }; }
+}

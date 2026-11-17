@@ -8,7 +8,6 @@ import { PALETTE } from './niveaux.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { smin, ellipsoide, cone, le_long, extraire, ponderer } from './sculpture.js';
 import { toon, matContour, contourner, piece, geoMeche, teinte } from './personnage-details.js';
-import { coupeMeches, COUPES_MECHES, ANCRES } from './cheveux.js';
 
 export const OPTIONS = {
   espece: [{ id: 'shiba', nom: 'Shiba' }, { id: 'panda', nom: 'Panda' }, { id: 'pandaRoux', nom: 'Panda roux' }, { id: 'capybara', nom: 'Capybara' }],
@@ -16,11 +15,11 @@ export const OPTIONS = {
     { id: 'homme', nom: 'Homme' }, { id: 'femme', nom: 'Femme' }, { id: 'neutre', nom: 'Neutre' },
   ],
   // Coiffures des animaux : une touffe de poils coiffée sur la tête
-  // Coupes en mèches fines inspirées des photos de références/personnages (Femmes, Hommes)
+  // Coupes des animaux : une touffe de poils coiffée sur la tête (texture de mèches fines)
   coiffure: [
-    { id: 'aucune', nom: 'Au naturel' }, { id: 'tresses', nom: 'Frange et tresses' },
-    { id: 'chignon', nom: 'Chignon haut' }, { id: 'chignonBas', nom: 'Chignon bas sur le côté' },
-    { id: 'wolf', nom: 'Wolf cut' }, { id: 'manbun', nom: 'Chignon samouraï' }, { id: 'coreen', nom: 'Coupe coréenne' },
+    { id: 'aucune', nom: 'Au naturel' }, { id: 'tresses', nom: 'Franges et tresses' },
+    { id: 'chignon', nom: 'Chignon et baguettes' }, { id: 'chonmage', nom: 'Chonmage moderne' },
+    { id: 'frange', nom: 'Courte à frange' },
   ],
   // Couleurs d'office (références/personnages/Kimono/Couleurs d'office)
   kimono: [PALETTE.corail, PALETTE.rose, PALETTE.rosePale, PALETTE.bleu, PALETTE.creme, PALETTE.marine],
@@ -34,11 +33,9 @@ export const OPTIONS = {
   baguettes: [{ id: 'bois', nom: 'Bois et perles' }, { id: 'sakura', nom: 'Fleurs de sakura' }, { id: 'momiji', nom: 'Feuilles d’érable' }],
   cheveux: ['#2a2a2e', '#5a3a2a', '#a8643a', '#e8d2a6', '#f8a0ab'],
   yeux: ['#3b6fd1', '#6b4a33', '#3f8f7a', '#c0506a', '#7a5bc4'],
-  // Plusieurs accessoires peuvent se porter ensemble ; ils prennent la couleur du kimono
-  accessoire: [
-    { id: 'ombrelle', nom: 'Ombrelle japonaise' }, { id: 'masque', nom: 'Masque de renard' }, { id: 'eventail', nom: 'Éventail' },
-    { id: 'sac', nom: 'Sac à dos' }, { id: 'sacoche', nom: 'Sacoche' },
-  ],
+  // Un seul sac (dos ou bandoulière) et un seul objet à la main ; ils prennent la couleur du kimono
+  accessoire: [{ id: 'sac', nom: 'Sac à dos' }, { id: 'sacoche', nom: 'Sacoche' }],
+  arme: [{ id: 'katana', nom: 'Katana' }, { id: 'ombrelle', nom: 'Ombrelle japonaise' }, { id: 'eventail', nom: 'Éventail' }],
   geta: [PALETTE.corail, PALETTE.marine, PALETTE.creme],
 };
 
@@ -51,11 +48,16 @@ export const MOTIF_PAR_COULEUR = {
   [PALETTE.corail]: 'seigaiha', [PALETTE.rose]: 'asanoha', [PALETTE.rosePale]: 'sakura',
   [PALETTE.bleu]: 'nuages', [PALETTE.creme]: 'sakura', [PALETTE.marine]: 'vagues',
 };
+// Ceinture du kimono : celle choisie, sinon beige sur un kimono foncé et noire sur un clair
+export const ceintureDe = (a) => a.ceinture ?? (a.kimono && new THREE.Color(a.kimono).getHSL({}).l < 0.3 ? '#d9c6a3' : '#1f1f24');
 export const motifDe = (a) => a.motif ?? MOTIF_PAR_COULEUR[a.kimono] ?? 'seigaiha';
-// Liste des accessoires portés (les anciennes parties n'en avaient qu'un : `accessoire`)
-export const accessoiresDe = (a) => a.accessoires ?? (a.accessoire && a.accessoire !== 'aucun' ? [a.accessoire] : []);
-// Anciennes coupes remplacées par les nouvelles
-const COUPES_REMPLACEES = { frange: 'coreen', chonmage: 'wolf' };
+// Sac porté : 'sac', 'sacoche' ou 'aucun' (une version de test permettait une liste `accessoires`)
+export const accessoireDe = (a) => (['sac', 'sacoche'].includes(a.accessoire) ? a.accessoire
+  : a.accessoires?.find((x) => x === 'sac' || x === 'sacoche') ?? 'aucun');
+// Objet tenu à la main : 'katana', 'ombrelle', 'eventail' ou null (les anciennes parties n'avaient que `katana`)
+export const armeDe = (a) => (a.arme !== undefined ? a.arme : a.katana ? 'katana' : null);
+// Coupes d'essai (en mèches) retirées : on retombe sur la coupe d'origine la plus proche
+const COUPES_REMPLACEES = { chignonBas: 'chignon', wolf: 'chonmage', manbun: 'chonmage', coreen: 'frange' };
 
 // Étape actuelle : avatars animaux. Le vestiaire ne propose que ce qui est déjà modélisé.
 export const CATEGORIES_DISPONIBLES = ['espece', 'coiffure', 'baguettes', 'cheveux', 'kimono', 'motif', 'ceinture', 'geta', 'accessoire', 'arme', 'prenom'];
@@ -159,6 +161,8 @@ const MOTIF_CHEVEUX = `
   diffuseColor.rgb *= 0.84 + 0.12 * stries + 0.08 * fil;
   diffuseColor.rgb *= mix(1.0, 0.82, smoothstep(0.75, 1.0, vMeche.y)); // racines
   diffuseColor.rgb *= 0.62 + 0.38 * pow(vMeche.x, 0.6); // sillon sombre au bord de chaque mèche
+  float trait = smoothstep(0.82, 0.97, sin(vMeche.x * 31.4 + vMeche.y * 4.0 + bruit(vPosObj * 70.0) * 3.0));
+  diffuseColor.rgb *= 1.0 - 0.22 * trait * step(0.001, vMeche.y); // fins traits de cheveux
   float reflet = smoothstep(0.42, 0.52, vMeche.y) * (1.0 - smoothstep(0.58, 0.7, vMeche.y)) * step(0.001, vMeche.y);
   diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.3 + 0.07, reflet * (0.35 + 0.35 * stries));`;
 
@@ -224,12 +228,14 @@ const MOTIFS_KIMONO = {
     // écailles de rayon 1, espacées de 2, rangées tous les 0,5 ; la rangée la plus basse passe devant
     vec2 q = cm / 0.026;
     vec2 cc = vec2(0.0); float rr = 2.0;
+    // on teste les rangées de la plus basse (devant) à la plus haute : la première écaille qui contient le point gagne,
+    // ce qui donne des éventails entiers dont le bas est caché par la rangée de devant (pas de découpe en briques)
     float r0 = floor(q.y / 0.5);
-    for (int k = 2; k >= 0; k--) {
-      float rang = r0 - float(k), dec = mod(rang, 2.0);
+    for (int k = -2; k <= 2; k++) {
+      float rang = r0 + float(k), dec = mod(rang, 2.0);
       vec2 c = vec2(floor((q.x - dec) / 2.0 + 0.5) * 2.0 + dec, rang * 0.5);
       float r = length(q - c);
-      if (rr > 1.5 && r < 1.0 && q.y >= c.y) { cc = c; rr = r; }
+      if (rr > 1.5 && r < 1.0) { cc = c; rr = r; }
     }
     float hh = hash2(cc).x;
     vec3 ev = hh < 0.3 ? base : hh < 0.55 ? B : hh < 0.8 ? mix(base, A, 0.55) : mix(base, L, 0.45);
@@ -333,7 +339,7 @@ function memo(cle, construire) {
 // Toutes les formes, dans l'ordre où le worker les calcule (celles du vestiaire d'abord)
 function formes() {
   return [
-    ...[...COUPES_MECHES, ...Object.keys(coiffures)].map((id) => ['coiffure.' + id, () => geometrieCoiffure(id)]),
+    ...Object.keys(coiffures).map((id) => ['coiffure.' + id, () => geometrieCoiffure(id)]),
     ['espece.humain', () => geometries('humain')], ['espece.panda', () => geometries('panda')],
     ['tissus', geometriesTissus], ['miko', geometriesMiko], ['samourai', geometriesSamourai], ['ville', geometriesVille],
     ['espece.shiba', () => geometries('shiba')],
@@ -382,7 +388,10 @@ const kimono = (x, y, z) => {
     const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
     d = smin(d, Math.max(cone(x, y, z, a, b, 0.078, 0.095), (le_long(x, y, z, a, b) - 1) * l), 0.02);
   }
-  return Math.max(d, y - 0.53);
+  // encolure en V : entre les deux bandes du col, on voit le cou (pelage ou peau), pas le tissu
+  const gauche = -0.09 + (0.51 - y) * (0.155 / 0.26), droite = 0.09 - (0.51 - y) * (0.105 / 0.17);
+  const v = Math.max(gauche + 0.01 - x, x - droite + 0.01, 0.37 - y, 0.04 - z) * 0.85;
+  return Math.max(d, y - 0.53, -v);
 };
 // Distance 2D d'un point au segment a → b (dans le plan de face)
 const segment2D = (x, y, a, b) => {
@@ -719,6 +728,72 @@ const coiffures = {
     for (const s of [-1, 1]) d = smin(d, ellipsoide(x, y, z, [s * 0.255, -0.11, 0.04], [0.045, 0.06, 0.06]), 0.03); // mèches avant plus longues
     return d;
   },
+  // Frange droite, mèches le long du visage, deux longues tresses lâches devant les épaules
+  tresses: (x, y, z) => {
+    let d = calotte(x, y, z);
+    const basFrange = 0.075 + 0.01 * Math.abs(Math.sin(x * 55));
+    // frange : bord bas droit, côtés arrondis qui rejoignent les mèches du visage
+    const largeur = 0.2 - Math.max(0, 0.13 - y) * 0.5;
+    d = smin(d, Math.max(CRANE(x, y, z) - 0.028, basFrange - y, (Math.abs(x) - largeur) * 0.7, 0.06 - z), 0.03);
+    for (const s of [-1, 1]) d = smin(d, cone(x, y, z, [s * 0.2, 0.1, 0.13], [s * 0.235, -0.1, 0.12], 0.03, 0.012), 0.02);
+    if (Math.abs(x) > 0.17 && y < 0.06) {
+      const s = Math.sign(x);
+      for (let i = 0; i <= 7; i++) {
+        const t = i / 7, r = 0.036 - 0.012 * t;
+        const c = [s * (0.245 + 0.03 * t + (i % 2 ? 0.012 : -0.012)), -0.02 - 0.36 * t, -0.02 + 0.11 * t];
+        d = smin(d, ellipsoide(x, y, z, c, [r, r * 1.3, r]), 0.008);
+      }
+    }
+    return d;
+  },
+  // Cheveux tirés vers un chignon bas torsadé
+  chignon: (x, y, z) => {
+    let d = calotte(x, y, z);
+    d = smin(d, ellipsoide(x, y, z, [0, -0.05, -0.27], [0.12, 0.095, 0.085]), 0.04);           // chignon bas
+    d = smin(d, ellipsoide(x, y, z, [0.04, -0.02, -0.325], [0.065, 0.055, 0.045]), 0.02);      // torsade
+    d = smin(d, ellipsoide(x, y, z, [-0.045, -0.085, -0.322], [0.065, 0.05, 0.045]), 0.02);
+    return d;
+  },
+  // Coupe masculine courte et texturée : volume sur le dessus, côtés courts,
+  // frange en mèches pointues qui retombe sur le front en s'écartant de chaque côté de la raie
+  frange: (x, y, z) => {
+    let d = Math.max(CRANE(x, y, z) - 0.024, -0.08 + 0.2 * Math.max(0, z / 0.255) ** 1.5 - y);
+    d = smin(d, ellipsoide(x, y, z, [0, 0.17, -0.03], [0.26, 0.11, 0.24]), 0.05); // un peu de volume sur le dessus
+    for (let k = 0; k < 7; k++) {
+      // mèches souples sur le sommet, couchées vers l'arrière
+      const a = -0.4 + (k / 6) * 3.9, b = [Math.cos(a) * 0.11, 0.25, Math.sin(a) * 0.08 - 0.05];
+      d = smin(d, cone(x, y, z, b, [b[0] * 1.4, 0.275, b[2] - 0.08], 0.045, 0.008), 0.025);
+    }
+    // arrière : deux rangées de mèches pointues étagées, la seconde effile la nuque
+    for (const [y0, long, n] of [[0.13, 0.12, 11], [0.02, 0.12, 10]]) {
+      for (let k = 0; k < n; k++) {
+        const th = 1.75 + (k / (n - 1)) * 2.8 + (y0 < 0.1 ? 0.12 : 0); // de l'oreille gauche à l'oreille droite, par l'arrière
+        const sx = Math.sin(th), cz = Math.cos(th);
+        const pointe = [sx * 0.29, y0 - long - (k % 2) * 0.02, cz * 0.27];
+        d = smin(d, cone(x, y, z, [sx * 0.265, y0, cz * 0.245], pointe, 0.046, 0.006), 0.01);
+      }
+    }
+    // épi en spirale au sommet de l'arrière du crâne
+    for (let k = 0; k < 6; k++) {
+      const a = (k / 6) * Math.PI * 2;
+      d = smin(d, cone(x, y, z, [0, 0.245, -0.11], [Math.cos(a) * 0.1, 0.235 - Math.abs(Math.sin(a)) * 0.02, -0.11 + Math.sin(a) * 0.08 - 0.02], 0.03, 0.006), 0.015);
+    }
+    // côtés : quelques mèches qui descendent devant les oreilles
+    for (const s of [-1, 1]) {
+      for (const dz of [0.0, 0.06]) d = smin(d, cone(x, y, z, [s * 0.27, 0.08, dz], [s * 0.285, -0.03 - dz * 0.3, dz + 0.02], 0.035, 0.005), 0.01);
+    }
+    // frange longue jusqu'au ras des yeux, mèches bien séparées qui s'écartent de la raie
+    const raie = 0.035;
+    for (let i = 0; i < 9; i++) {
+      const x0 = -0.15 + i * 0.0375, cote = x0 < raie ? -1 : 1, ecart = Math.abs(x0 - raie);
+      const haut = [x0, 0.23, 0.12];
+      const milieu = [x0 + cote * 0.015, 0.15, 0.228];
+      const pointe = [x0 + cote * (0.03 + ecart * 0.25), 0.04 + ecart * 0.15 + (i % 2) * 0.02, 0.262];
+      d = smin(d, cone(x, y, z, haut, milieu, 0.04, 0.032), 0.012);
+      d = smin(d, cone(x, y, z, milieu, pointe, 0.032, 0.004), 0.006);
+    }
+    return d;
+  },
   // Cheveux mi-courts rejetés en arrière, front dégagé, volume ébouriffé (M. Graber)
   rejetes: (x, y, z) => {
     // ligne du front dégagée (plus basse aux tempes) et calotte qui s'amincit vers le bord : pas d'effet bonnet
@@ -760,13 +835,33 @@ const coiffures = {
     d = smin(d, ellipsoide(x, y, z, [0, 0.305, 0.07], [0.042, 0.038, 0.036]), 0.01);
     return d;
   },
+  // Coupe dégradée : couches effilées, nuque longue, épis, petite queue, frange irrégulière
+  chonmage: (x, y, z) => {
+    let d = calotte(x, y, z, 0.026);
+    for (let k = 0; k < 14; k++) {
+      const th = -2.6 + (k / 13) * 5.2;
+      if (Math.abs(th) < 0.75) continue;
+      const sx = Math.sin(th), cz = Math.cos(th), dos = Math.max(0, -cz);
+      d = smin(d, cone(x, y, z, [sx * 0.265, 0.1, cz * 0.23], [sx * 0.345, -0.03 - dos * 0.08, cz * 0.3], 0.05, 0.006), 0.015);
+      if (Math.abs(th) > 1.6) {
+        // couche intermédiaire sur l'arrière : plus d'épaisseur et d'étagement
+        d = smin(d, cone(x, y, z, [sx * 0.255, 0.19, cz * 0.225], [sx * 0.31, 0.06 - (k % 2) * 0.02, cz * 0.285], 0.048, 0.007), 0.012);
+      }
+      if (Math.abs(th) > 1.9) {
+        d = smin(d, cone(x, y, z, [sx * 0.24, -0.02, cz * 0.22], [sx * 0.29, -0.22 + (k % 2) * 0.03, cz * 0.275], 0.045, 0.008), 0.015);
+      }
+    }
+    for (const dx of [-0.05, 0, 0.05]) d = smin(d, cone(x, y, z, [dx, 0.24, -0.04], [dx * 1.5, 0.33, -0.12], 0.035, 0.005), 0.012);
+    d = smin(d, cone(x, y, z, [0, 0.19, -0.2], [0, 0.23, -0.34], 0.042, 0.01), 0.015);
+    for (let i = 0; i < 6; i++) {
+      const fx = -0.125 + i * 0.05;
+      d = smin(d, cone(x, y, z, [fx, 0.22, 0.14], [fx * 1.05, 0.06 + (i % 3) * 0.018, 0.245], 0.03, 0.005), 0.01);
+    }
+    return d;
+  },
 };
 const cacheCoiffures = new Map();
 function geometrieCoiffure(id) {
-  if (COUPES_MECHES.includes(id)) {
-    if (!cacheCoiffures.has(id)) cacheCoiffures.set(id, memo('coiffure.' + id, () => coupeMeches(id)));
-    return cacheCoiffures.get(id);
-  }
   if (!coiffures[id]) return null;
   if (!cacheCoiffures.has(id)) cacheCoiffures.set(id, memo('coiffure.' + id, () => {
     const geo = extraire(coiffures[id], [-0.4, id === 'longs' ? -0.5 : -0.42, -0.4], [0.4, 0.36, 0.33], 0.0095);
@@ -1084,15 +1179,16 @@ function baguette(modele, uni, ornement = true) {
     b.add(piece(new THREE.CylinderGeometry(0.005, 0.003, 0.3, 8), or, 0, -0.02, 0));
     b.add(piece(new THREE.SphereGeometry(0.01, 10, 8), or, 0, 0.13, 0));
     if (ornement) {
-      // trois feuilles d'érable rouges et orangées qui pendent à une chaînette
-      b.add(piece(new THREE.CylinderGeometry(0.0015, 0.0015, 0.13, 4), or, 0.0, 0.065, 0.012));
-      [['#d8452f', 0.1], ['#e98a2c', 0.055], ['#c0352b', 0.01]].forEach(([c, y], i) => {
+      // trois feuilles d'érable rouges et orangées en grappe au bout qui dépasse du chignon, côté extérieur
+      b.add(piece(new THREE.CylinderGeometry(0.0018, 0.0018, 0.06, 4), or, 0.0, 0.165, -0.012));
+      [['#d8452f', 0.0, 0.205, 0], ['#f08a24', 0.034, 0.17, -0.6], ['#c0352b', -0.032, 0.165, 0.6]].forEach(([c, x, y, rz]) => {
         const f = feuilleMomiji(uni(c));
-        f.position.set(i % 2 ? 0.006 : -0.006, y, 0.012);
-        f.rotation.z = (i - 1) * 0.4;
+        f.scale.setScalar(1.6);
+        f.position.set(x, y, -0.022);
+        f.rotation.z = rz;
         b.add(f);
       });
-      b.add(piece(new THREE.SphereGeometry(0.007, 8, 6), uni('#c0352b'), 0, -0.012, 0.012));
+      b.add(piece(new THREE.SphereGeometry(0.009, 8, 6), uni('#c0352b'), 0, 0.145, -0.02));
     }
   } else {
     // bois clair, trois perles rouges en haut
@@ -1106,7 +1202,7 @@ function baguette(modele, uni, ornement = true) {
 export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   const a = { ...APPARENCE_DEFAUT, ...apparence };
   a.coiffure = COUPES_REMPLACEES[a.coiffure] ?? a.coiffure;
-  const accessoires = accessoiresDe(a);
+  const accessoires = [accessoireDe(a), armeDe(a)];
   const espece = PELAGE[a.espece] ? a.espece : 'shiba';
   const p = PELAGE[espece];
   const g = geometries(espece);
@@ -1133,7 +1229,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   // Col, ourlet et obi s'accordent à la couleur du kimono (y compris une couleur libre)
   const clarte = a.kimono ? new THREE.Color(a.kimono).getHSL({}).l : 0;
   const contraste = clarte > 0.75 ? PALETTE.marine : PALETTE.creme;
-  const couleurObi = a.ceinture ?? (clarte < 0.3 ? '#d9c6a3' : '#1f1f24'); // noir, anthracite, beige ou blanc
+  const couleurObi = ceintureDe(a); // noir, anthracite, beige ou blanc
   const ROUGE_MIKO = '#c8383d';
   if (a.tenue === 'miko') {
     const t = geometriesTissus(), m = geometriesMiko();
@@ -1294,6 +1390,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     const profil = [[0.025, 0.2], [0.14, 0.178], [0.28, 0.13], [0.39, 0.072], [0.46, 0.02], [0.47, 0.0]].map(([r, y]) => new THREE.Vector2(r, y));
     const toile = new THREE.Mesh(new THREE.LatheGeometry(profil, 28), tissuKimono(kim, motifAcc, 'xz', THREE.DoubleSide));
     toile.position.y = 0.98;
+    toile.userData.ombrelle = true;
     o.add(toile);
     // rayons en bambou sous la toile, du coulant jusqu'au milieu des baleines
     const rayons = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.004, 0.004, 1, 5), sombre, 28);
@@ -1306,6 +1403,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
       m4.compose(A.clone().add(B).multiplyScalar(0.5), q, new THREE.Vector3(1, D.length(), 1));
       rayons.setMatrixAt(i, m4);
     }
+    rayons.userData.ombrelle = true;
     o.add(sans(rayons));
     o.add(piece(new THREE.CylinderGeometry(0.009, 0.009, 1.28, 8), bambou, 0, 0.52, 0)); // manche
     o.add(piece(new THREE.CylinderGeometry(0.014, 0.014, 0.16, 10), sombre, 0, -0.03, 0)); // poignée gainée
@@ -1332,7 +1430,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     e.rotation.set(1.05 - 0.15, 0.3, 0.35); // reste droit malgré le bras levé, légèrement tourné vers l'extérieur
     fixer('poignetG', e, J.poignet[0][0] + 0.01, J.poignet[0][1] + 0.0, J.poignet[0][2] + 0.04);
   }
-  if (a.katana) {
+  if (armeDe(a) === 'katana') {
     const k = new THREE.Group();
     k.add(piece(new THREE.CapsuleGeometry(0.013, 0.3, 4, 10), uni('#1d1f2a'), 0, -0.17, 0));
     k.add(piece(new THREE.CylinderGeometry(0.015, 0.015, 0.015, 10), or, 0, -0.33, 0));
@@ -1488,7 +1586,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   os.hanches.add(queue);
   const cheveux = materiau(a.cheveux, { motif: MOTIF_FOURRURE, liseré: 0.25, cle: 'cheveux' });
   const touffe = new THREE.Group();
-  const geoCoiffure = geometrieCoiffure(a.coiffure);
+  const geoCoiffure = geometrieCoiffure(a.coiffure, espece === 'capybara' ? 'capy' : undefined);
   if (geoCoiffure) touffe.add(new THREE.Mesh(geoCoiffure, geoCoiffure.attributes.meche
     ? materiau(a.cheveux, { motif: MOTIF_CHEVEUX, liseré: 0.22, cle: 'cheveux-meches', meche: true })
     : geoCoiffure.attributes.color
@@ -1538,17 +1636,6 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     lien.scale.set(1, 1, 0.8);
     touffe.add(lien);
   }
-  // Masque de renard porté sur le côté de la tête, marques de la couleur du kimono
-  if (accessoires.includes('masque')) {
-    const clair = new THREE.Color(kim).getHSL({}).l > 0.78;
-    const m = masqueKitsune(uni, clair ? teinte(kim, -0.45) : kim);
-    m.scale.setScalar(0.5);
-    const d = new THREE.Vector3(0.78, 0.5, 0.38).normalize();
-    m.position.copy(d).multiplyScalar(0.2);
-    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), d);
-    m.rotateZ(-0.35);
-    touffe.add(m);
-  }
   // Hachimaki : bandeau noué autour du front, deux pans flottent derrière
   if (a.hachimaki) {
     const tissu = uni(a.hachimaki);
@@ -1568,7 +1655,13 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     }
   }
   // Le capybara a les yeux plus haut que les autres animaux : sa coiffure remonte pour ne pas les cacher
-  if (espece === 'capybara') { touffe.position.set(0, 0.095, -0.025); touffe.scale.setScalar(1.05); }
+  // (coupes en mèches : posées sur son crâne, plus bas et plus en avant, avec une frange plus courte)
+  if (espece === 'capybara') {
+    if (COUPES_MECHES.includes(a.coiffure)) { touffe.position.set(0, 0.035, -0.012); touffe.scale.set(0.95, 0.98, 1.07); }
+    else { touffe.position.set(0, 0.095, -0.025); touffe.scale.setScalar(1.05); }
+  }
+  // crâne humain un peu plus haut : les coupes en mèches montent d'autant
+  if (espece === 'humain' && COUPES_MECHES.includes(a.coiffure)) touffe.scale.set(1, 1.08, 1);
   tete.add(touffe);
   contourner(tete);
   contourner(queue);
@@ -1578,6 +1671,17 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
 
   racine.userData = { os, yeux, queue, tient, yHanches: J.hanches[1], phase: Math.random() * 6, clignement: 1 + Math.random() * 3 };
   return racine;
+}
+
+// En jeu, la caméra regarde le personnage de dos et d'en haut : la toile de l'ombrelle devient translucide
+// (comme le papier d'une vraie wagasa) pour ne pas le cacher.
+export function ombrelleTranslucide(perso, opacite = 0.38) {
+  perso.traverse((o) => {
+    if (!o.userData.ombrelle) return;
+    o.material = o.material.clone();
+    Object.assign(o.material, { transparent: true, opacity: opacite, depthWrite: false });
+    for (const c of o.children) c.visible = false; // pas de contour sur une toile translucide
+  });
 }
 
 // ---------------------------------------------------------------- Animation (dandinement chibi)

@@ -731,7 +731,9 @@ function decorGlycines({ groupe, scene, colliders, animations }) {
   // Grappes de glycine : une vraie grappe = des dizaines de petites fleurs en spirale autour d'une tige
   // qui pend, larges et lavande en haut, étroites et violet foncé (boutons) en bas.
   // Quelques modèles de grappes, posés des centaines de fois en instances (un seul appel de dessin par modèle).
-  const COULEURS = [['#d9bdf2', '#6e2c9e'], ['#c9a6ec', '#5f2491'], ['#e6cff7', '#8a45b8'], ['#bf96e6', '#57217f']];
+  // 4 grappes mauves + 2 blanches (glycine blanche, comme sur la photo de référence)
+  const COULEURS = [['#d9bdf2', '#6e2c9e'], ['#c9a6ec', '#5f2491'], ['#e6cff7', '#8a45b8'], ['#bf96e6', '#57217f'], ['#fbfaf4', '#d9dcc0'], ['#ffffff', '#e4e8cc']];
+  const MAUVES = [0, 1, 2, 3], BLANCHES = [4, 5];
   const modeles = COULEURS.map(([haut, bas], v) => {
     const morceaux = [], N = 24, longueur = 1;
     const ch = new THREE.Color(haut), cb = new THREE.Color(bas);
@@ -747,7 +749,8 @@ function decorGlycines({ groupe, scene, colliders, animations }) {
   });
   const matGrappes = mat('#ffffff', { vertexColors: true });
   const grappes = modeles.map(() => []); // [x, y, z, longueur, rotation] par modèle
-  const suspendre = (x, y, z) => grappes[Math.floor(Math.random() * grappes.length)].push([x, y, z, auHasard(0.8, 1.6), Math.random() * 6.28]);
+  const suspendre = (x, y, z, palette = MAUVES, longueur = auHasard(0.8, 1.6)) =>
+    grappes[palette[Math.floor(Math.random() * palette.length)]].push([x, y, z, longueur, Math.random() * 6.28]);
   const feuilles = []; // petites touffes de feuilles vertes entre les grappes
   const feuillage = (x, y, z, taille = 1) => feuilles.push(colorer(new THREE.IcosahedronGeometry(auHasard(0.22, 0.36) * taille, 1).scale(1.5, 0.45, 1.2).translate(x, y, z), Math.random() < 0.5 ? '#6f8f45' : '#82a352'));
 
@@ -778,6 +781,48 @@ function decorGlycines({ groupe, scene, colliders, animations }) {
     for (let k = 0; k < 10; k++) feuillage(x + auHasard(-1.6, 1.6), h + auHasard(0, 0.5), z + auHasard(-1.6, 1.6), 1.8);
     for (let k = 0; k < 12; k++) suspendre(x + auHasard(-1.7, 1.7), h + 0.05, z + auHasard(-1.7, 1.7));
   }
+  // Grandes glycines centenaires (photo de référence) : tronc noueux et court, grosses branches à l'horizontale,
+  // toit de treillis porté par des poteaux, feuillage vert clair dessus et rideau de grappes jusqu'au sol
+  for (const [x0, z0, R, palette] of [[-15.5, -8, 4.6, MAUVES], [15.5, -8.5, 4.4, MAUVES], [-16, 7.5, 4.2, BLANCHES], [16, 5, 4.8, MAUVES]]) {
+    const H = 2.7; // hauteur du treillis
+    // tronc tordu : plusieurs segments qui se décalent
+    let px = x0, pz = z0, py = 0;
+    for (let k = 0; k < 4; k++) {
+      const nx = x0 + auHasard(-0.35, 0.35), nz = z0 + auHasard(-0.35, 0.35), ny = py + 0.55;
+      const d = new THREE.Vector3(nx - px, ny - py, nz - pz), l = d.length();
+      troncs.push(colorer(new THREE.CylinderGeometry(0.3 - k * 0.04, 0.36 - k * 0.04, l + 0.1, 9)
+        .applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()))
+        .translate((px + nx) / 2, (py + ny) / 2, (pz + nz) / 2), bois));
+      px = nx; pz = nz; py = ny;
+    }
+    colliders.push({ x: x0, z: z0, r: 0.6 });
+    // grosses branches qui partent à l'horizontale jusqu'au bord du treillis
+    for (let k = 0; k < 7; k++) {
+      const a = (k / 7) * Math.PI * 2 + auHasard(-0.2, 0.2), l = R * auHasard(0.7, 0.95);
+      const A = new THREE.Vector3(px, py, pz), B = new THREE.Vector3(x0 + Math.cos(a) * l, H - 0.15, z0 + Math.sin(a) * l);
+      const d = B.clone().sub(A);
+      troncs.push(colorer(new THREE.CylinderGeometry(0.06, 0.14, d.length(), 6)
+        .applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()))
+        .translate((A.x + B.x) / 2, (A.y + B.y) / 2, (A.z + B.z) / 2), bois));
+    }
+    // poteaux gris clair qui soutiennent le treillis
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2 + 0.3, r = R * 0.82;
+      const x = x0 + Math.cos(a) * r, z = z0 + Math.sin(a) * r;
+      troncs.push(colorer(new THREE.CylinderGeometry(0.07, 0.08, H, 6).translate(x, H / 2, z), '#b9ab98'));
+      colliders.push({ x, z, r: 0.15 });
+    }
+    // feuillage vert tendre sur le dessus, en couches
+    for (let k = 0; k < 55; k++) {
+      const a = Math.random() * Math.PI * 2, r = R * Math.sqrt(Math.random());
+      feuillage(x0 + Math.cos(a) * r, H + 0.15 + auHasard(0, 0.45) * (1 - r / R), z0 + Math.sin(a) * r, 1.5);
+    }
+    // rideau de grappes : plus longues et serrées sur le pourtour, jusqu'à près du sol
+    for (let k = 0; k < 190; k++) {
+      const a = Math.random() * Math.PI * 2, r = R * Math.sqrt(auHasard(0.15, 1));
+      suspendre(x0 + Math.cos(a) * r, H + 0.05, z0 + Math.sin(a) * r, palette, auHasard(1.0, 1.8) * (0.7 + 0.5 * r / R));
+    }
+  }
   groupe.add(fusionner(troncs));
   groupe.add(fusionner(feuilles));
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
@@ -803,39 +848,50 @@ function decorGlycines({ groupe, scene, colliders, animations }) {
   // petit miroir blanc sous la queue ; les mâles portent des bois. La tête et le cou pivotent pour brouter.
   const cerfs = [];
   for (const [x, z, r, male] of [[-10, 3, 0.8, true], [11, -2, -2.2, false], [-12, 13, 2.4, false], [13, 11, -0.6, true]]) {
-    const pelage = '#a8703f', ventre = '#e8d3b5', sabot = '#3a2a22';
-    const corps = [colorer(new THREE.SphereGeometry(0.42, 16, 12).scale(1.45, 0.82, 0.78).translate(0, 0.98, 0), pelage)];
-    corps.push(colorer(new THREE.SphereGeometry(0.36, 14, 10).scale(1.3, 0.55, 0.7).translate(0, 0.86, 0), ventre)); // ventre clair
-    for (const [dx, dz] of [[-0.42, -0.17], [-0.42, 0.17], [0.4, -0.17], [0.4, 0.17]]) {
-      corps.push(colorer(new THREE.CylinderGeometry(0.055, 0.04, 0.78, 8).translate(dx, 0.42, dz), pelage));
-      corps.push(colorer(new THREE.CylinderGeometry(0.045, 0.05, 0.07, 8).translate(dx, 0.035, dz), sabot));
+    const pelage = '#a8703f', ventre = '#e8d3b5', sabot = '#3a2a22', blanc = '#fbf3e4';
+    // corps : ellipsoïde lisse (centre y 0,98, demi-axes 0,61 × 0,34 × 0,33) + épaules et hanches pour attacher les pattes
+    const RC = [0.61, 0.34, 0.31], YC = 0.98;
+    const corps = [colorer(new THREE.SphereGeometry(1, 28, 18).scale(...RC).translate(0, YC, 0), pelage)];
+    corps.push(colorer(new THREE.SphereGeometry(1, 20, 12).scale(0.46, 0.2, 0.24).translate(0, 0.84, 0), ventre)); // ventre clair
+    for (const dx of [-0.38, 0.36]) corps.push(colorer(new THREE.SphereGeometry(1, 16, 12).scale(0.2, 0.26, 0.27).translate(dx, 0.88, 0), pelage));
+    for (const [dx, dz] of [[-0.4, -0.15], [-0.4, 0.15], [0.38, -0.15], [0.38, 0.15]]) {
+      corps.push(colorer(new THREE.CylinderGeometry(0.06, 0.035, 0.8, 10).translate(dx, 0.44, dz), pelage));
+      corps.push(colorer(new THREE.CylinderGeometry(0.038, 0.045, 0.07, 10).translate(dx, 0.035, dz), sabot));
     }
-    for (let k = 0; k < 14; k++) { // taches blanches sur le dos
-      const a = auHasard(-0.5, 0.45), cote = Math.random() < 0.5 ? -1 : 1;
-      corps.push(colorer(new THREE.SphereGeometry(0.035, 6, 4).scale(1, 0.4, 1).translate(a, 1.2 - Math.abs(a) * 0.12, cote * auHasard(0.12, 0.26)), '#fbf3e4'));
+    // taches blanches posées exactement sur le pelage (deux rangées le long du dos)
+    for (let k = 0; k < 16; k++) {
+      const u = -0.75 + (k % 8) * 0.2 + auHasard(-0.04, 0.04), cote = k < 8 ? 1 : -1, th = cote * auHasard(0.45, 0.8);
+      const cx = Math.cos(Math.asin(Math.max(-1, Math.min(1, u)))); // largeur de la section à cet endroit
+      const n = new THREE.Vector3(u * RC[0], Math.cos(th) * cx * RC[1], Math.sin(th) * cx * RC[2]);
+      n.multiplyScalar(0.97); // à moitié enfoncée : une tache, pas une bille
+      const tache = new THREE.SphereGeometry(0.03, 8, 6).scale(1.3, 1, 1.3).translate(n.x, n.y + YC, n.z);
+      corps.push(colorer(tache, blanc));
     }
-    corps.push(colorer(new THREE.SphereGeometry(0.11, 8, 6).scale(0.6, 1, 1.2).translate(-0.6, 1.0, 0), '#fbf3e4')); // miroir blanc
-    corps.push(colorer(new THREE.ConeGeometry(0.05, 0.14, 6).rotateZ(Math.PI / 2 + 0.6).translate(-0.62, 1.07, 0), pelage)); // petite queue
-    // Cou + tête : groupe qui pivote à la base du cou
-    const tete = [colorer(new THREE.CylinderGeometry(0.1, 0.15, 0.5, 10).rotateZ(-0.55).translate(0.12, 0.2, 0), pelage)];
-    tete.push(colorer(new THREE.SphereGeometry(0.17, 12, 10).scale(1.15, 0.95, 0.9).translate(0.3, 0.45, 0), pelage));
-    tete.push(colorer(new THREE.CylinderGeometry(0.075, 0.105, 0.22, 10).rotateZ(Math.PI / 2 + 0.25).translate(0.48, 0.41, 0), pelage)); // museau
-    tete.push(colorer(new THREE.SphereGeometry(0.06, 8, 6).translate(0.6, 0.39, 0), '#2a1f1c')); // truffe
-    tete.push(colorer(new THREE.SphereGeometry(0.06, 8, 6).scale(1.2, 0.6, 1).translate(0.5, 0.36, 0), ventre)); // menton clair
+    corps.push(colorer(new THREE.SphereGeometry(1, 12, 10).scale(0.07, 0.13, 0.15).translate(-0.6, 1.0, 0), blanc)); // miroir blanc
+    corps.push(colorer(new THREE.ConeGeometry(0.05, 0.14, 8).rotateZ(Math.PI / 2 + 0.6).translate(-0.63, 1.08, 0), pelage)); // petite queue
+    // Cou + tête : groupe qui pivote à la base du cou (enfoncée dans le poitrail, sans jour)
+    const tete = [colorer(new THREE.CylinderGeometry(0.1, 0.16, 0.66, 14).translate(0, 0.33, 0).rotateZ(-0.5).translate(-0.1, -0.12, 0), pelage)];
+    tete.push(colorer(new THREE.SphereGeometry(1, 18, 14).scale(0.19, 0.16, 0.15).translate(0.22, 0.42, 0), pelage));
+    tete.push(colorer(new THREE.CylinderGeometry(0.07, 0.11, 0.24, 14).rotateZ(Math.PI / 2 + 0.25).translate(0.42, 0.37, 0), pelage)); // museau
+    tete.push(colorer(new THREE.SphereGeometry(0.05, 10, 8).translate(0.55, 0.34, 0), '#2a1f1c')); // truffe
+    tete.push(colorer(new THREE.SphereGeometry(1, 10, 8).scale(0.08, 0.035, 0.06).translate(0.44, 0.31, 0), ventre)); // menton clair
     for (const s of [-1, 1]) {
-      tete.push(colorer(new THREE.SphereGeometry(0.035, 8, 6).translate(0.38, 0.5, s * 0.13), '#1d1614')); // yeux
-      tete.push(colorer(new THREE.SphereGeometry(0.09, 10, 8).scale(0.45, 0.6, 1.4).rotateX(s * 0.5).translate(0.22, 0.58, s * 0.2), pelage)); // oreilles
-      tete.push(colorer(new THREE.SphereGeometry(0.06, 8, 6).scale(0.35, 0.5, 1.2).rotateX(s * 0.5).translate(0.235, 0.58, s * 0.21), '#f1dcc4'));
+      tete.push(colorer(new THREE.SphereGeometry(0.03, 10, 8).translate(0.32, 0.47, s * 0.11), '#1d1614')); // yeux
+      // grandes oreilles tournées sur les côtés, intérieur clair
+      tete.push(colorer(new THREE.SphereGeometry(1, 12, 8).scale(0.04, 0.06, 0.12).rotateX(-s * 0.5).translate(0.15, 0.55, s * 0.2), pelage));
+      tete.push(colorer(new THREE.SphereGeometry(1, 10, 6).scale(0.02, 0.045, 0.09).rotateX(-s * 0.5).translate(0.175, 0.555, s * 0.2), '#f1dcc4'));
       if (male) { // bois : une perche et deux andouillers
-        tete.push(colorer(new THREE.CylinderGeometry(0.018, 0.025, 0.36, 6).rotateX(s * 0.35).rotateZ(-0.3).translate(0.24, 0.78, s * 0.08), '#e9dcc0'));
-        tete.push(colorer(new THREE.CylinderGeometry(0.013, 0.018, 0.16, 6).rotateX(s * 0.2).rotateZ(-1.0).translate(0.32, 0.8, s * 0.1), '#e9dcc0'));
-        tete.push(colorer(new THREE.CylinderGeometry(0.012, 0.016, 0.14, 6).rotateX(s * 0.6).rotateZ(-0.1).translate(0.3, 0.93, s * 0.13), '#e9dcc0'));
+        tete.push(colorer(new THREE.CylinderGeometry(0.016, 0.024, 0.34, 8).rotateX(s * 0.35).rotateZ(-0.3).translate(0.18, 0.72, s * 0.08), '#e9dcc0'));
+        tete.push(colorer(new THREE.CylinderGeometry(0.012, 0.017, 0.15, 8).rotateX(s * 0.2).rotateZ(-1.0).translate(0.26, 0.74, s * 0.1), '#e9dcc0'));
+        tete.push(colorer(new THREE.CylinderGeometry(0.011, 0.015, 0.13, 8).rotateX(s * 0.6).rotateZ(-0.1).translate(0.24, 0.87, s * 0.13), '#e9dcc0'));
       }
     }
     const cou = fusionner(tete);
-    cou.position.set(0.5, 1.05, 0);
+    cou.position.set(0.5, 1.08, 0);
     const cerf = new THREE.Group();
     cerf.add(fusionner(corps), cou);
+    // pas d'ombre portée sur lui-même : évite les taches sombres sur le pelage
+    cerf.traverse((o) => { if (o.isMesh) o.receiveShadow = false; });
     cerf.position.set(x, 0, z);
     cerf.rotation.y = r;
     cerf.userData = { tete: cou, phase: Math.random() * 6 };
@@ -844,7 +900,7 @@ function decorGlycines({ groupe, scene, colliders, animations }) {
     colliders.push({ x, z, r: 0.8 });
   }
   animations.push((dt, t) => {
-    for (const c of cerfs) c.userData.tete.rotation.z = -Math.max(0, Math.sin(t * 0.5 + c.userData.phase)) * 1.1; // baisse la tête pour brouter
+    for (const c of cerfs) c.userData.tete.rotation.z = -Math.max(0, Math.sin(t * 0.5 + c.userData.phase)) * 1.45; // baisse la tête jusqu'à l'herbe pour brouter
   });
   feuillesQuiTombent(groupe, animations, ['#c99ad8', '#b56bc4', '#e6d3f2'], 90);
 }
