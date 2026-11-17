@@ -385,28 +385,6 @@ function epreuve(intro, lancer, succes, echec) {
   });
 }
 
-// ------------------------------------------------------------------ Bouton provisoire « Passer l'épreuve »
-// Pour tester avant les portes ouvertes : débloque l'arène sans faire l'épreuve. Il disparaît tout seul
-// le 27 novembre 2026 à 17 h (heure de l'ordinateur), au début des portes ouvertes.
-const FIN_BOUTON_PASSER = new Date(2026, 10, 27, 17, 0, 0); // mois 10 = novembre
-const peutPasserEpreuve = () => new Date() < FIN_BOUTON_PASSER && mode === 'exploration' && niveau && !etatNiveau.miniJeuReussi;
-$('passer-epreuve').onclick = () => {
-  if (!peutPasserEpreuve()) return;
-  ouvrirArene();
-  dialogue([{ nom: nomPnj(), texte: t('Épreuve passée (bouton de test). {boss} t’attend dans l’arène.', { boss: niveau.boss.nom }) }]);
-};
-
-// Même bouton provisoire pour le combat : le boss est vaincu d'office (pendant le combat ou avant de le lancer),
-// l'objet de quête apparaît comme après une vraie victoire. Disparaît aussi le 27 novembre 2026 à 17 h.
-const peutPasserCombat = () => new Date() < FIN_BOUTON_PASSER && niveau && etatNiveau.miniJeuReussi && !etatNiveau.bossVaincu
-  && (mode === 'exploration' || (mode === 'combat' && combat && combat.etat !== 'fin'));
-$('passer-combat').onclick = () => {
-  if (!peutPasserCombat()) return;
-  if (mode === 'exploration') lancerCombat();
-  combat.b.pv = 0;
-  combat.verifierFin();
-};
-
 function ouvrirArene() {
   etatNiveau.miniJeuReussi = true;
   monde.ouvrirArene();
@@ -844,7 +822,6 @@ function majExploration(dt) {
   }
   animerPersonnage(joueur, dt, joueur.position.y > 0 ? 0 : vitesse);
 
-  $('passer-epreuve').hidden = !peutPasserEpreuve();
 
   // Portail
   if (monde.portail.visible && joueur.position.distanceTo(monde.portail.position) < 1.8 && mode === 'exploration') {
@@ -955,7 +932,6 @@ function masquerEntreCameraEtJoueur(cible, dt) {
 // ------------------------------------------------------------------ Boucle
 function boucle() {
   requestAnimationFrame(boucle);
-  $('passer-combat').hidden = !peutPasserCombat();
   const dt = Math.min(horloge.getDelta(), 0.05);
   const t = horloge.elapsedTime;
   if (mode === 'creation') {
