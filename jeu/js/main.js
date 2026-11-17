@@ -449,28 +449,6 @@ function lancerCombat() {
   });
 }
 
-// ------------------------------------------------------------------ Carte des îles
-// Permet d'aller directement sur n'importe quelle île (pratique aux portes ouvertes et pour tester)
-function ouvrirCarte() {
-  if (mode !== 'exploration') return;
-  mode = 'carte';
-  const liste = $('liste-iles');
-  liste.innerHTML = '';
-  for (const id of ORDRE) {
-    const n = NIVEAUX[id];
-    const b = document.createElement('button');
-    b.className = `ile${id === niveau.id ? ' actuelle' : ''}`;
-    const objet = OBJETS[id];
-    const etat = objet ? (partie.objets.includes(id) ? `${objet.icone} ${t('obtenu')}` : t('objet à gagner')) : t('boss final');
-    b.innerHTML = `<strong>${t(n.titre)}</strong><span>${t(n.lieu)}</span><small>${etat}</small>`;
-    b.onclick = () => { $('carte-iles').hidden = true; mode = 'exploration'; if (id !== niveau.id) lancerNiveau(id); };
-    liste.append(b);
-  }
-  $('carte-iles').hidden = false;
-}
-$('ouvrir-carte').onclick = ouvrirCarte;
-$('fermer-carte').onclick = () => { $('carte-iles').hidden = true; mode = 'exploration'; };
-
 // ------------------------------------------------------------------ Fin du jeu
 function victoireFinale() {
   partie.termine = true; // la partie reste terminée même si la page est rechargée, jusqu'au code staff
@@ -524,7 +502,7 @@ function validerStaff() {
     return;
   }
   try { localStorage.removeItem(CLE_SAUVEGARDE); } catch { /* navigation privée */ }
-  location.replace(location.pathname); // sans ?niveau=…, pour repartir du Sas
+  location.replace(location.pathname); // recharge la page : on repart du Sas
 }
 for (const b of document.querySelectorAll('.ouvrir-staff')) b.onclick = ouvrirStaff;
 $('staff-annuler').onclick = fermerStaff;
@@ -728,7 +706,6 @@ addEventListener('keydown', (e) => {
   touches.add(e.code);
   if (mode === 'dialogue' && ['Space', 'Enter', 'KeyE'].includes(e.code) && !$('dialogue').hidden) { e.preventDefault(); avancerDialogue(); return; }
   if (mode === 'exploration' && e.code === 'KeyE') interagir();
-  if (e.key === 'm' || e.key === 'M') { if (mode === 'carte') $('fermer-carte').click(); else ouvrirCarte(); }
   if (mode === 'exploration' && e.code === 'Space') { e.preventDefault(); sauter(); }
 });
 addEventListener('keyup', (e) => touches.delete(e.code));
@@ -950,16 +927,8 @@ function boucle() {
 }
 boucle();
 
-// Accès direct à un niveau pour tester : index.html?niveau=informatique
-const params = new URLSearchParams(location.search);
-if (params.has('niveau') && NIVEAUX[params.get('niveau')]) {
-  quitterVestiaire();
-  partie.prenom ||= 'Testeur·se';
-  lancerNiveau(params.get('niveau'));
-}
-
 // Une partie terminée reste sur l'écran de fin (seul le code staff relance une partie)
-if (partie.termine && !params.has('niveau')) afficherFin();
+if (partie.termine) afficherFin();
 
 // Pour le débogage depuis la console
 window.jeu = { partie, renderer, get monde() { return monde; }, lancerMiniJeu, tourner: (r) => { rotationApercu = r; rotationAuto = false; }, essayer: (ap) => { Object.assign(partie.apparence, ap); majApercu(); }, zoom: (v) => { zoomVoulu = zoomApercu = v; }, get mode() { return mode; }, get combat() { return combat; }, etatNiveau, lancerNiveau, ouvrirArene, lancerCombat, joueur: () => joueur, camera, cam };

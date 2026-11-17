@@ -161,25 +161,8 @@
 
   /* HUD */
   #hud { position: fixed; inset: 0; pointer-events: none; }
-  #ouvrir-carte { position: absolute; top: 96px; left: 16px; pointer-events: auto; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--marine); color: var(--creme); font-weight: 900; }
-  .carte-iles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
-  .ile { border: 2px solid var(--marine); background: #fff; border-radius: 14px; padding: 12px; text-align: left; color: var(--marine); display: grid; gap: 4px; }
-  .ile:hover { background: var(--rose-pale); }
-  .ile.actuelle { border-color: var(--corail); box-shadow: 0 0 0 3px var(--corail); }
-  .ile strong { font-size: 1.05rem; }
-  .ile small { color: #6b7a8c; }
-  /* Carte des îles aux couleurs du Sas : fond lavande, cases blanches à ombre pastel, boutons rose / violet */
-  #carte-iles .carte { background: var(--violet-pastel); color: var(--texte-sas); border-color: #fff; box-shadow: 0 6px 0 var(--violet-pastel-fonce); }
-  #carte-iles h2 { color: var(--texte-sas) !important; }
-  #carte-iles .ile { border: 0; color: var(--texte-sas); box-shadow: 0 4px 0 var(--bleu-pastel-fonce); transition: transform .2s, box-shadow .2s; }
-  #carte-iles .ile:hover { background: #fff; transform: translateY(-3px); box-shadow: 0 7px 0 var(--bleu-pastel-fonce); }
-  #carte-iles .ile.actuelle { background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce), 0 0 0 3px #fff; }
-  #carte-iles .ile small { color: #7a6f9e; }
-  #carte-iles .bouton, #carte-iles .bouton-staff { font-family: var(--mono); font-weight: 700; border: 0; border-radius: 24px; color: var(--texte-sas); padding: .8em 1.4em; font-size: .95rem; transition: transform .2s, box-shadow .2s; }
-  #carte-iles .bouton { background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
-  #carte-iles .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
-  #carte-iles .bouton-staff { background: #fff; box-shadow: 0 4px 0 var(--violet-pastel-fonce); }
-  #carte-iles .bouton-staff:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--violet-pastel-fonce); }
+  /* Accès staff pendant le jeu (code demandé) : relancer une nouvelle partie */
+  #staff-jeu { position: absolute; top: 96px; left: 16px; pointer-events: auto; border: 0; border-radius: 999px; padding: 6px 14px; background: rgba(36,52,71,.55); color: var(--creme); font-weight: 700; font-size: .85rem; }
   #hud-niveau { position: absolute; top: 16px; left: 16px; background: rgba(241,230,208,.9); padding: 10px 18px; border-radius: 16px; border-left: 6px solid var(--corail); }
   #hud-titre { font-family: var(--titre); font-size: 1.3rem; display: block; }
   #hud-lieu { font-size: .85rem; }
@@ -314,7 +297,7 @@
   #bouton-action { position: absolute; right: max(108px, calc(env(safe-area-inset-right) + 88px)); bottom: max(52px, env(safe-area-inset-bottom)); min-width: 92px; height: 56px; padding: 0 18px; border-radius: 999px; border: 0; background: var(--corail); color: #fff; font-weight: 900; font-size: 1.05rem; pointer-events: auto; box-shadow: 0 4px 0 #c94a4b; touch-action: none; }
   body.tactile #aide { display: none; }
   /* Pendant un combat : ni joystick ni boutons, et le nom de l'île laisse la place à la barre du boss */
-  body.en-combat #joystick, body.en-combat #bouton-sauter, body.en-combat #bouton-action, body.en-combat #hud-niveau, body.en-combat #ouvrir-carte { display: none; }
+  body.en-combat #joystick, body.en-combat #bouton-sauter, body.en-combat #bouton-action, body.en-combat #hud-niveau, body.en-combat #staff-jeu { display: none; }
   body.tactile #invite kbd { display: none; }
   body.tactile #invite { bottom: 170px; }
   @media (max-width: 600px) {
@@ -323,7 +306,7 @@
     #hud-lieu { font-size: .72rem; }
     #inventaire { top: 66px; left: 10px; right: auto; gap: 4px; }
     .case-inv { width: 34px; height: 34px; font-size: 1.05rem; border-radius: 9px; }
-    #ouvrir-carte { top: 108px; left: 10px; padding: 6px 12px; font-size: .9rem; }
+    #staff-jeu { top: 108px; left: 10px; padding: 5px 12px; font-size: .8rem; }
       #combat-haut { top: 8px; padding: 8px 12px; }
     #journal { display: none; }
     #combat-bas { bottom: 8px; padding: 8px; gap: 8px; }
@@ -398,7 +381,7 @@
 
 <section id="hud" hidden>
   <div id="hud-niveau"><span id="hud-titre"></span><span id="hud-lieu"></span></div>
-  <button id="ouvrir-carte" title="Carte des îles (touche M)" data-i18n-attr="title" data-i18n>🗺️ Îles</button>
+  <button id="staff-jeu" class="ouvrir-staff" title="Réservé au staff (code demandé)" data-i18n-attr="title">Staff</button>
   <div id="inventaire"></div>
   <div id="invite" hidden></div>
   <div id="aide" data-i18n><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> / flèches : bouger · <kbd>Espace</kbd> sauter · <kbd>Maj</kbd> courir · <kbd>E</kbd> interagir · glisser la souris : caméra · molette : zoom</div>
@@ -445,14 +428,6 @@
   </div>
 </section>
 
-<section id="carte-iles" class="modale" hidden>
-  <div class="carte carte-large">
-    <h2 id="minijeu-titre-carte" style="font-family:var(--titre);margin:0;color:var(--corail)" data-i18n>Les îles de Médiaventure</h2>
-    <p data-i18n>Choisis une île pour t’y rendre directement.</p>
-    <div class="carte-iles" id="liste-iles"></div>
-    <div class="mj-actions"><button class="bouton-staff ouvrir-staff" data-i18n>Nouvelle partie (staff)</button> <button class="bouton secondaire" id="fermer-carte" data-i18n>Fermer</button></div>
-  </div>
-</section>
 
 <section id="fin-jeu" class="modale" hidden>
   <img src="portraits/cleo_miko.png" alt="Cléo">
@@ -509,7 +484,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwku4upy"></script>
-<script src="./jeu.js?v=mwku4upy"></script>
+<script src="./ressources.js?v=mwku8dkx"></script>
+<script src="./jeu.js?v=mwku8dkx"></script>
 </body>
 </html>
