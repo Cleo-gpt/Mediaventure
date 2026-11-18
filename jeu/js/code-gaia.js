@@ -22,10 +22,16 @@ export function codeGaia(date = new Date(), heure = date.getHours(), secret = SE
   return code;
 }
 
+// Code permanent provisoire (pour tester et préparer les portes ouvertes) : accepté à toute heure
+// jusqu'au 27 novembre 2026 à 16 h (heure de l'ordinateur), puis seuls les codes horaires marchent.
+export const CODE_PERMANENT = '640318';
+const FIN_CODE_PERMANENT = new Date(2026, 10, 27, 16, 0, 0); // mois 10 = novembre
+
 // Accepte le code de l'heure en cours et celui de l'heure précédente
 // (l'élève qui reçoit son code à 10 h 58 a encore le temps de l'entrer)
 export function codeGaiaValide(saisie, maintenant = new Date(), secret = SECRET_GAIA) {
   const s = saisie.trim().toUpperCase().replace(/\s+/g, '');
+  if (s === CODE_PERMANENT && maintenant < FIN_CODE_PERMANENT) return true;
   const avant = new Date(maintenant.getTime() - 3600e3);
   return s === codeGaia(maintenant, maintenant.getHours(), secret) || s === codeGaia(avant, avant.getHours(), secret);
 }
