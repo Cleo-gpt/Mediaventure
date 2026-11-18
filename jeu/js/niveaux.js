@@ -19,7 +19,7 @@ export const NIVEAUX = {
   sas: {
     murs: [[3, 2], [5, 2], [1, 4], [4, 4], [7, 4], [2, 6], [6, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 60, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Le Sas', ville: 'Kyoto', lieu: 'Forêt de bambous — Kyoto', biome: 'bambou', jouable: true,
+    titre: 'Le Sas', ville: 'Bambouseraie d’Arashiyama', lieu: 'Forêt de bambous — bambouseraie d’Arashiyama', biome: 'bambou', jouable: true,
     ciel: '#628d34', brume: '#628d34', sol: '#bd8a4c', chemin: PALETTE.creme, accent: PALETTE.corail,
     fond: '../fonds/sas_bambous.jpg', miniJeu: 'demo', suivant: 'multimedia',
     boss: {

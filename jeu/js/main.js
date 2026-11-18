@@ -510,7 +510,7 @@ function dessinerCarte() {
     d.style.left = pos[i][0] + '%';
     d.style.top = pos[i][1] + '%';
     const etat = i === ici ? t('Tu es ici') : fait ? `✓ ${t('obtenu')}` : id === 'final' ? t('boss final') : '';
-    d.innerHTML = `<img src="cartes/${id}.jpg" alt=""><strong>${t(n.titre).split(' — ')[0]}</strong><span>${n.ville}</span>${etat ? `<small>${etat}</small>` : ''}`;
+    d.innerHTML = `<img src="cartes/${id}.jpg" alt=""><strong>${t(n.titre).split(' — ')[0]}</strong><span>${t(n.ville)}</span>${etat ? `<small>${etat}</small>` : ''}`;
     plan.append(d);
   });
 }

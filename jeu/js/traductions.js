@@ -185,7 +185,8 @@ const L = [
 
   // ---------------------------------------------------------------- Îles, boss et objets
   ["Le Sas", "The Gateway", "Die Schleuse", "Il Passaggio"],
-  ["Forêt de bambous — Kyoto", "Bamboo forest — Kyoto", "Bambuswald — Kyoto", "Foresta di bambù — Kyoto"],
+  ["Forêt de bambous — bambouseraie d’Arashiyama", "Bamboo forest — Arashiyama bamboo grove", "Bambuswald — Bambushain von Arashiyama", "Foresta di bambù — bambuseto di Arashiyama"],
+  ["Bambouseraie d’Arashiyama", "Arashiyama bamboo grove", "Bambushain von Arashiyama", "Bambuseto di Arashiyama"],
   ["Gardienne du Sas (démo)", "Guardian of the Gateway (demo)", "Hüterin der Schleuse (Demo)", "Guardiana del Passaggio (demo)"],
   ["Pichenette", "Flick", "Schnipser", "Buffetto"],
   ["Feuille de bambou", "Bamboo leaf", "Bambusblatt", "Foglia di bambù"],
