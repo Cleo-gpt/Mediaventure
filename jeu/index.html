@@ -99,8 +99,9 @@
   #titre-sas { position: absolute; top: 28px; right: 28px; text-align: right; }
   #titre-sas h1 { margin: 0; font-family: var(--titre-po); font-weight: 400; font-size: clamp(1.8rem, 4.4vw, 3.4rem); line-height: 1; color: #fff; text-shadow: 0 4px 0 var(--violet-pastel-fonce); }
   #titre-sas p { display: inline-block; margin: 10px 0 0; padding: 8px 18px; border-radius: 30px; background: #fff; color: var(--texte-sas); letter-spacing: .1em; font-size: .9rem; box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
-  @media (max-width: 760px) {
-    #panneau { top: auto; left: 12px; right: 12px; bottom: 90px; width: auto; height: 46%; gap: 10px; }
+  @media (max-width: 760px) and (min-height: 501px) {
+    #panneau { top: auto; left: 12px; right: 12px; bottom: 84px; width: auto; height: 40%; gap: 10px; }
+    #titre-sas h1 { font-size: 1.7rem; }
     #corps { grid-template-columns: 60px 1fr; gap: 10px; padding: 10px; }
     .categorie { width: 52px; height: 52px; }
     #cartes { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
@@ -131,13 +132,57 @@
     #guide-sas { align-items: flex-start; }
     #guide-bulle::after { bottom: auto; top: 18px; }
   }
-  /* Sur téléphone, le panneau est en bas : Cléo se place juste au-dessus */
-  @media (max-width: 760px) {
-    #guide-sas { position: absolute; left: 0; right: 0; bottom: calc(100% + 10px); align-items: flex-start; }
-    #guide-bulle { margin: 0; padding: 10px 12px; }
-    #guide-bulle::after { bottom: auto; top: 18px; }
-    #guide-texte { font-size: .9rem; }
-    #guide-avatar img, #guide-sas.reduit #guide-avatar img { height: 88px; width: 88px; object-fit: cover; object-position: 50% 4%; border-radius: 50%; background: var(--rose-pastel); border: 3px solid #fff; }
+  /* Sur téléphone (portrait), le panneau est en bas : Cléo se place juste au-dessus, en petit,
+     pour laisser voir le personnage entre le titre et sa bulle */
+  @media (max-width: 760px) and (min-height: 501px) {
+    #guide-sas { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); align-items: flex-start; gap: 8px; }
+    #guide-bulle { margin: 0; padding: 7px 10px 6px; border-radius: 14px; }
+    #guide-bulle::after { bottom: auto; top: 14px; }
+    #guide-tete strong { padding: 1px 10px; font-size: .8rem; }
+    #guide-etape { font-size: .7rem; }
+    #guide-texte { font-size: .76rem; line-height: 1.35; margin: 4px 0 5px; }
+    #guide-boutons button { font-size: .74rem; padding: .35em .9em; }
+    #guide-avatar img, #guide-sas.reduit #guide-avatar img { height: 52px; width: 52px; object-fit: cover; object-position: 50% 4%; border-radius: 50%; background: var(--rose-pastel); border: 3px solid #fff; }
+  }
+  /* Téléphone en paysage (écran peu haut) : panneau à gauche sur toute la hauteur, tout en plus compact */
+  @media (max-height: 500px) and (orientation: landscape) {
+    #panneau { top: 8px; left: 8px; bottom: 8px; width: min(470px, 56%); gap: 6px; }
+    #onglets { padding: 3px; }
+    #onglets button { height: 34px; }
+    #onglets button svg { width: 22px; height: 22px; }
+    #badge-identite { width: 18px; height: 18px; font-size: .7rem; }
+    #corps { grid-template-columns: 48px 1fr; gap: 8px; padding: 8px; margin-bottom: 5px; }
+    #categories { gap: 8px; }
+    .categorie { width: 42px; height: 42px; }
+    .categorie svg { width: 24px; height: 24px; }
+    #cat-titre { font-size: 1.05rem; margin: 2px 0 0; }
+    #creation .rond { width: 32px; height: 32px; font-size: 1rem; }
+    #cartes { margin-top: 8px; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
+    .carte-objet { padding: 6px 4px 22px; }
+    .carte-objet .etoiles { bottom: 4px; font-size: .8rem; }
+    #champ-prenom { margin-top: 8px; }
+    #prenom { padding: .5em 1em; font-size: .95rem; }
+    #guide-sas { gap: 6px; align-items: flex-start; }
+    #guide-bulle { margin: 0; padding: 5px 9px; border-radius: 12px; }
+    #guide-bulle::after { bottom: auto; top: 12px; }
+    #guide-tete strong { padding: 0 8px; font-size: .72rem; }
+    #guide-etape { font-size: .65rem; }
+    #guide-texte { font-size: .7rem; line-height: 1.3; margin: 3px 0 4px; }
+    #guide-boutons button { font-size: .68rem; padding: .3em .8em; }
+    #guide-avatar img, #guide-sas.reduit #guide-avatar img { height: 40px; width: 40px; object-fit: cover; object-position: 50% 4%; border-radius: 50%; background: var(--rose-pastel); border: 2px solid #fff; }
+    #titre-sas { top: 8px; right: 12px; }
+    #titre-sas h1 { font-size: 1.5rem; }
+    #titre-sas p { font-size: .62rem; padding: 4px 10px; margin-top: 4px; }
+    #actions-sas { right: 10px; bottom: 10px; left: calc(min(470px, 56%) + 22px); gap: 8px; flex-wrap: nowrap; }
+    #creation #actions-sas .bouton { padding: .55em 1em; font-size: .8rem; }
+    #actions-sas .bouton-staff { padding: .55em .9em; font-size: .75rem; }
+    /* en jeu : pas de journal de combat ni d'inventaire par-dessus l'arène ; barre des sorts sur une seule ligne, basse */
+    #journal, body.en-combat #inventaire { display: none; }
+    body #combat-haut { top: 6px; padding: 4px 12px; }
+    body #combat-bas { grid-template-columns: 120px 1fr auto; bottom: 6px; padding: 6px 8px; gap: 8px; }
+    body .sort { padding: 4px 8px; }
+    body .sort small { display: none; }
+    body #fin-tour { padding: .5em 1em; }
   }
 
   /* Bouton et fenêtre réservés au staff */
@@ -297,24 +342,79 @@
   #bouton-action { position: absolute; right: max(108px, calc(env(safe-area-inset-right) + 88px)); bottom: max(52px, env(safe-area-inset-bottom)); min-width: 92px; height: 56px; padding: 0 18px; border-radius: 999px; border: 0; background: var(--corail); color: #fff; font-weight: 900; font-size: 1.05rem; pointer-events: auto; box-shadow: 0 4px 0 #c94a4b; touch-action: none; }
   body.tactile #aide { display: none; }
   /* Pendant un combat : ni joystick ni boutons, et le nom de l'île laisse la place à la barre du boss */
-  body.en-combat #joystick, body.en-combat #bouton-sauter, body.en-combat #bouton-action, body.en-combat #hud-niveau, body.en-combat #staff-jeu { display: none; }
+  body.en-combat #joystick, body.en-combat #bouton-sauter, body.en-combat #bouton-action, body.en-combat #hud-niveau, body.en-combat #staff-jeu, body.en-combat #ouvrir-carte { display: none; }
   body.tactile #invite kbd { display: none; }
   body.tactile #invite { bottom: 170px; }
   @media (max-width: 600px) {
     #hud-niveau { top: 10px; left: 10px; padding: 6px 12px; }
     #hud-titre { font-size: 1rem; }
     #hud-lieu { font-size: .72rem; }
-    #inventaire { top: 66px; left: 10px; right: auto; gap: 4px; }
+    #inventaire { top: 92px; left: 10px; right: auto; gap: 4px; }
     .case-inv { width: 34px; height: 34px; font-size: 1.05rem; border-radius: 9px; }
-    #staff-jeu { top: 108px; left: 10px; padding: 5px 12px; font-size: .8rem; }
+    #staff-jeu { top: 134px; left: 10px; padding: 5px 12px; font-size: .8rem; }
       #combat-haut { top: 8px; padding: 8px 12px; }
-    #journal { display: none; }
+    #journal, body.en-combat #inventaire { display: none; }
     #combat-bas { bottom: 8px; padding: 8px; gap: 8px; }
     .sort { padding: 5px 8px; }
     .sort small { display: none; }
     #fin-tour { padding: .6em 1.2em; }
     #dialogue { bottom: 12px; padding: 14px 16px 10px; }
     #dialogue-texte { font-size: 1rem; }
+  }
+
+  /* Mini-carte des îles : parchemin déroulé, mer turquoise, une île par niveau (photo, nom, ville) reliées par le chemin */
+  /* Bouton de la carte : un petit rouleau (makimono) avec l'inscription « Carte » */
+  #ouvrir-carte { position: absolute; top: 92px; left: 12px; pointer-events: auto; border: 0; padding: 0; background: none; width: 84px; height: 64px; cursor: pointer; filter: drop-shadow(0 3px 3px rgba(0,0,0,.35)); transition: transform .15s; }
+  #ouvrir-carte svg { width: 100%; height: 100%; display: block; }
+  #ouvrir-carte:hover { transform: translateY(-2px) rotate(-3deg); }
+  #ouvrir-carte:active { transform: scale(.95); }
+  #staff-jeu { left: 104px; }
+  #carte { z-index: 120; }
+  .parchemin { position: relative; width: min(980px, 100%); max-height: calc(100vh - 40px); display: flex; flex-direction: column; background: #f3e3bf; border-radius: 6px; padding: 26px 26px 22px; color: #4a3423;
+    box-shadow: inset 0 0 0 3px #e2c991, inset 0 0 40px rgba(140,98,48,.35), 0 18px 40px rgba(0,0,0,.35); }
+  .parchemin::before, .parchemin::after { content: ''; position: absolute; left: -14px; right: -14px; height: 18px; border-radius: 9px; background: linear-gradient(#a8323a, #6e1e25); box-shadow: 0 3px 6px rgba(0,0,0,.35); }
+  .parchemin::before { top: -9px; } .parchemin::after { bottom: -9px; }
+  .parchemin h2 { margin: 0; font-family: var(--titre); color: #8a2f2f; font-size: clamp(1.3rem, 3vw, 1.9rem); }
+  .parchemin-contenu > p { margin: 2px 0 12px; font-size: .9rem; }
+  /* Ouverture / fermeture : le parchemin se déroule depuis le centre (les rouleaux s'écartent), puis se réenroule */
+  .parchemin-contenu { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; transition: opacity .3s ease; }
+  .parchemin.anime { transition: height .6s cubic-bezier(.25,.8,.25,1), padding .6s cubic-bezier(.25,.8,.25,1); }
+  .parchemin.roule { padding-top: 0; padding-bottom: 0; }
+  .parchemin.roule .parchemin-contenu { opacity: 0; }
+  .parchemin.roule:not(.fermeture) .parchemin-contenu { transition: none; } /* enroulé d'un coup avant de se dérouler */
+  .parchemin.anime:not(.roule) .parchemin-contenu { transition-delay: .15s; } /* la carte apparaît pendant le déroulé */
+  #carte { transition: background-color .4s ease; }
+  #carte.fondu { background-color: transparent; }
+  #carte-mer { position: relative; flex: 1; min-height: 0; overflow: auto; border-radius: 10px; border: 3px solid #c9a96a; background: #4fb8c4; }
+  #carte-plan { position: relative; width: 100%; }
+  #carte-plan svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ile-carte { position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 2px; text-align: center; width: 22%; max-width: 150px; }
+  .ile-carte img { width: clamp(54px, 9vw, 96px); aspect-ratio: 1; object-fit: cover; border-radius: 50%; border: 4px solid #fff8e6; box-shadow: 0 4px 0 rgba(74,52,35,.45); background: #cfe7ea; }
+  .ile-carte strong { background: #fff8e6; color: #4a3423; border-radius: 999px; padding: 1px 10px; font-size: clamp(.68rem, 1.4vw, .85rem); box-shadow: 0 2px 0 rgba(74,52,35,.3); line-height: 1.35; }
+  .ile-carte span { color: #fff; font-weight: 800; font-size: clamp(.66rem, 1.3vw, .8rem); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+  .ile-carte small { font-size: .66rem; font-weight: 800; color: #fff8e6; background: rgba(74,52,35,.65); border-radius: 999px; padding: 0 8px; }
+  .ile-carte.ici img { border-color: var(--corail); animation: pulse-ici 1.4s ease-in-out infinite; }
+  .ile-carte.ici small { background: var(--corail); }
+  .ile-carte.a-venir img { filter: saturate(.35) brightness(.9); }
+  @keyframes pulse-ici { 50% { box-shadow: 0 4px 0 rgba(74,52,35,.45), 0 0 0 7px rgba(255,105,106,.45); } }
+  #carte .mj-actions { margin-top: 12px; }
+  @media (max-width: 600px) {
+    #ouvrir-carte { top: 128px; left: 6px; width: 66px; height: 50px; }
+    #staff-jeu { left: 80px; }
+    .parchemin { padding: 18px 12px 16px; }
+    .ile-carte { width: 40%; }
+    .ile-carte img { width: 64px; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    .parchemin { padding: 12px 14px 10px; }
+    .parchemin-contenu > p, .parchemin h2 { display: none; }
+    #carte .mj-actions { margin-top: 8px; }
+    #carte .mj-actions .bouton { padding: .45em 1.4em; font-size: .9rem; }
+    .ile-carte { gap: 1px; }
+    .ile-carte img { width: 46px; border-width: 3px; }
+    .ile-carte strong { font-size: .6rem; padding: 0 7px; }
+    .ile-carte span { font-size: .58rem; }
+    .ile-carte small { font-size: .55rem; padding: 0 6px; }
   }
   /* Sur petit écran, le portrait laisse la place aux fenêtres (quiz, épreuves, carte…) */
   @media (max-width: 760px) { body:has(.modale:not([hidden])) #dialogue-portrait { display: none; } }
@@ -381,6 +481,26 @@
 
 <section id="hud" hidden>
   <div id="hud-niveau"><span id="hud-titre"></span><span id="hud-lieu"></span></div>
+  <button id="ouvrir-carte" title="Carte des îles (touche M)" data-i18n-attr="title,aria-label" aria-label="Carte des îles (touche M)">
+    <svg viewBox="0 0 120 92" aria-hidden="true">
+      <!-- papier déroulé qui pend sous le rouleau, bord du bas ondulé -->
+      <path d="M8 18H104V74Q96 70 88 77Q78 85 66 76Q56 69 46 78Q34 87 24 76Q16 69 8 76Z" fill="#e6dcc0" stroke="#3b3326" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M8 18H30V74Q22 70 15 75L8 76Z" fill="#cdc2a3"/>
+      <path d="M8 28H104M8 64H104" stroke="#7d6d4f" stroke-width="2.5"/>
+      <path d="M8 31H104" stroke="#a89878" stroke-width="1.2"/>
+      <!-- cordelettes -->
+      <path d="M20 46q-8 10-4 26M92 44q8 10 5 26" fill="none" stroke="#5c5446" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="20" cy="45" r="2.6" fill="#5c5446"/><circle cx="92" cy="43" r="2.6" fill="#5c5446"/>
+      <!-- rouleau -->
+      <rect x="4" y="8" width="104" height="14" rx="7" fill="#6e6656" stroke="#3b3326" stroke-width="2.5"/>
+      <ellipse cx="108" cy="15" rx="6" ry="8" fill="#4e4739" stroke="#3b3326" stroke-width="2.5"/>
+      <ellipse cx="108" cy="15" rx="2.5" ry="3.5" fill="#2e2a22"/>
+      <path d="M10 12H100" stroke="#8d8471" stroke-width="2" stroke-linecap="round"/>
+      <!-- étiquette blanche avec l'inscription -->
+      <rect x="36" y="36" width="44" height="22" rx="2" fill="#fbf8f0" stroke="#3b3326" stroke-width="2"/>
+      <text x="58" y="52.5" text-anchor="middle" font-size="14" font-weight="900" fill="#2b2420" font-family="'Zen Maru Gothic', sans-serif" data-i18n>Carte</text>
+    </svg>
+  </button>
   <button id="staff-jeu" class="ouvrir-staff" title="Réservé au staff (code demandé)" data-i18n-attr="title">Staff</button>
   <div id="inventaire"></div>
   <div id="invite" hidden></div>
@@ -428,6 +548,15 @@
   </div>
 </section>
 
+
+<section id="carte" class="modale" hidden>
+  <div class="parchemin" id="parchemin-carte"><div class="parchemin-contenu">
+    <h2 data-i18n>Les îles de Médiaventure</h2>
+    <p data-i18n>Le chemin de l’aventure, île après île : chaque île a son épreuve, son boss et son objet de quête.</p>
+    <div id="carte-mer"><div id="carte-plan"></div></div>
+    <div class="mj-actions"><button class="bouton" id="fermer-carte" data-i18n>Fermer</button></div>
+  </div></div>
+</section>
 
 <section id="fin-jeu" class="modale" hidden>
   <img src="portraits/cleo_miko.png" alt="Cléo">
@@ -484,7 +613,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwlt4db1"></script>
-<script src="./jeu.js?v=mwlt4db1"></script>
+<script src="./ressources.js?v=mwlv6v51"></script>
+<script src="./jeu.js?v=mwlv6v51"></script>
 </body>
 </html>

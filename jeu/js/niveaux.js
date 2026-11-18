@@ -19,7 +19,7 @@ export const NIVEAUX = {
   sas: {
     murs: [[3, 2], [5, 2], [1, 4], [4, 4], [7, 4], [2, 6], [6, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 60, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Le Sas', lieu: 'Forêt de bambous — Kyoto', biome: 'bambou', jouable: true,
+    titre: 'Le Sas', ville: 'Kyoto', lieu: 'Forêt de bambous — Kyoto', biome: 'bambou', jouable: true,
     ciel: '#628d34', brume: '#628d34', sol: '#bd8a4c', chemin: PALETTE.creme, accent: PALETTE.corail,
     fond: '../fonds/sas_bambous.jpg', miniJeu: 'demo', suivant: 'multimedia',
     boss: {
@@ -36,7 +36,7 @@ export const NIVEAUX = {
   multimedia: {
     murs: [[2, 2], [6, 2], [4, 3], [0, 4], [2, 4], [6, 4], [8, 4], [4, 5], [3, 6], [5, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 70, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Multimédia', lieu: 'Sayo — champs de tournesols', biome: 'tournesol', jouable: true,
+    titre: 'Multimédia', ville: 'Sayo', lieu: 'Sayo — champs de tournesols', biome: 'tournesol', jouable: true,
     ciel: '#82ccfa', brume: '#7aa852', sol: '#77ab52', chemin: PALETTE.creme, accent: '#f2b632',
     fond: '../fonds/multimedia_tournesols.jpg', miniJeu: 'video', suivant: 'design',
     // Bibliothèque de vidéos : `youtube` = identifiant de la vidéo YouTube (il faut internet),
@@ -68,7 +68,7 @@ export const NIVEAUX = {
   design: {
     murs: [[1, 2], [4, 2], [7, 2], [2, 4], [4, 4], [6, 4], [0, 5], [8, 5], [1, 6], [3, 6], [5, 6], [7, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 80, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Design', lieu: 'Hakone — forêt d’automne', biome: 'automne', jouable: true,
+    titre: 'Design', ville: 'Hakone', lieu: 'Hakone — forêt d’automne', biome: 'automne', jouable: true,
     ciel: '#8cc4e8', brume: '#7fae4c', sol: '#86b24f', chemin: PALETTE.creme, accent: '#e8672c',
     fond: '../fonds/design_automne.jpg', miniJeu: 'portfolios', suivant: 'informatique',
     // E-portfolios à visiter : sans `url`, la case affiche « Bientôt »
@@ -101,7 +101,7 @@ export const NIVEAUX = {
   informatique: {
     murs: [[1, 3], [3, 3], [5, 3], [7, 3], [0, 5], [2, 5], [4, 5], [6, 5], [8, 5], [3, 7], [5, 7]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 90, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Informatique', lieu: 'Le Ciel — îles flottantes', biome: 'ciel', jouable: true,
+    titre: 'Informatique', ville: 'Mont Fuji', lieu: 'Le Ciel — îles flottantes', biome: 'ciel', jouable: true,
     ciel: '#92a3b7', brume: '#a8b8cb', sol: '#bccad8', chemin: PALETTE.creme, accent: PALETTE.corail,
     fond: '../fonds/informatique_fuji.jpg', miniJeu: 'quiz', suivant: 'marketing',
     boss: {
@@ -116,7 +116,7 @@ export const NIVEAUX = {
   marketing: {
     murs: [[2, 2], [6, 2], [0, 3], [4, 3], [8, 3], [2, 4], [6, 4], [1, 5], [4, 5], [7, 5], [3, 6], [5, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 100, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Marketing', lieu: 'Nara — glycines', biome: 'glycine', jouable: true,
+    titre: 'Marketing', ville: 'Nara', lieu: 'Nara — glycines', biome: 'glycine', jouable: true,
     ciel: '#d9b3e0', brume: '#dcbde3', sol: '#9db56a', chemin: PALETTE.creme, accent: '#a44c94',
     miniJeu: 'etapes-projet', suivant: 'admin',
     // Étapes d'un projet marketing, dans le bon ordre (elles sont mélangées dans l'épreuve)
@@ -153,7 +153,7 @@ export const NIVEAUX = {
   admin: {
     murs: [[1, 2], [7, 2], [3, 3], [5, 3], [4, 4], [0, 5], [2, 5], [6, 5], [8, 5], [3, 6], [5, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 110, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Admin & gestion', lieu: 'Tokyo — sakura', biome: 'sakura', jouable: true,
+    titre: 'Admin & gestion', ville: 'Tokyo', lieu: 'Tokyo — sakura', biome: 'sakura', jouable: true,
     ciel: '#f2d9e8', brume: '#efd9ea', sol: '#b9cc8f', chemin: PALETTE.creme, accent: '#8a5fb4', // herbe de printemps sous les cerisiers
     miniJeu: 'stand-gaia', suivant: 'final',
     // Le code donné par la vendeuse du stand Gaïa change toutes les heures : voir js/code-gaia.js et codes-gaia.html
@@ -181,7 +181,7 @@ export const NIVEAUX = {
   final: {
     murs: [[2, 2], [4, 2], [6, 2], [1, 4], [3, 4], [5, 4], [7, 4], [2, 6], [4, 6], [6, 6], [0, 7], [8, 7]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 130, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Boss final — Média global', lieu: 'Kyoto — le pavillon d’or (Kinkaku-ji)', biome: 'final', jouable: true,
+    titre: 'Boss final — Média global', ville: 'Kyoto', lieu: 'Kyoto — le pavillon d’or (Kinkaku-ji)', biome: 'final', jouable: true,
     ciel: '#c3cdd2', brume: '#c9d3d6', sol: '#8fa477', chemin: PALETTE.creme, accent: PALETTE.corail, // ciel gris et mousse du jardin du pavillon d'or
     miniJeu: 'combat-final', suivant: null,
     gain: 'Passe au stand Médiaventure : ton gain t’attend (goodies, print spécial PO ou rabais sur une Gaïa) !',

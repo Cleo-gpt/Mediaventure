@@ -449,6 +449,116 @@ function lancerCombat() {
   });
 }
 
+// ------------------------------------------------------------------ Mini-carte des îles
+// Consultation seulement (on ne peut pas y voyager) : une île par niveau avec sa photo, son nom et sa ville,
+// reliées par le chemin de l'aventure. Les photos sont dans jeu/cartes/.
+const TERRES = { bambou: '#6f9f45', tournesol: '#9cc24f', automne: '#e0883a', ciel: '#e8f1fb', glycine: '#a98bd6', sakura: '#f0b2c8', final: '#d8b04a' };
+function formeIle(cx, cy, r, graine) {
+  const pts = [];
+  for (let k = 0; k < 16; k++) {
+    const a = (k / 16) * Math.PI * 2;
+    const rr = r * (1 + 0.16 * Math.sin(a * 3 + graine) + 0.09 * Math.sin(a * 5 + graine * 2.3));
+    pts.push([cx + Math.cos(a) * rr * 1.25, cy + Math.sin(a) * rr * 0.85]);
+  }
+  const mil = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+  let d = `M${mil(pts[15], pts[0]).join(',')}`;
+  for (let k = 0; k < 16; k++) d += ` Q${pts[k].join(',')} ${mil(pts[k], pts[(k + 1) % 16]).join(',')}`;
+  return d + 'Z';
+}
+function dessinerCarte() {
+  const plan = $('carte-plan');
+  const haut = $('carte-mer').clientWidth < 560; // téléphone en portrait : les îles se suivent de haut en bas
+  const W = 1000, H = haut ? 2100 : 560;
+  plan.style.aspectRatio = `${W} / ${H}`;
+  const pos = haut
+    ? ORDRE.map((_, i) => [i % 2 ? 70 : 30, 10 + i * 13.4])
+    : [[10, 64], [24, 30], [38, 68], [52, 30], [65, 68], [78, 30], [90, 66]];
+  const P = pos.map(([x, y]) => [x * W / 100, y * H / 100]);
+  const r = haut ? 105 : 62;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
+    <radialGradient id="mer" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#6fd0d6"/><stop offset="1" stop-color="#2f8ea3"/></radialGradient>
+    <pattern id="vagues" width="60" height="30" patternUnits="userSpaceOnUse"><path d="M0 15q15-10 30 0t30 0" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2"/></pattern></defs>
+    <rect width="${W}" height="${H}" fill="url(#mer)"/><rect width="${W}" height="${H}" fill="url(#vagues)"/>`;
+  // chemin de l'aventure, d'île en île
+  let d = `M${P[0].join(',')}`;
+  for (let i = 1; i < P.length; i++) {
+    const [a, b] = [P[i - 1], P[i]];
+    d += ` Q${(a[0] + b[0]) / 2 + (i % 2 ? 40 : -40)},${(a[1] + b[1]) / 2 + (haut ? 0 : (i % 2 ? -40 : 40))} ${b.join(',')}`;
+  }
+  svg += `<path d="${d}" fill="none" stroke="#fff8e6" stroke-width="6" stroke-dasharray="4 16" stroke-linecap="round" opacity=".9"/>`;
+  ORDRE.forEach((id, i) => {
+    const [x, y] = P[i], terre = TERRES[NIVEAUX[id].biome] ?? '#7fae4c';
+    svg += `<path d="${formeIle(x, y + 6, r * 1.12, i * 1.7)}" fill="#ecd9a8"/><path d="${formeIle(x, y + 4, r * 0.95, i * 1.7)}" fill="${terre}"/>`;
+  });
+  // rose des vents
+  svg += `<g transform="translate(${W - 60},${haut ? 60 : 56})" fill="#fff8e6" opacity=".85"><path d="M0-34L7-7 34 0 7 7 0 34-7 7-34 0-7-7Z"/><text y="-40" text-anchor="middle" font-size="18" font-weight="700" fill="#fff8e6">N</text></g></svg>`;
+  plan.innerHTML = svg;
+  // la carte entière tient dans la hauteur disponible (téléphone en paysage, petite fenêtre)
+  plan.style.width = '100%';
+  plan.style.margin = '';
+  const mer = $('carte-mer');
+  if (!haut && mer.clientHeight && mer.clientHeight < mer.clientWidth * H / W) {
+    plan.style.width = `${(mer.clientHeight * W) / H}px`;
+    plan.style.margin = '0 auto';
+  }
+  const ici = ORDRE.indexOf(niveau?.id);
+  ORDRE.forEach((id, i) => {
+    const n = NIVEAUX[id], d = document.createElement('div');
+    const fait = partie.objets.includes(id);
+    d.className = `ile-carte${i === ici ? ' ici' : ''}${i > ici && !fait ? ' a-venir' : ''}`;
+    d.style.left = pos[i][0] + '%';
+    d.style.top = pos[i][1] + '%';
+    const etat = i === ici ? t('Tu es ici') : fait ? `✓ ${t('obtenu')}` : id === 'final' ? t('boss final') : '';
+    d.innerHTML = `<img src="cartes/${id}.jpg" alt=""><strong>${t(n.titre).split(' — ')[0]}</strong><span>${n.ville}</span>${etat ? `<small>${etat}</small>` : ''}`;
+    plan.append(d);
+  });
+}
+// Le parchemin se déroule depuis le centre à l'ouverture et se réenroule à la fermeture
+const DUREE_PARCHEMIN = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600;
+const ROULE = 18; // hauteur du parchemin enroulé : les deux rouleaux se touchent
+let animParchemin = 0;
+function ouvrirCarte() {
+  if (mode !== 'exploration') return;
+  mode = 'carte';
+  touches.clear();
+  const p = $('parchemin-carte');
+  clearTimeout(animParchemin);
+  p.classList.remove('anime', 'roule', 'fermeture');
+  p.style.height = '';
+  $('carte').classList.add('fondu');
+  $('carte').hidden = false;
+  dessinerCarte(); // à pleine taille, pour mesurer
+  const h = p.offsetHeight;
+  p.classList.add('roule');
+  p.style.height = ROULE + 'px';
+  void p.offsetHeight; // part de l'état enroulé
+  p.classList.add('anime');
+  p.classList.remove('roule');
+  p.style.height = h + 'px';
+  $('carte').classList.remove('fondu');
+  animParchemin = setTimeout(() => { p.classList.remove('anime'); p.style.height = ''; }, DUREE_PARCHEMIN);
+}
+function fermerCarte() {
+  if (mode !== 'carte') return;
+  mode = 'exploration';
+  const p = $('parchemin-carte');
+  clearTimeout(animParchemin);
+  p.style.height = p.offsetHeight + 'px';
+  void p.offsetHeight;
+  p.classList.add('anime', 'roule', 'fermeture');
+  p.style.height = ROULE + 'px';
+  $('carte').classList.add('fondu');
+  animParchemin = setTimeout(() => {
+    $('carte').hidden = true;
+    p.classList.remove('anime', 'roule', 'fermeture');
+    p.style.height = '';
+  }, DUREE_PARCHEMIN);
+}
+$('ouvrir-carte').onclick = ouvrirCarte;
+$('fermer-carte').onclick = fermerCarte;
+$('carte').addEventListener('click', (e) => { if (e.target === $('carte')) fermerCarte(); });
+addEventListener('resize', () => { if (mode === 'carte' && !$('parchemin-carte').classList.contains('anime')) dessinerCarte(); });
+
 // ------------------------------------------------------------------ Fin du jeu
 function victoireFinale() {
   partie.termine = true; // la partie reste terminée même si la page est rechargée, jusqu'au code staff
@@ -706,6 +816,8 @@ addEventListener('keydown', (e) => {
   touches.add(e.code);
   if (mode === 'dialogue' && ['Space', 'Enter', 'KeyE'].includes(e.code) && !$('dialogue').hidden) { e.preventDefault(); avancerDialogue(); return; }
   if (mode === 'exploration' && e.code === 'KeyE') interagir();
+  if (e.code === 'KeyM') { if (mode === 'carte') fermerCarte(); else ouvrirCarte(); }
+  if (mode === 'carte' && e.code === 'Escape') fermerCarte();
   if (mode === 'exploration' && e.code === 'Space') { e.preventDefault(); sauter(); }
 });
 addEventListener('keyup', (e) => touches.delete(e.code));
@@ -890,6 +1002,30 @@ function masquerEntreCameraEtJoueur(cible, dt) {
 }
 
 // ------------------------------------------------------------------ Boucle
+// Cadrage du personnage du Sas. Sur grand écran : à droite du panneau, recul fixe.
+// Sur téléphone : on mesure la zone libre (sous le titre ; au-dessus de Cléo en portrait, à droite du panneau en paysage)
+// et on centre le personnage dedans, avec le recul qui le fait tenir en entier.
+function cadrageSas() {
+  const W = innerWidth, H = innerHeight;
+  if (W > 760 && H > 500) return { x: -W * 0.24, y: 0, recul: 2.3 };
+  const r = (id) => $(id).getBoundingClientRect();
+  const titre = r('titre-sas'), panneau = r('panneau'), actions = r('actions-sas'), guide = r('guide-sas');
+  let x0 = 0, x1 = W, y0 = titre.bottom + 6, y1;
+  if (panneau.top > H * 0.3) { // panneau en bas (portrait) : Cléo est au-dessus du panneau
+    y1 = Math.min(panneau.top, guide.height ? guide.top : panneau.top) - 6;
+  } else { // panneau à gauche (paysage)
+    x0 = panneau.right + 8;
+    y0 = 8; // le titre est en haut à droite : le personnage peut passer dessous sans gêne
+    y1 = actions.top - 6;
+  }
+  const zl = Math.max(80, x1 - x0), zh = Math.max(80, y1 - y0);
+  const tanDemi = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  // hauteur visible voulue : personnage (≈ 1,25 m) sur 90 % de la zone ; largeur : ≈ 0,9 m sur 85 %
+  const reculH = (1.25 * H / (0.9 * zh)) / (2 * tanDemi);
+  const reculL = (0.9 * W / (0.85 * zl)) / (2 * tanDemi * (W / H));
+  return { x: W / 2 - (x0 + x1) / 2, y: H / 2 - (y0 + y1) / 2, recul: Math.max(reculH, reculL, 1.6) };
+}
+
 function boucle() {
   requestAnimationFrame(boucle);
   const dt = Math.min(horloge.getDelta(), 0.05);
@@ -903,12 +1039,13 @@ function boucle() {
       e.position.y = e.userData.y + Math.sin(t + e.userData.phase) * 0.15;
       e.rotation.z = t * 0.5 + e.userData.phase;
     }
-    // Personnage cadré sur la droite de l'écran, comme dans le vestiaire de référence
-    const large = innerWidth > 760;
-    camera.setViewOffset(innerWidth, innerHeight, large ? -innerWidth * 0.24 : 0, large ? 0 : innerHeight * 0.25, innerWidth, innerHeight);
+    // Personnage cadré sur la droite de l'écran, comme dans le vestiaire de référence ;
+    // sur téléphone, cadré dans l'espace laissé libre par le titre, Cléo, le panneau et les boutons
     zoomApercu += (zoomVoulu - zoomApercu) * Math.min(1, dt * 8);
     const z = zoomApercu;
-    camera.position.set(0, THREE.MathUtils.lerp(0.75, 0.82, z), THREE.MathUtils.lerp(large ? 2.3 : 3.6, 1.05, z));
+    const cadre = cadrageSas();
+    camera.setViewOffset(innerWidth, innerHeight, cadre.x, cadre.y, innerWidth, innerHeight);
+    camera.position.set(0, THREE.MathUtils.lerp(0.75, 0.82, z), THREE.MathUtils.lerp(cadre.recul, 1.05, z));
     camera.lookAt(0, THREE.MathUtils.lerp(0.55, 0.74, z), 0);
     renderer.render(sceneCreation, camera);
     if (!chargementTermine && mode === 'creation') { chargementTermine = true; fondu(false); }

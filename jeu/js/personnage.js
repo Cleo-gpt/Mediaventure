@@ -1485,6 +1485,8 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   // Tête (rigide, sur l'os de la tête)
   const tete = new THREE.Group();
   tete.position.set(TETE[0] - J.tete[0], TETE[1] - J.tete[1], TETE[2] - J.tete[2]);
+  // la tête du capybara est plus haute que celle des autres : on la pose sur le corps (sinon on voit le ciel dessous)
+  if (espece === 'capybara') tete.position.y -= 0.05;
   os.tete.add(tete);
   const homme = espece === 'humain' && a.genre === 'homme'; // traits plus marqués, sans joues roses
   const photo = !!a.tetePhoto; // tête réaliste tirée d'une photo (M. Graber) : pas de traits dessinés
@@ -1585,7 +1587,9 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
   if (espece === 'shiba') {
     queue.add(new THREE.Mesh(g.queue, fourrure));
     queue.position.set(QUEUE_BASE[0] - J.hanches[0], QUEUE_BASE[1] - J.hanches[1], QUEUE_BASE[2] - J.hanches[2]);
-    queue.scale.setScalar(1.35); // panache bien visible derrière la grosse tête
+    // panache bien visible, mais penché vers l'arrière : la boucle reste derrière le dos, sous la tête et le chignon
+    queue.scale.setScalar(1.15);
+    queue.rotation.x = -0.55;
   } else if (espece === 'pandaRoux') {
     queue.add(new THREE.Mesh(g.queue, fourrure));
     queue.position.set(QUEUE_BASE[0] - J.hanches[0], QUEUE_BASE[1] - J.hanches[1], QUEUE_BASE[2] - J.hanches[2]);
@@ -1672,7 +1676,7 @@ export function creerPersonnage(apparence = APPARENCE_DEFAUT) {
     }
   }
   // Le capybara a les yeux plus haut que les autres animaux : sa coiffure remonte pour ne pas les cacher
-  if (capy) { touffe.position.set(0, 0.03, -0.015); touffe.scale.set(0.93, 0.95, 0.97); } // ajustée à son crâne
+  if (capy) { touffe.position.set(0, 0.025, -0.015); touffe.scale.set(0.98, 1.04, 0.98); } // ajustée à son crâne, oreilles couvertes
   else if (espece === 'capybara') { touffe.position.set(0, 0.095, -0.025); touffe.scale.setScalar(1.05); }
   tete.add(touffe);
   contourner(tete);
