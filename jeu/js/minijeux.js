@@ -92,7 +92,7 @@ export function epreuveVideo(videos) {
 // YouTube refuse d'être intégré directement (erreur 153, la page n'a pas d'adresse web). Le jeu affiche alors
 // cette page relais, qui affiche elle-même la vidéo : YouTube voit l'adresse du serveur et accepte.
 // À changer si le jeu déménage (le fichier doit être en ligne à cette adresse).
-const RELAIS_YOUTUBE = 'http://localhost:8768/jeu/video-youtube.html'; // TEST
+const RELAIS_YOUTUBE = 'https://cforclaz.eleves.mediamatique.ch/jeu/video-youtube.html';
 
 // Lecteur YouTube intégré. Il suit la lecture grâce aux messages du lecteur (enablejsapi) pour savoir
 // quand la vidéo est finie. Si la vidéo ne s'affiche pas (pas d'internet…), le joueur peut l'ouvrir sur YouTube :
