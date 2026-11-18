@@ -17,7 +17,10 @@ function ouvrir(titre, sousTitre) {
 function fermer() {
   $('minijeu').hidden = true;
   $('minijeu-contenu').innerHTML = '';
+  grandEcran(false);
 }
+// Pendant une vidéo ou la visite d'un e-portfolio, la fenêtre prend presque tout l'écran (sans le portrait à côté)
+const grandEcran = (oui) => document.body.classList.toggle('mj-grand', oui);
 const bouton = (texte, classe = 'bouton') => Object.assign(document.createElement('button'), { className: classe, textContent: texte });
 
 // ---------------------------------------------------------------- Multimédia : regarder une vidéo de la bibliothèque
@@ -39,6 +42,7 @@ export function epreuveVideo(videos) {
 
     function lire(v) {
       zone.innerHTML = '';
+      grandEcran(true);
       const ecran = document.createElement('div');
       ecran.className = 'mj-ecran';
       const barre = document.createElement('div');
@@ -84,24 +88,32 @@ export function epreuveVideo(videos) {
   });
 }
 
+// Page relais hébergée sur le serveur (fichier jeu/video-youtube.html) : quand le jeu est ouvert par double-clic,
+// YouTube refuse d'être intégré directement (erreur 153, la page n'a pas d'adresse web). Le jeu affiche alors
+// cette page relais, qui affiche elle-même la vidéo : YouTube voit l'adresse du serveur et accepte.
+// À changer si le jeu déménage (le fichier doit être en ligne à cette adresse).
+const RELAIS_YOUTUBE = 'https://cforclaz.eleves.mediamatique.ch/jeu/video-youtube.html';
+
 // Lecteur YouTube intégré. Il suit la lecture grâce aux messages du lecteur (enablejsapi) pour savoir
-// quand la vidéo est finie. Si la vidéo ne s'affiche pas (pas d'internet, page ouverte par double-clic…),
-// le joueur peut l'ouvrir sur YouTube : on compte alors la durée de la vidéo à partir de ce moment.
+// quand la vidéo est finie. Si la vidéo ne s'affiche pas (pas d'internet…), le joueur peut l'ouvrir sur YouTube :
+// on compte alors la durée de la vidéo à partir de ce moment.
 function lecteurYoutube(v, ecran) {
-  if (location.protocol === 'file:') return lecteurYoutubeFenetre(v, ecran);
+  const relais = location.protocol === 'file:';
   const origine = location.protocol.startsWith('http') ? `&origin=${encodeURIComponent(location.origin)}` : '';
   const cadre = Object.assign(document.createElement('iframe'), {
-    src: `https://www.youtube.com/embed/${v.youtube}?enablejsapi=1&autoplay=1&rel=0&playsinline=1${origine}`,
+    src: relais ? `${RELAIS_YOUTUBE}?id=${encodeURIComponent(v.youtube)}`
+      : `https://www.youtube.com/embed/${v.youtube}?enablejsapi=1&autoplay=1&rel=0&playsinline=1${origine}`,
     allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
     title: v.titre,
   });
   cadre.referrerPolicy = 'strict-origin-when-cross-origin';
   ecran.append(cadre);
-  let temps = 0, total = 0, termine = false, ouvertA = null;
+  let temps = 0, total = 0, termine = false, ouvertA = null, pret = !relais, secours = null, arrete = false;
   const ecouter = (e) => {
     if (e.source !== cadre.contentWindow) return;
     let d;
     try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch { return; }
+    if (d?.mediaventure === 'relais-pret') { pret = true; return; }
     const info = d?.info;
     if (d?.event === 'onStateChange' && info === 0) termine = true;
     if (d?.event === 'infoDelivery' && info) {
@@ -119,12 +131,22 @@ function lecteurYoutube(v, ecran) {
   const lien = Object.assign(document.createElement('a'), { href: `https://www.youtube.com/watch?v=${v.youtube}`, target: '_blank', rel: 'noopener', textContent: t('Ouvre-la sur YouTube') });
   lien.onclick = () => { ouvertA ??= performance.now(); };
   aide.append(lien);
+  // Relais injoignable (pas d'internet, page relais pas encore en ligne) : on revient à la fenêtre YouTube à côté du jeu
+  if (relais) {
+    setTimeout(() => {
+      if (pret || arrete) return;
+      removeEventListener('message', ecouter);
+      cadre.remove();
+      secours = lecteurYoutubeFenetre(v, ecran, false);
+      aide.replaceWith(secours.aide);
+    }, 8000);
+  }
   return {
     aide,
-    ecoule: () => (ouvertA !== null && !temps ? (performance.now() - ouvertA) / 1000 : temps),
-    duree: () => total,
-    fini: () => termine,
-    arreter: () => { removeEventListener('message', ecouter); cadre.remove(); },
+    ecoule: () => (secours ? secours.ecoule() : ouvertA !== null && !temps ? (performance.now() - ouvertA) / 1000 : temps),
+    duree: () => (secours ? 0 : total),
+    fini: () => !secours && termine,
+    arreter: () => { arrete = true; removeEventListener('message', ecouter); cadre.remove(); secours?.arreter(); },
   };
 }
 
@@ -140,24 +162,24 @@ function ouvrirFenetreVideo(url) {
   f?.focus();
   return f;
 }
-function lecteurYoutubeFenetre(v, ecran) {
+// `ouvrirTout` : ouvrir la fenêtre tout de suite (seulement juste après un clic du joueur, sinon le navigateur la bloque)
+function lecteurYoutubeFenetre(v, ecran, ouvrirTout = true) {
   const url = `https://www.youtube.com/watch?v=${v.youtube}`;
   ecran.classList.add('mj-ecran-yt');
   ecran.style.backgroundImage = `url(https://i.ytimg.com/vi/${v.youtube}/hqdefault.jpg)`;
-  // ouverte tout de suite : le clic sur la vidéo de la bibliothèque autorise la nouvelle fenêtre
-  let fenetre = ouvrirFenetreVideo(url);
-  const ouvertA = performance.now();
+  let fenetre = ouvrirTout ? ouvrirFenetreVideo(url) : null;
+  let ouvertA = ouvrirTout ? performance.now() : null;
   // YouTube coupe le lien avec la fenêtre qui l'ouvre : le jeu ne peut ni la fermer ni la ramener devant,
-  // ce bouton rouvre donc simplement la vidéo si le joueur l'a fermée trop tôt.
-  const revoir = bouton(t('▶ Rouvrir la vidéo'));
-  revoir.onclick = () => { fenetre = ouvrirFenetreVideo(url); };
+  // ce bouton (r)ouvre donc simplement la vidéo.
+  const revoir = bouton(ouvrirTout ? t('▶ Rouvrir la vidéo') : t('▶ Ouvrir la vidéo'));
+  revoir.onclick = () => { fenetre = ouvrirFenetreVideo(url); ouvertA ??= performance.now(); };
   ecran.append(revoir);
   const aide = document.createElement('p');
   aide.className = 'mj-credit';
   aide.textContent = `${t('Crédit : {nom}', { nom: v.credit ?? 'YouTube' })} · ${t('La vidéo s’ouvre dans une fenêtre à côté du jeu : regarde-la jusqu’au bout, ferme-la, puis reviens ici.')}`;
   return {
     aide,
-    ecoule: () => (performance.now() - ouvertA) / 1000,
+    ecoule: () => (ouvertA === null ? 0 : (performance.now() - ouvertA) / 1000),
     duree: () => 0,
     fini: () => false,
     arreter: () => { try { fenetre?.close(); } catch { /* fenêtre déjà fermée */ } },
@@ -188,6 +210,7 @@ export function epreuvePortfolios(portfolios, duree = 30) {
 
     function visiter(p) {
       zone.innerHTML = '';
+      grandEcran(true);
       $('minijeu-sous-titre').textContent = t('Visite de l’e-portfolio de {nom}', { nom: p.nom });
       const ecran = document.createElement('div');
       ecran.className = 'mj-site';

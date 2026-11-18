@@ -255,6 +255,13 @@
   .mj-ecran-yt .bouton { box-shadow: 0 4px 0 #c94a4b, 0 0 0 6px rgba(255,255,255,.35); }
   .mj-site { height: min(58vh, 560px); border-radius: 14px; overflow: hidden; border: 3px solid var(--marine); background: #fff; }
   .mj-site iframe { width: 100%; height: 100%; border: 0; display: block; }
+  /* Vidéo ou e-portfolio en cours : grande fenêtre, le portrait s'efface */
+  body.mj-grand #dialogue-portrait { display: none; }
+  body.mj-grand #minijeu { padding-left: 16px; }
+  body.mj-grand #minijeu .carte { width: min(1280px, 100%); max-height: calc(100vh - 24px); padding: 16px 20px; }
+  body.mj-grand #minijeu-sous-titre { margin-bottom: 10px; }
+  body.mj-grand .mj-site { height: calc(100vh - 200px); }
+  body.mj-grand .mj-ecran { width: min(100%, calc((100vh - 190px) * 16 / 9)); margin: 0 auto; }
   .mj-video:disabled { opacity: .55; cursor: default; background: #fff; }
   .mj-credit { font-size: .78rem; font-weight: 400; color: #6b7a8c; margin: 6px 0 0; }
   .mj-credit a { color: var(--corail); font-weight: 700; }
@@ -419,6 +426,26 @@
     .ile-carte span { font-size: .58rem; }
     .ile-carte small { font-size: .55rem; padding: 0 6px; }
   }
+  /* Bouton Staff en jeu : le même petit rouleau que « Carte », avec l'inscription « Staff » */
+  #hud #staff-jeu { position: absolute; top: 92px; left: 104px; pointer-events: auto; border: 0; padding: 0; background: none; width: 84px; height: 64px; cursor: pointer;
+    filter: drop-shadow(0 4px 0 #b49fe2) drop-shadow(0 4px 6px rgba(59,51,96,.3)); transition: transform .15s; }
+  #hud #staff-jeu svg { width: 100%; height: 100%; display: block; }
+  #hud #staff-jeu:hover { transform: translateY(-2px) rotate(3deg); }
+  #hud #staff-jeu:active { transform: scale(.95); }
+  @media (max-width: 600px) { #hud #staff-jeu { top: 128px; left: 78px; width: 66px; height: 50px; } }
+
+  /* Fenêtre du code staff aux couleurs du Sas */
+  #staff .carte { background: var(--violet-pastel); color: var(--texte-sas); border: 3px solid #fff; box-shadow: 0 6px 0 var(--violet-pastel-fonce), 0 18px 40px rgba(20,29,85,.35); font-family: var(--mono); }
+  #staff h2 { font-family: var(--titre-po); font-weight: 400; color: var(--texte-sas); font-size: clamp(1.2rem, 3vw, 1.6rem); }
+  #staff .avertissement { background: #fff; color: var(--texte-sas); border-left: 6px solid var(--rose-pastel-fonce); font-weight: 700; font-size: .9rem; }
+  #staff label { font-weight: 700; }
+  #code-staff { border: 3px solid var(--rose-pastel-fonce); color: var(--texte-sas); font-family: var(--mono); background: #fff; }
+  #code-staff:focus { outline: none; border-color: var(--violet-pastel-fonce); box-shadow: 0 0 0 4px rgba(180,159,226,.35); }
+  #staff-erreur { color: #b8456e; }
+  #staff .bouton { font-family: var(--mono); font-weight: 700; color: var(--texte-sas); border-radius: 24px; background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce); transition: transform .2s, box-shadow .2s; }
+  #staff .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
+  #staff .bouton.secondaire { background: var(--bleu-pastel); box-shadow: 0 4px 0 var(--bleu-pastel-fonce); }
+  #staff .bouton.secondaire:hover { box-shadow: 0 7px 0 var(--bleu-pastel-fonce); }
   /* Sur petit écran, le portrait laisse la place aux fenêtres (quiz, épreuves, carte…) */
   @media (max-width: 760px) { body:has(.modale:not([hidden])) #dialogue-portrait { display: none; } }
 </style>
@@ -501,7 +528,23 @@
       <text x="58" y="52.5" text-anchor="middle" font-size="13" font-weight="700" fill="#3b3360" font-family="'Space Mono', monospace" data-i18n>Carte</text>
     </svg>
   </button>
-  <button id="staff-jeu" class="ouvrir-staff" title="Réservé au staff (code demandé)" data-i18n-attr="title">Staff</button>
+  <button id="staff-jeu" class="ouvrir-staff" title="Réservé au staff (code demandé)" data-i18n-attr="title">
+    <svg viewBox="0 0 120 92" aria-hidden="true">
+      <!-- aux couleurs des boutons du Sas : papier lavande, rouleau rose, bandes roses, cordelettes bleues, traits violet foncé -->
+      <path d="M8 18H104V74Q96 70 88 77Q78 85 66 76Q56 69 46 78Q34 87 24 76Q16 69 8 76Z" fill="#ddd0f5" stroke="#3b3360" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M8 18H30V74Q22 70 15 75L8 76Z" fill="#c9b8ee"/>
+      <path d="M8 28H104M8 64H104" stroke="#eaa3c0" stroke-width="3"/>
+      <path d="M8 31.5H104" stroke="#b49fe2" stroke-width="1.2"/>
+      <path d="M20 46q-8 10-4 26M92 44q8 10 5 26" fill="none" stroke="#93b4e3" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="20" cy="45" r="2.8" fill="#93b4e3" stroke="#3b3360" stroke-width="1"/><circle cx="92" cy="43" r="2.8" fill="#93b4e3" stroke="#3b3360" stroke-width="1"/>
+      <rect x="4" y="8" width="104" height="14" rx="7" fill="#f9cfe0" stroke="#3b3360" stroke-width="2.5"/>
+      <ellipse cx="108" cy="15" rx="6" ry="8" fill="#eaa3c0" stroke="#3b3360" stroke-width="2.5"/>
+      <ellipse cx="108" cy="15" rx="2.5" ry="3.5" fill="#3b3360"/>
+      <path d="M10 12H100" stroke="#fff" stroke-opacity=".7" stroke-width="2" stroke-linecap="round"/>
+      <rect x="36" y="36" width="44" height="22" rx="3" fill="#fff" stroke="#3b3360" stroke-width="2"/>
+      <text x="58" y="52.5" text-anchor="middle" font-size="13" font-weight="700" fill="#3b3360" font-family="'Space Mono', monospace">Staff</text>
+    </svg>
+  </button>
   <div id="inventaire"></div>
   <div id="invite" hidden></div>
   <div id="aide" data-i18n><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> / flèches : bouger · <kbd>Espace</kbd> sauter · <kbd>Maj</kbd> courir · <kbd>E</kbd> interagir · glisser la souris : caméra · molette : zoom</div>
@@ -613,7 +656,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwlvx7wi"></script>
-<script src="./jeu.js?v=mwlvx7wi"></script>
+<script src="./ressources.js?v=mwlwp6ng"></script>
+<script src="./jeu.js?v=mwlwp6ng"></script>
 </body>
 </html>

@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Relais vidéo de Médiaventure.
+     Le jeu ouvert par double-clic (file://) n'a pas d'adresse web : YouTube refuse alors de lire ses vidéos (erreur 153).
+     Cette petite page, hébergée sur le serveur (https://cforclaz.eleves.mediamatique.ch/jeu/video-youtube.html),
+     est affichée dans le jeu et c'est elle qui affiche la vidéo YouTube : YouTube voit l'adresse du serveur et accepte.
+     Elle transmet les messages du lecteur (position, fin de la vidéo) au jeu, et ceux du jeu au lecteur.
+     Usage : video-youtube.html?id=IDENTIFIANT_YOUTUBE -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Médiaventure — vidéo</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; }
+  iframe { width: 100%; height: 100%; border: 0; display: block; }
+</style>
+</head>
+<body>
+<iframe id="lecteur" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="Vidéo"></iframe>
+<script>
+  const id = (new URLSearchParams(location.search).get('id') || '').replace(/[^\w-]/g, '');
+  const lecteur = document.getElementById('lecteur');
+  lecteur.src = `https://www.youtube.com/embed/${id}?enablejsapi=1&autoplay=1&rel=0&playsinline=1&origin=${encodeURIComponent(location.origin)}`;
+  // le jeu sait que le relais est bien chargé
+  parent.postMessage(JSON.stringify({ mediaventure: 'relais-pret' }), '*');
+  // le lecteur YouTube doit être prévenu qu'on écoute pour envoyer la position et la fin de la vidéo
+  lecteur.addEventListener('load', () => lecteur.contentWindow.postMessage(JSON.stringify({ event: 'listening', id }), 'https://www.youtube.com'));
+  addEventListener('message', (e) => {
+    if (e.source === lecteur.contentWindow) parent.postMessage(e.data, '*');           // lecteur → jeu
+    else if (e.source === parent) lecteur.contentWindow.postMessage(e.data, 'https://www.youtube.com'); // jeu → lecteur
+  });
+</script>
+</body>
+</html>

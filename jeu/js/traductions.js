@@ -172,6 +172,7 @@ const L = [
   ["Crédit : {nom}", "Credit: {nom}", "Credits: {nom}", "Crediti: {nom}"],
   ["La vidéo ne s’affiche pas ?", "Video not showing?", "Video wird nicht angezeigt?", "Il video non si vede?"],
   ["Ouvre-la sur YouTube", "Open it on YouTube", "Öffne es auf YouTube", "Aprilo su YouTube"],
+  ["▶ Ouvrir la vidéo", "▶ Open the video", "▶ Video öffnen", "▶ Apri il video"],
   ["▶ Rouvrir la vidéo", "▶ Reopen the video", "▶ Video erneut öffnen", "▶ Riapri il video"],
   ["La vidéo s’ouvre dans une fenêtre à côté du jeu : regarde-la jusqu’au bout, ferme-la, puis reviens ici.", "The video opens in a window next to the game: watch it to the end, close it, then come back here.", "Das Video öffnet sich in einem Fenster neben dem Spiel: Schau es bis zum Ende, schließ es und komm dann hierher zurück.", "Il video si apre in una finestra accanto al gioco: guardalo fino alla fine, chiudilo e poi torna qui."],
   ["Analyser le marché et la concurrence", "Analyse the market and the competition", "Markt und Konkurrenz analysieren", "Analizzare il mercato e la concorrenza"],
