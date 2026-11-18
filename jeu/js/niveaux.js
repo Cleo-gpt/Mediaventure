@@ -68,7 +68,7 @@ export const NIVEAUX = {
   design: {
     murs: [[1, 2], [4, 2], [7, 2], [2, 4], [4, 4], [6, 4], [0, 5], [8, 5], [1, 6], [3, 6], [5, 6], [7, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 80, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
-    titre: 'Design', lieu: 'Parc national de Daisetsuzan', biome: 'automne', jouable: true,
+    titre: 'Design', lieu: 'Hakone — forêt d’automne', biome: 'automne', jouable: true,
     ciel: '#8cc4e8', brume: '#7fae4c', sol: '#86b24f', chemin: PALETTE.creme, accent: '#e8672c',
     fond: '../fonds/design_automne.jpg', miniJeu: 'portfolios', suivant: 'informatique',
     // E-portfolios à visiter : sans `url`, la case affiche « Bientôt »

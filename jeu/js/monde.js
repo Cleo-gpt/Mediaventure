@@ -679,7 +679,7 @@ function decorTournesols({ groupe, scene, niveau, colliders, animations, chargeu
   animations.push((dt, t) => { for (const f of fleurs) f.rotation.z = Math.sin(t * 1.2 + f.userData.phase) * 0.03; });
 }
 
-// ------------------------------------------------------------------ Design : Daisetsuzan en automne
+// ------------------------------------------------------------------ Design : Hakone en automne
 function decorAutomne({ groupe, scene, niveau, colliders, animations, chargeurTexture }) {
   // Fond dessiné (ciel bleu, arbres d'automne, herbe et feuilles mortes) tout autour de l'île ;
   // brume et sol aux couleurs de son herbe pour que le décor 3D s'y fonde

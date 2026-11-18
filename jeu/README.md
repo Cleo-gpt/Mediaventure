@@ -30,7 +30,7 @@ Les sept îles de la mindmap, dans l'ordre des portails :
 |---|---|---|---|---|
 | Sas | Forêt de bambous (fond dessiné) | Présentation par Cléo + combat d'entraînement | Cléo Forclaz | Clé |
 | Multimédia | Champs de tournesols de Sayo | Regarder une vidéo de la bibliothèque | Roderick Graber | Caméra |
-| Design | Daisetsuzan en automne | Jeu des 7 différences | Ariane Nicollier | Règle-cutter |
+| Design | Hakone en automne | Visite d’e-portfolios | Jade Perroset | Massicot |
 | Informatique | Îles flottantes, fond mont Fuji | Quiz (7 bonnes réponses sur 10) | Philippe Kiener | Raspberry Pi |
 | Marketing | Nara : glycines, cerfs, pagode | Remettre les étapes d'un projet dans l'ordre | Olivier Droz | Parchemin |
 | Admin | Tokyo : sakura, stand Gaïa | Code donné au vrai stand Gaïa | Baptiste Forestier | Bouteille Gaïa |

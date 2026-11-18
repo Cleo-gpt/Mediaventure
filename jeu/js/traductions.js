@@ -195,7 +195,7 @@ const L = [
   ["Coupe franche", "Clean cut", "Harter Schnitt", "Taglio netto"],
   ["Flash aveuglant", "Blinding flash", "Blendender Blitz", "Flash accecante"],
   ["Design", "Design", "Design", "Design"],
-  ["Parc national de Daisetsuzan", "Daisetsuzan National Park", "Daisetsuzan-Nationalpark", "Parco nazionale di Daisetsuzan"],
+  ["Hakone — forêt d’automne", "Hakone — autumn forest", "Hakone — Herbstwald", "Hakone — foresta d’autunno"],
   ["Boss Design", "Design Boss", "Design-Boss", "Boss Design"],
   ["Trait de cutter", "Cutter stroke", "Cutterschnitt", "Colpo di taglierino"],
   ["Palette de couleurs", "Colour palette", "Farbpalette", "Tavolozza di colori"],
