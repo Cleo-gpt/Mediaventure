@@ -92,7 +92,7 @@ export function epreuveVideo(videos) {
 // YouTube refuse d'être intégré directement (erreur 153, la page n'a pas d'adresse web). Le jeu affiche alors
 // cette page relais, qui affiche elle-même la vidéo : YouTube voit l'adresse du serveur et accepte.
 // À changer si le jeu déménage (le fichier doit être en ligne à cette adresse).
-const RELAIS_YOUTUBE = 'https://cforclaz.eleves.mediamatique.ch/jeu/video-youtube.html';
+const RELAIS_YOUTUBE = 'http://localhost:8768/jeu/video-youtube.html'; // TEST
 
 // Lecteur YouTube intégré. Il suit la lecture grâce aux messages du lecteur (enablejsapi) pour savoir
 // quand la vidéo est finie. Si la vidéo ne s'affiche pas (pas d'internet…), le joueur peut l'ouvrir sur YouTube :
@@ -113,7 +113,7 @@ function lecteurYoutube(v, ecran) {
     if (e.source !== cadre.contentWindow) return;
     let d;
     try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch { return; }
-    if (d?.mediaventure === 'relais-pret') { pret = true; return; }
+    if (d?.mediaventure === 'relais-pret') { pret = true; cadre.style.opacity = ''; ecran.style.backgroundImage = ''; return; }
     const info = d?.info;
     if (d?.event === 'onStateChange' && info === 0) termine = true;
     if (d?.event === 'infoDelivery' && info) {
@@ -131,15 +131,18 @@ function lecteurYoutube(v, ecran) {
   const lien = Object.assign(document.createElement('a'), { href: `https://www.youtube.com/watch?v=${v.youtube}`, target: '_blank', rel: 'noopener', textContent: t('Ouvre-la sur YouTube') });
   lien.onclick = () => { ouvertA ??= performance.now(); };
   aide.append(lien);
-  // Relais injoignable (pas d'internet, page relais pas encore en ligne) : on revient à la fenêtre YouTube à côté du jeu
+  // Relais injoignable (pas d'internet, page relais pas encore en ligne) : on revient à la fenêtre YouTube à côté du jeu.
+  // En attendant sa réponse, on montre l'image de la vidéo (et jamais une éventuelle page d'erreur du serveur).
   if (relais) {
+    cadre.style.opacity = '0';
+    ecran.style.background = `#243447 url(https://i.ytimg.com/vi/${v.youtube}/hqdefault.jpg) center / cover no-repeat`;
     setTimeout(() => {
       if (pret || arrete) return;
       removeEventListener('message', ecouter);
       cadre.remove();
       secours = lecteurYoutubeFenetre(v, ecran, false);
       aide.replaceWith(secours.aide);
-    }, 8000);
+    }, 5000);
   }
   return {
     aide,
