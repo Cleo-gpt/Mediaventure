@@ -452,7 +452,8 @@ function lancerCombat() {
 // ------------------------------------------------------------------ Mini-carte des îles
 // Consultation seulement (on ne peut pas y voyager) : une île par niveau avec sa photo, son nom et sa ville,
 // reliées par le chemin de l'aventure. Les photos sont dans jeu/cartes/.
-const TERRES = { bambou: '#6f9f45', tournesol: '#9cc24f', automne: '#e0883a', ciel: '#e8f1fb', glycine: '#a98bd6', sakura: '#f0b2c8', final: '#d8b04a' };
+// couleurs de terre adoucies (pastels du Sas), une par décor
+const TERRES = { bambou: '#a8d49a', tournesol: '#f5e08c', automne: '#f6bb8f', ciel: '#ffffff', glycine: '#c9b3f0', sakura: '#f9cfe0', final: '#f2d98a' };
 function formeIle(cx, cy, r, graine) {
   const pts = [];
   for (let k = 0; k < 16; k++) {
@@ -476,8 +477,8 @@ function dessinerCarte() {
   const P = pos.map(([x, y]) => [x * W / 100, y * H / 100]);
   const r = haut ? 105 : 62;
   let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
-    <radialGradient id="mer" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#6fd0d6"/><stop offset="1" stop-color="#2f8ea3"/></radialGradient>
-    <pattern id="vagues" width="60" height="30" patternUnits="userSpaceOnUse"><path d="M0 15q15-10 30 0t30 0" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2"/></pattern></defs>
+    <radialGradient id="mer" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#dbe8fb"/><stop offset="1" stop-color="#a9c5ee"/></radialGradient>
+    <pattern id="vagues" width="60" height="30" patternUnits="userSpaceOnUse"><path d="M0 15q15-10 30 0t30 0" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2"/></pattern></defs>
     <rect width="${W}" height="${H}" fill="url(#mer)"/><rect width="${W}" height="${H}" fill="url(#vagues)"/>`;
   // chemin de l'aventure, d'île en île
   let d = `M${P[0].join(',')}`;
@@ -485,13 +486,13 @@ function dessinerCarte() {
     const [a, b] = [P[i - 1], P[i]];
     d += ` Q${(a[0] + b[0]) / 2 + (i % 2 ? 40 : -40)},${(a[1] + b[1]) / 2 + (haut ? 0 : (i % 2 ? -40 : 40))} ${b.join(',')}`;
   }
-  svg += `<path d="${d}" fill="none" stroke="#fff8e6" stroke-width="6" stroke-dasharray="4 16" stroke-linecap="round" opacity=".9"/>`;
+  svg += `<path d="${d}" fill="none" stroke="#b49fe2" stroke-width="6" stroke-dasharray="4 16" stroke-linecap="round"/>`;
   ORDRE.forEach((id, i) => {
     const [x, y] = P[i], terre = TERRES[NIVEAUX[id].biome] ?? '#7fae4c';
-    svg += `<path d="${formeIle(x, y + 6, r * 1.12, i * 1.7)}" fill="#ecd9a8"/><path d="${formeIle(x, y + 4, r * 0.95, i * 1.7)}" fill="${terre}"/>`;
+    svg += `<path d="${formeIle(x, y + 10, r * 1.12, i * 1.7)}" fill="#93b4e3"/><path d="${formeIle(x, y + 6, r * 1.12, i * 1.7)}" fill="#fff"/><path d="${formeIle(x, y + 4, r * 0.95, i * 1.7)}" fill="${terre}"/>`;
   });
   // rose des vents
-  svg += `<g transform="translate(${W - 60},${haut ? 60 : 56})" fill="#fff8e6" opacity=".85"><path d="M0-34L7-7 34 0 7 7 0 34-7 7-34 0-7-7Z"/><text y="-40" text-anchor="middle" font-size="18" font-weight="700" fill="#fff8e6">N</text></g></svg>`;
+  svg += `<g transform="translate(${W - 60},${haut ? 60 : 56})" fill="#fff" stroke="#3b3360" stroke-width="2"><path d="M0-34L7-7 34 0 7 7 0 34-7 7-34 0-7-7Z"/><text y="-40" text-anchor="middle" font-size="18" font-weight="700" fill="#3b3360" stroke="none">N</text></g></svg>`;
   plan.innerHTML = svg;
   // la carte entière tient dans la hauteur disponible (téléphone en paysage, petite fenêtre)
   plan.style.width = '100%';

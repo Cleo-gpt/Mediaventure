@@ -364,18 +364,19 @@
 
   /* Mini-carte des îles : parchemin déroulé, mer turquoise, une île par niveau (photo, nom, ville) reliées par le chemin */
   /* Bouton de la carte : un petit rouleau (makimono) avec l'inscription « Carte » */
-  #ouvrir-carte { position: absolute; top: 92px; left: 12px; pointer-events: auto; border: 0; padding: 0; background: none; width: 84px; height: 64px; cursor: pointer; filter: drop-shadow(0 3px 3px rgba(0,0,0,.35)); transition: transform .15s; }
+  #ouvrir-carte { position: absolute; top: 92px; left: 12px; pointer-events: auto; border: 0; padding: 0; background: none; width: 84px; height: 64px; cursor: pointer; filter: drop-shadow(0 4px 0 #b49fe2) drop-shadow(0 4px 6px rgba(59,51,96,.3)); transition: transform .15s; }
   #ouvrir-carte svg { width: 100%; height: 100%; display: block; }
   #ouvrir-carte:hover { transform: translateY(-2px) rotate(-3deg); }
   #ouvrir-carte:active { transform: scale(.95); }
   #staff-jeu { left: 104px; }
   #carte { z-index: 120; }
-  .parchemin { position: relative; width: min(980px, 100%); max-height: calc(100vh - 40px); display: flex; flex-direction: column; background: #f3e3bf; border-radius: 6px; padding: 26px 26px 14px; color: #4a3423;
-    box-shadow: inset 0 0 0 3px #e2c991, inset 0 0 40px rgba(140,98,48,.35), 0 18px 40px rgba(0,0,0,.35); }
-  .parchemin::before, .parchemin::after { content: ''; position: absolute; left: -14px; right: -14px; height: 18px; border-radius: 9px; background: linear-gradient(#a8323a, #6e1e25); box-shadow: 0 3px 6px rgba(0,0,0,.35); }
+  /* aux couleurs du Sas : papier lavande, rouleaux roses, mer bleu pastel, textes violet foncé */
+  .parchemin { position: relative; width: min(980px, 100%); max-height: calc(100vh - 40px); display: flex; flex-direction: column; background: var(--violet-pastel); border-radius: 6px; padding: 26px 26px 14px; color: var(--texte-sas); font-family: var(--mono);
+    box-shadow: inset 0 0 0 3px #fff, inset 0 0 40px rgba(180,159,226,.45), 0 18px 40px rgba(20,29,85,.4); }
+  .parchemin::before, .parchemin::after { content: ''; position: absolute; left: -14px; right: -14px; height: 18px; border-radius: 9px; background: linear-gradient(var(--rose-pastel), var(--rose-pastel-fonce)); border: 2px solid var(--texte-sas); box-shadow: 0 3px 0 var(--violet-pastel-fonce); }
   .parchemin::before { top: -9px; } .parchemin::after { bottom: -9px; }
-  .parchemin h2 { margin: 0; font-family: var(--titre); color: #8a2f2f; font-size: clamp(1.3rem, 3vw, 1.9rem); }
-  .parchemin-contenu > p { margin: 2px 0 12px; font-size: .9rem; }
+  .parchemin h2 { margin: 0; font-family: var(--titre-po); font-weight: 400; color: var(--texte-sas); font-size: clamp(1.3rem, 3vw, 1.9rem); }
+  .parchemin-contenu > p { margin: 4px 0 12px; font-size: .85rem; }
   /* Ouverture / fermeture : le parchemin se déroule depuis le centre (les rouleaux s'écartent), puis se réenroule */
   .parchemin-contenu { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; transition: opacity .3s ease; }
   .parchemin.anime { transition: height .6s cubic-bezier(.25,.8,.25,1), padding .6s cubic-bezier(.25,.8,.25,1); }
@@ -385,18 +386,20 @@
   .parchemin.anime:not(.roule) .parchemin-contenu { transition-delay: .15s; } /* la carte apparaît pendant le déroulé */
   #carte { transition: background-color .4s ease; }
   #carte.fondu { background-color: transparent; }
-  #carte-mer { position: relative; flex: 1; min-height: 0; overflow: auto; border-radius: 10px; border: 3px solid #c9a96a; background: #4fb8c4; }
+  #carte-mer { position: relative; flex: 1; min-height: 0; overflow: auto; border-radius: 14px; border: 3px solid #fff; background: var(--bleu-pastel); box-shadow: 0 4px 0 var(--violet-pastel-fonce); }
   #carte-plan { position: relative; width: 100%; }
   #carte-plan svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .ile-carte { position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 2px; text-align: center; width: 22%; max-width: 150px; }
-  .ile-carte img { width: clamp(54px, 9vw, 96px); aspect-ratio: 1; object-fit: cover; border-radius: 50%; border: 4px solid #fff8e6; box-shadow: 0 4px 0 rgba(74,52,35,.45); background: #cfe7ea; }
-  .ile-carte strong { background: #fff8e6; color: #4a3423; border-radius: 999px; padding: 1px 10px; font-size: clamp(.68rem, 1.4vw, .85rem); box-shadow: 0 2px 0 rgba(74,52,35,.3); line-height: 1.35; }
-  .ile-carte span { color: #fff; font-weight: 800; font-size: clamp(.66rem, 1.3vw, .8rem); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
-  .ile-carte small { font-size: .66rem; font-weight: 800; color: #fff8e6; background: rgba(74,52,35,.65); border-radius: 999px; padding: 0 8px; }
-  .ile-carte.ici img { border-color: var(--corail); animation: pulse-ici 1.4s ease-in-out infinite; }
-  .ile-carte.ici small { background: var(--corail); }
+  .ile-carte img { width: clamp(54px, 9vw, 96px); aspect-ratio: 1; object-fit: cover; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 0 var(--bleu-pastel-fonce); background: var(--bleu-pastel); }
+  .ile-carte strong { background: #fff; color: var(--texte-sas); border-radius: 999px; padding: 1px 10px; font-family: var(--mono); font-size: clamp(.64rem, 1.3vw, .8rem); box-shadow: 0 3px 0 var(--violet-pastel-fonce); line-height: 1.4; }
+  .ile-carte span { color: var(--texte-sas); font-family: var(--mono); font-weight: 700; font-size: clamp(.62rem, 1.2vw, .76rem); background: rgba(255,255,255,.75); border-radius: 999px; padding: 0 8px; }
+  .ile-carte small { font-family: var(--mono); font-size: .62rem; font-weight: 700; color: var(--texte-sas); background: var(--violet-pastel); border-radius: 999px; padding: 0 8px; box-shadow: 0 2px 0 var(--violet-pastel-fonce); }
+  .ile-carte.ici img { border-color: var(--rose-pastel-fonce); animation: pulse-ici 1.4s ease-in-out infinite; }
+  .ile-carte.ici small { background: var(--rose-pastel); box-shadow: 0 2px 0 var(--rose-pastel-fonce); }
   .ile-carte.a-venir img { filter: saturate(.35) brightness(.9); }
-  @keyframes pulse-ici { 50% { box-shadow: 0 4px 0 rgba(74,52,35,.45), 0 0 0 7px rgba(255,105,106,.45); } }
+  @keyframes pulse-ici { 50% { box-shadow: 0 4px 0 var(--bleu-pastel-fonce), 0 0 0 7px rgba(234,163,192,.6); } }
+  #carte .bouton { font-family: var(--mono); font-weight: 700; color: var(--texte-sas); background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce); border-radius: 24px; }
+  #carte .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
   #carte .mj-actions { margin-top: 12px; padding: 4px 6px 10px; } /* place pour l'ombre et le survol du bouton (le contenu est rogné pendant l'animation) */
   @media (max-width: 600px) {
     #ouvrir-carte { top: 128px; left: 6px; width: 66px; height: 50px; }
@@ -483,22 +486,19 @@
   <div id="hud-niveau"><span id="hud-titre"></span><span id="hud-lieu"></span></div>
   <button id="ouvrir-carte" title="Carte des îles (touche M)" data-i18n-attr="title">
     <svg viewBox="0 0 120 92" aria-hidden="true">
-      <!-- papier déroulé qui pend sous le rouleau, bord du bas ondulé -->
-      <path d="M8 18H104V74Q96 70 88 77Q78 85 66 76Q56 69 46 78Q34 87 24 76Q16 69 8 76Z" fill="#e6dcc0" stroke="#3b3326" stroke-width="2.5" stroke-linejoin="round"/>
-      <path d="M8 18H30V74Q22 70 15 75L8 76Z" fill="#cdc2a3"/>
-      <path d="M8 28H104M8 64H104" stroke="#7d6d4f" stroke-width="2.5"/>
-      <path d="M8 31H104" stroke="#a89878" stroke-width="1.2"/>
-      <!-- cordelettes -->
-      <path d="M20 46q-8 10-4 26M92 44q8 10 5 26" fill="none" stroke="#5c5446" stroke-width="2" stroke-linecap="round"/>
-      <circle cx="20" cy="45" r="2.6" fill="#5c5446"/><circle cx="92" cy="43" r="2.6" fill="#5c5446"/>
-      <!-- rouleau -->
-      <rect x="4" y="8" width="104" height="14" rx="7" fill="#6e6656" stroke="#3b3326" stroke-width="2.5"/>
-      <ellipse cx="108" cy="15" rx="6" ry="8" fill="#4e4739" stroke="#3b3326" stroke-width="2.5"/>
-      <ellipse cx="108" cy="15" rx="2.5" ry="3.5" fill="#2e2a22"/>
-      <path d="M10 12H100" stroke="#8d8471" stroke-width="2" stroke-linecap="round"/>
-      <!-- étiquette blanche avec l'inscription -->
-      <rect x="36" y="36" width="44" height="22" rx="2" fill="#fbf8f0" stroke="#3b3326" stroke-width="2"/>
-      <text x="58" y="52.5" text-anchor="middle" font-size="14" font-weight="900" fill="#2b2420" font-family="'Zen Maru Gothic', sans-serif" data-i18n>Carte</text>
+      <!-- aux couleurs des boutons du Sas : papier lavande, rouleau rose, bandes roses, cordelettes bleues, traits violet foncé -->
+      <path d="M8 18H104V74Q96 70 88 77Q78 85 66 76Q56 69 46 78Q34 87 24 76Q16 69 8 76Z" fill="#ddd0f5" stroke="#3b3360" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M8 18H30V74Q22 70 15 75L8 76Z" fill="#c9b8ee"/>
+      <path d="M8 28H104M8 64H104" stroke="#eaa3c0" stroke-width="3"/>
+      <path d="M8 31.5H104" stroke="#b49fe2" stroke-width="1.2"/>
+      <path d="M20 46q-8 10-4 26M92 44q8 10 5 26" fill="none" stroke="#93b4e3" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="20" cy="45" r="2.8" fill="#93b4e3" stroke="#3b3360" stroke-width="1"/><circle cx="92" cy="43" r="2.8" fill="#93b4e3" stroke="#3b3360" stroke-width="1"/>
+      <rect x="4" y="8" width="104" height="14" rx="7" fill="#f9cfe0" stroke="#3b3360" stroke-width="2.5"/>
+      <ellipse cx="108" cy="15" rx="6" ry="8" fill="#eaa3c0" stroke="#3b3360" stroke-width="2.5"/>
+      <ellipse cx="108" cy="15" rx="2.5" ry="3.5" fill="#3b3360"/>
+      <path d="M10 12H100" stroke="#fff" stroke-opacity=".7" stroke-width="2" stroke-linecap="round"/>
+      <rect x="36" y="36" width="44" height="22" rx="3" fill="#fff" stroke="#3b3360" stroke-width="2"/>
+      <text x="58" y="52.5" text-anchor="middle" font-size="13" font-weight="700" fill="#3b3360" font-family="'Space Mono', monospace" data-i18n>Carte</text>
     </svg>
   </button>
   <button id="staff-jeu" class="ouvrir-staff" title="Réservé au staff (code demandé)" data-i18n-attr="title">Staff</button>
@@ -613,7 +613,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwlveg48"></script>
-<script src="./jeu.js?v=mwlveg48"></script>
+<script src="./ressources.js?v=mwlvx7wi"></script>
+<script src="./jeu.js?v=mwlvx7wi"></script>
 </body>
 </html>
