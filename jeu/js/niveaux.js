@@ -45,6 +45,7 @@ export const NIVEAUX = {
       { titre: 'Projet vidéo', credit: 'Rémy Martinez', src: 'videos/projet-video.mp4', youtube: 'Ne7nYNzBqcg', duree: 114, icone: '🎬' },
       { titre: 'La vidéo en bref', credit: 'Cléo Ana Forclaz', src: 'videos/la-video-en-bref.mp4', youtube: 'at5eeLY0Xyw', duree: 136, icone: '🎞️' },
       { titre: 'Au-delà du sang', credit: 'Salomé Duperrex', src: 'videos/au-dela-du-sang.mp4', youtube: 'K6EnqKqhGyk', duree: 135, icone: '🎥' },
+      { titre: 'Échecs', credit: 'Matteo Macaluso, Mélinda Nicolet-Dit-Félix, Salomé Duperrex', src: 'videos/echecs.mp4', youtube: '7h4dfSiwiuQ', duree: 98, icone: '♟️' },
     ],
     boss: {
       nom: 'Roderick Graber', titre: 'Boss Multimédia', pv: 85, pa: 6, pm: 3,

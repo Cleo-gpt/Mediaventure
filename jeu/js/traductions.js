@@ -176,6 +176,7 @@ const L = [
   ["Ouvre-le dans un nouvel onglet", "Open it in a new tab", "Öffne sie in einem neuen Tab", "Aprilo in una nuova scheda"],
   ["J’ai fini la visite !", "I've finished exploring!", "Ich habe alles angeschaut!", "Ho finito la visita!"],
   ["Projet vidéo", "Video project", "Videoprojekt", "Progetto video"],
+  ["Échecs", "Chess", "Schach", "Scacchi"],
   ["La vidéo en bref", "The video in short", "Das Video in Kürze", "Il video in breve"],
   ["Crédit : {nom}", "Credit: {nom}", "Credits: {nom}", "Crediti: {nom}"],
   ["La vidéo ne s’affiche pas ?", "Video not showing?", "Video wird nicht angezeigt?", "Il video non si vede?"],

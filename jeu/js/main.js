@@ -571,10 +571,12 @@ const INSTAGRAM = [
   { nom: 'Rémy Martinez', compte: 'remy_psd', qr: 'credits/qr-remy.png' },
   { nom: 'Salomé Duperrex', compte: 'salome.duperrex', qr: 'credits/qr-salome.png' },
   { nom: 'Samuel Porchet', compte: '_sirius_design_', qr: 'credits/qr-samuel.png' },
+  { nom: 'Matteo Macaluso', compte: 'matteo.maca', qr: 'credits/qr-matteo.png' },
+  { nom: 'Mélinda Nicolet-Dit-Félix', compte: 'melinda.nicoletditfelix', qr: 'credits/qr-melinda.png' },
 ];
 const CREDITS = [
   ['Jeu et visuels', [['Cléo Ana Forclaz', 'SM-C3a']]],
-  ['Vidéos', [['Rémy Martinez', 'SM-C3a'], ['Salomé Duperrex', 'SM-MI3a'], ['Cléo Ana Forclaz', 'SM-C3a']]],
+  ['Vidéos', [['Rémy Martinez', 'SM-C3a'], ['Salomé Duperrex', 'SM-MI3a'], ['Cléo Ana Forclaz', 'SM-C3a'], ['Matteo Macaluso', ''], ['Mélinda Nicolet-Dit-Félix', '']]],
   ['E-portfolios', [['Rémy Martinez', 'SM-C3a'], ['Salomé Duperrex', 'SM-MI3a'], ['Cléo Ana Forclaz', 'SM-C3a'], ['Samuel Porchet', 'SM-MI3a']]],
   ['Boss', [['Roderick Graber'], ['Jade Perroset'], ['Philippe Kiener'], ['Olivier Droz'], ['Baptiste Forestier'], ['Christophe Haenssler']]],
 ];
