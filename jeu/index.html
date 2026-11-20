@@ -448,18 +448,28 @@
   #staff .bouton.secondaire:hover { box-shadow: 0 7px 0 var(--bleu-pastel-fonce); }
   /* Générique de fin (fixe) : les crédits sur un ciel étoilé, avant le message de récompense ; liens Instagram des élèves */
   #credits { z-index: 160; background: radial-gradient(ellipse at 50% 70%, #3d5bc0 0%, #26399a 45%, #141d55 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 16px; }
-  .credits-fenetre { width: min(860px, 100%); max-height: calc(100vh - 110px); overflow-y: auto; color: #fff; font-family: var(--mono); text-align: center; }
+  .credits-fenetre { width: min(1100px, 100%); max-height: calc(100vh - 110px); overflow-y: auto; color: #fff; font-family: var(--mono); text-align: center; }
   .credits-fenetre h2 { font-family: var(--titre-po); font-weight: 400; font-size: clamp(1.8rem, 6vw, 2.8rem); margin: 0; color: #fff; text-shadow: 0 4px 0 var(--violet-pastel-fonce); }
   .credits-fenetre .sous { margin: 4px 0 18px; color: var(--violet-pastel); }
-  .credits-rubriques { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; text-align: center; }
+  .credits-rubriques { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; text-align: center; }
+  @media (max-width: 900px) { .credits-rubriques { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 600px) { .credits-rubriques { grid-template-columns: 1fr; } }
   .credits-rubrique { background: rgba(221,208,245,.14); border: 2px solid rgba(255,255,255,.35); border-radius: 18px; padding: 12px 14px; }
   .credits-rubrique h3 { margin: 0 0 8px; font-size: .85rem; letter-spacing: .12em; text-transform: uppercase; color: var(--rose-pastel); }
-  .credits-rubrique p { margin: 7px 0; font-size: 1rem; font-weight: 700; line-height: 1.25; }
+  .credits-rubrique p { margin: 6px 0; font-size: .92rem; font-weight: 700; line-height: 1.25; }
   .credits-rubrique p small { display: block; font-size: .7rem; font-weight: 400; color: var(--bleu-pastel); letter-spacing: .06em; }
   .credits-rubrique a { color: var(--rose-pastel); font-weight: 700; text-decoration: none; }
   .credits-rubrique a:hover { text-decoration: underline; }
   .credits-fenetre .merci { margin: 18px 0 0; color: var(--violet-pastel); }
+  /* Instagram des élèves : QR code + gros bouton par élève */
+  .credits-fenetre h3.insta-titre { margin: 22px 0 10px; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; color: var(--rose-pastel); }
+  .credits-insta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .carte-insta { display: grid; justify-items: center; gap: 8px; background: rgba(221,208,245,.14); border: 2px solid rgba(255,255,255,.35); border-radius: 18px; padding: 10px; }
+  .carte-insta strong { font-size: .9rem; }
+  .carte-insta img { width: 100%; max-width: 140px; border-radius: 12px; background: #fff; }
+  .bouton-insta { display: inline-block; max-width: 100%; overflow-wrap: anywhere; padding: .55em 1em; border-radius: 24px; background: var(--rose-pastel); color: var(--texte-sas); font-weight: 700; font-size: .9rem; text-decoration: none; box-shadow: 0 4px 0 var(--rose-pastel-fonce); transition: transform .2s, box-shadow .2s; }
+  .bouton-insta:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
+  @media (max-width: 760px) { .credits-insta { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bouton-insta { font-size: .78rem; } }
   #credits .bouton { font-family: var(--mono); font-weight: 700; color: var(--texte-sas); background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce); border-radius: 24px; }
   #credits .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
   /* Sur petit écran, le portrait laisse la place aux fenêtres (quiz, épreuves, carte…) */
@@ -677,7 +687,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwonnlz1"></script>
-<script src="./jeu.js?v=mwonnlz1"></script>
+<script src="./ressources.js?v=mwop3h0y"></script>
+<script src="./jeu.js?v=mwop3h0y"></script>
 </body>
 </html>

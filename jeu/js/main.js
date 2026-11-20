@@ -565,9 +565,13 @@ addEventListener('resize', () => { if (mode === 'carte' && !$('parchemin-carte')
 // ------------------------------------------------------------------ Fin du jeu
 // Générique de fin, montré après la victoire contre le boss final et avant le message de récompense.
 // Fixe (pas de défilement) pour que les joueurs puissent cliquer sur les Instagram des élèves.
-const INSTAGRAM = {
-  'Salomé Duperrex': 'salome.duperrex', 'Samuel Porchet': '_sirius_design_', 'Rémy Martinez': 'remy_psd', 'Cléo Ana Forclaz': 'la_lanterne_de_yuna',
-};
+// Instagram des élèves (QR codes dans jeu/credits/)
+const INSTAGRAM = [
+  { nom: 'Cléo Ana Forclaz', compte: 'la_lanterne_de_yuna', qr: 'credits/qr-cleo.png' },
+  { nom: 'Rémy Martinez', compte: 'remy_psd', qr: 'credits/qr-remy.png' },
+  { nom: 'Salomé Duperrex', compte: 'salome.duperrex', qr: 'credits/qr-salome.png' },
+  { nom: 'Samuel Porchet', compte: '_sirius_design_', qr: 'credits/qr-samuel.png' },
+];
 const CREDITS = [
   ['Jeu et visuels', [['Cléo Ana Forclaz', 'SM-C3a']]],
   ['Vidéos', [['Rémy Martinez', 'SM-C3a'], ['Salomé Duperrex', 'SM-MI3a'], ['Cléo Ana Forclaz', 'SM-C3a']]],
@@ -578,10 +582,12 @@ function afficherCredits(ensuite) {
   mode = 'credits';
   montrerPortrait(false);
   $('dialogue').hidden = true;
-  const insta = (nom) => (INSTAGRAM[nom] ? ` · <a href="https://www.instagram.com/${INSTAGRAM[nom]}/" target="_blank" rel="noopener">@${INSTAGRAM[nom]}</a>` : '');
   $('credits-contenu').innerHTML = `<h2>MÉDIAVENTURE</h2><p class="sous">${t('Portes ouvertes 2026')}</p><div class="credits-rubriques">` +
     CREDITS.map(([titre, noms]) => `<section class="credits-rubrique"><h3>${t(titre)}</h3>` +
-      noms.map(([nom, classe]) => `<p>${nom}${classe ? `<small>${classe}${insta(nom)}</small>` : ''}</p>`).join('') + '</section>').join('') +
+      noms.map(([nom, classe]) => `<p>${nom}${classe ? `<small>${classe}</small>` : ''}</p>`).join('') + '</section>').join('') +
+    `</div><h3 class="insta-titre">${t('Suivez les élèves sur Instagram')}</h3><div class="credits-insta">` +
+    INSTAGRAM.map((e) => `<div class="carte-insta"><strong>${e.nom}</strong><img src="${e.qr}" alt="${t('QR code Instagram de {nom}', { nom: e.nom })}">` +
+      `<a class="bouton-insta" href="https://www.instagram.com/${e.compte}/" target="_blank" rel="noopener">@${e.compte}</a></div>`).join('') +
     `</div><p class="merci">${t('Merci d’avoir joué !')}</p>`;
   $('credits').hidden = false;
   $('credits-ok').onclick = () => { $('credits').hidden = true; ensuite(); };

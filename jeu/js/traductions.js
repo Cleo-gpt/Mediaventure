@@ -31,6 +31,8 @@ const L = [
   ["Boss", "Bosses", "Bosse", "Boss"],
   ["Portes ouvertes 2026", "Open days 2026", "Tag der offenen Tür 2026", "Porte aperte 2026"],
   ["Merci d’avoir joué !", "Thanks for playing!", "Danke fürs Spielen!", "Grazie per aver giocato!"],
+  ["Suivez les élèves sur Instagram", "Follow the students on Instagram", "Folgt den Lernenden auf Instagram", "Seguite gli studenti su Instagram"],
+  ["QR code Instagram de {nom}", "Instagram QR code of {nom}", "Instagram-QR-Code von {nom}", "Codice QR Instagram di {nom}"],
   ["Tu es ici", "You are here", "Du bist hier", "Sei qui"],
   ["Le chemin de l’aventure, île après île : chaque île a son épreuve, son boss et son objet de quête.", "The path of the adventure, island after island: each island has its challenge, its boss and its quest item.", "Der Weg des Abenteuers, Insel für Insel: Jede Insel hat ihre Prüfung, ihren Boss und ihren Questgegenstand.", "Il percorso dell’avventura, isola dopo isola: ogni isola ha la sua prova, il suo boss e il suo oggetto della missione."],
   ["Réservé au staff (code demandé)", "Staff only (code required)", "Nur für das Staff (Code erforderlich)", "Riservato allo staff (codice richiesto)"],
