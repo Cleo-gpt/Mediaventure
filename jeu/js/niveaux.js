@@ -77,6 +77,7 @@ export const NIVEAUX = {
       { nom: 'Rémy Martinez', url: 'https://remymartinez.ch', icone: '🎨' },
       { nom: 'Samuel Porchet', url: 'https://samuelporchet.ch', icone: '✏️' },
       { nom: 'Salomé Duperrex', url: 'https://sduperrex.eleves.mediamatique.ch/portfolio/', icone: '🖌️' },
+      { nom: 'Cléo Ana Forclaz', url: 'https://cforclaz.eleves.mediamatique.ch/e-portfolio/', icone: '🏮' },
     ],
     boss: {
       nom: 'Jade Perroset', titre: 'Boss Design', pv: 85, pa: 6, pm: 3,

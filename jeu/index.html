@@ -247,6 +247,7 @@
   #minijeu-sous-titre { margin: 4px 0 14px; }
   .mj-videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
   .mj-video { border: 2px solid var(--marine); background: #fff; border-radius: 14px; padding: 14px; display: grid; gap: 6px; justify-items: center; font-weight: 700; color: var(--marine); }
+  .mj-video small { overflow-wrap: anywhere; max-width: 100%; } /* adresses longues : à la ligne plutôt que hors de la carte */
   .mj-video:hover { background: var(--rose-pale); }
   .mj-video-icone { font-size: 2.2rem; }
   .mj-ecran { aspect-ratio: 16 / 9; background: var(--marine); border-radius: 14px; overflow: hidden; display: grid; place-items: center; color: var(--creme); }
@@ -687,7 +688,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwop3h0y"></script>
-<script src="./jeu.js?v=mwop3h0y"></script>
+<script src="./ressources.js?v=mwopp6pm"></script>
+<script src="./jeu.js?v=mwopp6pm"></script>
 </body>
 </html>
