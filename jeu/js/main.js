@@ -437,9 +437,11 @@ function lancerCombat() {
         etatNiveau.bossVaincu = true;
         boss.visible = false;
         monde.colliders.splice(monde.colliders.findIndex((c) => c.objet === boss), 1);
-        if (niveau.id === 'final') victoireFinale();
-        else apparaitreObjet();
-        dialogue([{ nom: niveau.boss.nom, texte: t('Bien joué… Prends cet objet de quête, tu l’as mérité.') }]);
+        if (niveau.id === 'final') victoireFinale(); // générique puis récompense (pas d'objet de quête à prendre)
+        else {
+          apparaitreObjet();
+          dialogue([{ nom: niveau.boss.nom, texte: t('Bien joué… Prends cet objet de quête, tu l’as mérité.') }]);
+        }
       } else {
         boss.rotation.set(0, 0, 0);
         boss.position.copy(ARENE.centre).add(new THREE.Vector3(0, 0, -2));
@@ -561,9 +563,37 @@ $('carte').addEventListener('click', (e) => { if (e.target === $('carte')) ferme
 addEventListener('resize', () => { if (mode === 'carte' && !$('parchemin-carte').classList.contains('anime')) dessinerCarte(); });
 
 // ------------------------------------------------------------------ Fin du jeu
+// Générique de fin, montré après la victoire contre le boss final et avant le message de récompense
+const CREDITS = [
+  ['Jeu et visuels', [['Cléo Ana Forclaz', 'SM-C3a']]],
+  ['Vidéos', [['Rémy Martinez', 'SM-C3a'], ['Salomé Duperrex', 'SM-MI3a'], ['Cléo Ana Forclaz', 'SM-C3a']]],
+  ['E-portfolios', [['Rémy Martinez', 'SM-C3a'], ['Salomé Duperrex', 'SM-MI3a'], ['Cléo Ana Forclaz', 'SM-C3a'], ['Samuel Porchet', 'SM-MI3a']]],
+  ['Boss', [['Roderick Graber'], ['Jade Perroset'], ['Philippe Kiener'], ['Olivier Droz'], ['Baptiste Forestier'], ['Christophe Haenssler']]],
+];
+function afficherCredits(ensuite) {
+  mode = 'credits';
+  montrerPortrait(false);
+  $('dialogue').hidden = true;
+  const d = $('credits-defile');
+  d.innerHTML = `<h2>MÉDIAVENTURE</h2><p class="sous">${t('Portes ouvertes 2026')}</p>` +
+    CREDITS.map(([titre, noms]) => `<h3>${t(titre)}</h3>` + noms.map(([nom, classe]) => `<p>${nom}${classe ? `<small>${classe}</small>` : ''}</p>`).join('')).join('') +
+    `<p class="merci">${t('Merci d’avoir joué !')}</p>`;
+  d.style.animation = 'none';
+  void d.offsetHeight; // relance le défilement depuis le bas
+  d.style.animation = '';
+  $('credits').hidden = false;
+  let fini = false;
+  const suite = () => { if (fini) return; fini = true; $('credits').hidden = true; ensuite(); };
+  $('credits-ok').onclick = suite;
+  d.onanimationend = () => setTimeout(suite, 1500); // à la fin du défilement, on passe à la récompense
+}
+
 function victoireFinale() {
   partie.termine = true; // la partie reste terminée même si la page est rechargée, jusqu'au code staff
   sauver();
+  afficherCredits(montrerRecompense);
+}
+function montrerRecompense() {
   $('obtenu-icone').textContent = '🏆';
   $('obtenu-nom').textContent = t('Médiaventure terminée !');
   $('obtenu-texte').textContent = t(niveau.gain);

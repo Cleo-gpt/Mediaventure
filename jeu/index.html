@@ -446,6 +446,21 @@
   #staff .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
   #staff .bouton.secondaire { background: var(--bleu-pastel); box-shadow: 0 4px 0 var(--bleu-pastel-fonce); }
   #staff .bouton.secondaire:hover { box-shadow: 0 7px 0 var(--bleu-pastel-fonce); }
+  /* Générique de fin : les crédits défilent sur un ciel étoilé, avant le message de récompense */
+  #credits { z-index: 160; background: radial-gradient(ellipse at 50% 70%, #3d5bc0 0%, #26399a 45%, #141d55 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 16px; }
+  .credits-fenetre { position: relative; width: min(620px, 100%); height: min(70vh, 620px); overflow: hidden;
+    -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent); }
+  #credits-defile { position: absolute; left: 0; right: 0; top: 100%; text-align: center; color: #fff; font-family: var(--mono); animation: credits-monte var(--duree-credits, 26s) linear forwards; }
+  #credits-defile h2 { font-family: var(--titre-po); font-weight: 400; font-size: clamp(1.8rem, 6vw, 2.8rem); margin: 0 0 6px; color: #fff; text-shadow: 0 4px 0 var(--violet-pastel-fonce); }
+  #credits-defile .sous { margin: 0 0 40px; color: var(--violet-pastel); }
+  #credits-defile h3 { margin: 34px 0 10px; font-family: var(--mono); font-size: .95rem; letter-spacing: .12em; text-transform: uppercase; color: var(--rose-pastel); }
+  #credits-defile p { margin: 6px 0; font-size: 1.1rem; font-weight: 700; }
+  #credits-defile p small { display: block; font-size: .72rem; font-weight: 400; color: var(--bleu-pastel); letter-spacing: .08em; }
+  #credits-defile .merci { margin-top: 48px; font-size: 1rem; color: var(--violet-pastel); }
+  @keyframes credits-monte { to { transform: translateY(calc(-100% - min(70vh, 620px))); } }
+  @media (prefers-reduced-motion: reduce) { #credits-defile { animation: none; top: 0; position: relative; } .credits-fenetre { overflow-y: auto; } }
+  #credits .bouton { font-family: var(--mono); font-weight: 700; color: var(--texte-sas); background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce); border-radius: 24px; }
+  #credits .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
   /* Sur petit écran, le portrait laisse la place aux fenêtres (quiz, épreuves, carte…) */
   @media (max-width: 760px) { body:has(.modale:not([hidden])) #dialogue-portrait { display: none; } }
 </style>
@@ -601,6 +616,11 @@
   </div></div>
 </section>
 
+<section id="credits" class="modale" hidden>
+  <div class="credits-fenetre"><div id="credits-defile"></div></div>
+  <button class="bouton" id="credits-ok" data-i18n>Continuer</button>
+</section>
+
 <section id="fin-jeu" class="modale" hidden>
   <img src="portraits/cleo_miko.png" alt="Cléo">
   <div class="carte">
@@ -656,7 +676,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwly0rdk"></script>
-<script src="./jeu.js?v=mwly0rdk"></script>
+<script src="./ressources.js?v=mwnsccm3"></script>
+<script src="./jeu.js?v=mwnsccm3"></script>
 </body>
 </html>
