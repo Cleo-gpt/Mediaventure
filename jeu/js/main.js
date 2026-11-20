@@ -563,7 +563,11 @@ $('carte').addEventListener('click', (e) => { if (e.target === $('carte')) ferme
 addEventListener('resize', () => { if (mode === 'carte' && !$('parchemin-carte').classList.contains('anime')) dessinerCarte(); });
 
 // ------------------------------------------------------------------ Fin du jeu
-// Générique de fin, montré après la victoire contre le boss final et avant le message de récompense
+// Générique de fin, montré après la victoire contre le boss final et avant le message de récompense.
+// Fixe (pas de défilement) pour que les joueurs puissent cliquer sur les Instagram des élèves.
+const INSTAGRAM = {
+  'Salomé Duperrex': 'salome.duperrex', 'Samuel Porchet': '_sirius_design_', 'Rémy Martinez': 'remy_psd', 'Cléo Ana Forclaz': 'la_lanterne_de_yuna',
+};
 const CREDITS = [
   ['Jeu et visuels', [['Cléo Ana Forclaz', 'SM-C3a']]],
   ['Vidéos', [['Rémy Martinez', 'SM-C3a'], ['Salomé Duperrex', 'SM-MI3a'], ['Cléo Ana Forclaz', 'SM-C3a']]],
@@ -574,18 +578,13 @@ function afficherCredits(ensuite) {
   mode = 'credits';
   montrerPortrait(false);
   $('dialogue').hidden = true;
-  const d = $('credits-defile');
-  d.innerHTML = `<h2>MÉDIAVENTURE</h2><p class="sous">${t('Portes ouvertes 2026')}</p>` +
-    CREDITS.map(([titre, noms]) => `<h3>${t(titre)}</h3>` + noms.map(([nom, classe]) => `<p>${nom}${classe ? `<small>${classe}</small>` : ''}</p>`).join('')).join('') +
-    `<p class="merci">${t('Merci d’avoir joué !')}</p>`;
-  d.style.animation = 'none';
-  void d.offsetHeight; // relance le défilement depuis le bas
-  d.style.animation = '';
+  const insta = (nom) => (INSTAGRAM[nom] ? ` · <a href="https://www.instagram.com/${INSTAGRAM[nom]}/" target="_blank" rel="noopener">@${INSTAGRAM[nom]}</a>` : '');
+  $('credits-contenu').innerHTML = `<h2>MÉDIAVENTURE</h2><p class="sous">${t('Portes ouvertes 2026')}</p><div class="credits-rubriques">` +
+    CREDITS.map(([titre, noms]) => `<section class="credits-rubrique"><h3>${t(titre)}</h3>` +
+      noms.map(([nom, classe]) => `<p>${nom}${classe ? `<small>${classe}${insta(nom)}</small>` : ''}</p>`).join('') + '</section>').join('') +
+    `</div><p class="merci">${t('Merci d’avoir joué !')}</p>`;
   $('credits').hidden = false;
-  let fini = false;
-  const suite = () => { if (fini) return; fini = true; $('credits').hidden = true; ensuite(); };
-  $('credits-ok').onclick = suite;
-  d.onanimationend = () => setTimeout(suite, 1500); // à la fin du défilement, on passe à la récompense
+  $('credits-ok').onclick = () => { $('credits').hidden = true; ensuite(); };
 }
 
 function victoireFinale() {
