@@ -485,6 +485,67 @@
   @media (max-width: 760px) { .credits-insta { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bouton-insta { font-size: .78rem; } }
   #credits .bouton { font-family: var(--mono); font-weight: 700; color: var(--texte-sas); background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce); border-radius: 24px; }
   #credits .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
+  /* ---- Téléphone : fenêtres et épreuves ---- */
+  /* aucune fenêtre ne dépasse de l'écran : on peut toujours faire défiler jusqu'aux boutons (ex. code staff en paysage) */
+  .modale .carte { max-height: calc(100dvh - 24px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  @media (max-width: 600px) {
+    #minijeu .carte { padding: 16px 14px; }
+    #minijeu-titre { font-size: 1.3rem; line-height: 1.15; padding-right: 110px; }
+    #minijeu-sous-titre { font-size: .9rem; margin: 4px 0 10px; }
+    .mj-quitter { top: 12px; right: 10px; font-size: .78rem; padding: .35em .8em; }
+    /* bibliothèque vidéo et e-portfolios : deux cartes compactes par ligne au lieu d'une grande */
+    .mj-videos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .mj-video { padding: 10px 6px; gap: 3px; font-size: .85rem; }
+    .mj-video-icone { font-size: 1.6rem; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    #minijeu .carte { padding: 12px 16px; }
+    #minijeu-titre { font-size: 1.2rem; }
+    #minijeu-sous-titre { font-size: .82rem; margin: 2px 0 8px; }
+    .mj-quitter { top: 10px; }
+    .mj-videos { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .mj-video { padding: 8px 6px; gap: 2px; font-size: .8rem; }
+    .mj-video-icone { font-size: 1.4rem; }
+    /* étapes Marketing : numéros à gauche, étapes à placer à droite, tout visible sans défiler */
+    #minijeu-contenu:has(.mj-cases) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: start; }
+    #minijeu-contenu:has(.mj-cases) > :not(.mj-cases):not(.mj-reserve) { grid-column: 1 / -1; }
+    .mj-cases { gap: 3px; margin: 0; }
+    .mj-case { min-height: 28px; padding: 1px 2px; gap: 6px; }
+    .mj-numero { width: 22px; height: 22px; font-size: .75rem; }
+    .mj-vide { font-size: .72rem; }
+    #minijeu-contenu:has(.mj-cases) > .mj-actions { grid-column: 2; margin-top: 0; }
+    #minijeu-contenu:has(.mj-cases) > .mj-compteur:empty { display: none; }
+    .mj-etape { padding: 5px 8px; font-size: .78rem; }
+    .mj-reserve { padding: 6px; gap: 5px; }
+    #staff .carte { padding: 14px 18px; }
+    #staff h2 { font-size: 1.1rem; margin-bottom: 6px; }
+    #staff .avertissement { font-size: .78rem; padding: 6px 10px; margin: 6px 0; }
+    #code-staff { padding: .45em 1em; font-size: 1rem; }
+  }
+  /* ---- Téléphone : retours de l'expert ---- */
+  #carte-defiler { margin: 6px 0 0; text-align: center; font-size: .8rem; font-weight: 700; color: var(--texte-sas); }
+  /* cartes de langue : le nom en entier, toujours visible, sous l'étiquette ; la coche ne le recouvre plus */
+  #cartes.cartes-langue .carte-objet { padding: 6px 4px 22px; }
+  #cartes.cartes-langue .nom { opacity: 1; top: auto; bottom: 6px; text-align: center; font-size: .66rem; }
+  #cartes.cartes-langue .etoiles { display: none; }
+  #cartes.cartes-langue .carte-objet svg { width: 80%; height: 80%; }
+  /* écran tactile : les numéros des raccourcis clavier ne servent à rien */
+  body.tactile .sort kbd { display: none; }
+  body.tactile .sort { grid-template-columns: 1fr; }
+  body.tactile .sort small { grid-column: 1; }
+  @media (max-width: 760px), (max-height: 500px) {
+    /* cibles tactiles d'au moins 40 px */
+    #guide-boutons button { min-height: 40px; }
+    #creation .rond { min-width: 40px; min-height: 40px; }
+    #onglets button { min-height: 40px; }
+    #creation #actions-sas .bouton, #actions-sas .bouton-staff { min-height: 42px; }
+    .mj-quitter { min-height: 40px; }
+    .mj-credit a { display: inline-block; padding: 10px 4px; }
+    .bouton-insta { min-height: 40px; display: inline-flex; align-items: center; }
+    .sort { min-height: 44px; }
+    /* coût et portée des sorts visibles, en petit */
+    body .sort small { display: block; font-size: .62rem; }
+  }
   /* Sur petit écran, le portrait laisse la place aux fenêtres (quiz, épreuves, carte…) */
   @media (max-width: 760px) { body:has(.modale:not([hidden])) #dialogue-portrait { display: none; } }
 </style>
@@ -638,6 +699,7 @@
     <h2 data-i18n>Les îles de Médiaventure</h2>
     <p data-i18n>Le chemin de l’aventure, île après île : chaque île a son épreuve, son boss et son objet de quête.</p>
     <div id="carte-mer"><div id="carte-plan"></div></div>
+    <p id="carte-defiler" hidden data-i18n>↓ Fais défiler la carte pour voir toutes les îles</p>
     <div class="mj-actions"><button class="bouton" id="fermer-carte" data-i18n>Fermer</button></div>
   </div></div>
 </section>
@@ -702,7 +764,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwrzdode"></script>
-<script src="./jeu.js?v=mwrzdode"></script>
+<script src="./ressources.js?v=mws12dbd"></script>
+<script src="./jeu.js?v=mws12dbd"></script>
 </body>
 </html>

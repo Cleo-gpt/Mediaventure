@@ -39,6 +39,7 @@ const L = [
   ["Pas de souci, reviens me parler quand tu veux.", "No problem, come back and talk to me whenever you like.", "Kein Problem, sprich mich wieder an, wann immer du willst.", "Nessun problema, torna a parlarmi quando vuoi."],
   ["✕ Plus tard", "✕ Later", "✕ Später", "✕ Più tardi"],
   ["Quitter l’épreuve (tu pourras revenir)", "Leave the challenge (you can come back)", "Prüfung verlassen (du kannst zurückkommen)", "Lascia la prova (potrai tornare)"],
+  ["↓ Fais défiler la carte pour voir toutes les îles", "↓ Scroll the map to see all the islands", "↓ Scrolle die Karte, um alle Inseln zu sehen", "↓ Scorri la mappa per vedere tutte le isole"],
   ["Tu es ici", "You are here", "Du bist hier", "Sei qui"],
   ["Le chemin de l’aventure, île après île : chaque île a son épreuve, son boss et son objet de quête.", "The path of the adventure, island after island: each island has its challenge, its boss and its quest item.", "Der Weg des Abenteuers, Insel für Insel: Jede Insel hat ihre Prüfung, ihren Boss und ihren Questgegenstand.", "Il percorso dell’avventura, isola dopo isola: ogni isola ha la sua prova, il suo boss e il suo oggetto della missione."],
   ["Réservé au staff (code demandé)", "Staff only (code required)", "Nur für das Staff (Code erforderlich)", "Riservato allo staff (codice richiesto)"],

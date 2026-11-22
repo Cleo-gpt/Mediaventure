@@ -512,6 +512,7 @@ function dessinerCarte() {
     plan.style.width = `${(mer.clientHeight * W) / H}px`;
     plan.style.margin = '0 auto';
   }
+  $('carte-defiler').hidden = !(mer.scrollHeight > mer.clientHeight + 8);
   const ici = ORDRE.indexOf(niveau?.id);
   ORDRE.forEach((id, i) => {
     const n = NIVEAUX[id], d = document.createElement('div');
@@ -1061,9 +1062,9 @@ function cadrageSas() {
   let x0 = 0, x1 = W, y0 = titre.bottom + 6, y1;
   if (panneau.top > H * 0.3) { // panneau en bas (portrait) : Cléo est au-dessus du panneau
     y1 = Math.min(panneau.top, guide.height ? guide.top : panneau.top) - 6;
-  } else { // panneau à gauche (paysage)
+  } else { // panneau à gauche (paysage) : le personnage se place sous le titre, au-dessus des boutons
     x0 = panneau.right + 8;
-    y0 = 8; // le titre est en haut à droite : le personnage peut passer dessous sans gêne
+    y0 = titre.bottom + 4;
     y1 = actions.top - 6;
   }
   const zl = Math.max(80, x1 - x0), zh = Math.max(80, y1 - y0);

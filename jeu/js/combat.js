@@ -465,7 +465,8 @@ export class Combat {
     if (!this.orbite) {
       // Écran en hauteur (téléphone) : on recule pour voir toute la grille au-dessus de la barre de sorts
       const portrait = this.camera.aspect < 1;
-      this.orbite = portrait ? { yaw: 0, pitch: 0.97, dist: 23, decale: 2.6 } : { yaw: 0, pitch: 0.84, dist: 14.2, decale: 0.6 };
+      // (petit téléphone : l'arène remonte pour que sa dernière rangée ne passe pas sous la barre des sorts)
+      this.orbite = portrait ? { yaw: 0, pitch: 1.2, dist: 24, decale: innerHeight < 720 ? 4.2 : 2.6 } : { yaw: 0, pitch: 0.84, dist: 14.2, decale: 0.6 };
     }
     const v = this.orbite;
     const cible = ARENE.centre.clone().add(new THREE.Vector3(Math.sin(v.yaw) * v.decale, 0, Math.cos(v.yaw) * v.decale));
