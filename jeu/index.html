@@ -178,6 +178,7 @@
     #actions-sas .bouton-staff { padding: .55em .9em; font-size: .75rem; }
     /* en jeu : pas de journal de combat ni d'inventaire par-dessus l'arène ; barre des sorts sur une seule ligne, basse */
     #journal, body.en-combat #inventaire { display: none; }
+    body #dialogue-portrait { height: 56vh; } /* ne recouvre plus les rouleaux Carte et Staff */
     body #combat-haut { top: 6px; padding: 4px 12px; }
     body #combat-bas { grid-template-columns: 120px 1fr auto; bottom: 6px; padding: 6px 8px; gap: 8px; }
     body .sort { padding: 4px 8px; }
@@ -245,6 +246,12 @@
   .carte-large { width: min(860px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
   #minijeu-titre { font-family: var(--titre); margin: 0; color: var(--corail); }
   #minijeu-sous-titre { margin: 4px 0 14px; }
+  /* Sortie toujours possible d'une épreuve (vidéo, e-portfolio, étapes, Gaïa) : on pourra revenir parler au gardien */
+  #minijeu .carte { position: relative; }
+  .mj-quitter { position: absolute; top: 14px; right: 16px; border: 0; border-radius: 999px; padding: .4em 1em; background: var(--creme); color: var(--marine); font-weight: 800; font-size: .85rem; box-shadow: 0 3px 0 #cbbd9f; cursor: pointer; }
+  .mj-quitter:hover { transform: translateY(-2px); }
+  #minijeu-titre { padding-right: 130px; }
+  #cartes.cartes-langue { grid-template-columns: repeat(4, minmax(0, 1fr)); } /* les 4 langues sur une ligne */
   .mj-videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
   .mj-video { border: 2px solid var(--marine); background: #fff; border-radius: 14px; padding: 14px; display: grid; gap: 6px; justify-items: center; font-weight: 700; color: var(--marine); }
   .mj-video small { overflow-wrap: anywhere; max-width: 100%; } /* adresses longues : à la ligne plutôt que hors de la carte */
@@ -612,11 +619,13 @@
     <p id="quiz-compteur"></p>
     <h2 id="quiz-question"></h2>
     <div id="quiz-reponses"></div>
+    <div class="mj-actions"><button class="bouton secondaire" id="quiz-plus-tard" data-i18n>Plus tard</button></div>
   </div>
 </section>
 
 <section id="minijeu" class="modale" hidden>
   <div class="carte carte-large">
+    <button class="mj-quitter" id="minijeu-quitter" title="Quitter l’épreuve (tu pourras revenir)" data-i18n-attr="title" data-i18n>✕ Plus tard</button>
     <h2 id="minijeu-titre"></h2>
     <p id="minijeu-sous-titre"></p>
     <div id="minijeu-contenu"></div>
@@ -664,7 +673,7 @@
 
 <section id="obtenu" class="modale" hidden>
   <div class="carte">
-    <p data-i18n>Objet de quête obtenu</p>
+    <p id="obtenu-titre" data-i18n>Objet de quête obtenu</p>
     <div id="obtenu-icone"></div>
     <h2 id="obtenu-nom"></h2>
     <p id="obtenu-texte" data-i18n>Il rejoint ton inventaire, en haut à droite.</p>
@@ -693,7 +702,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwovt32u"></script>
-<script src="./jeu.js?v=mwovt32u"></script>
+<script src="./ressources.js?v=mwrzdode"></script>
+<script src="./jeu.js?v=mwrzdode"></script>
 </body>
 </html>

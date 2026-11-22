@@ -1,5 +1,7 @@
-// Quiz du niveau Informatique : 10 questions, 7 bonnes réponses obligatoires.
-export const SEUIL = 7;
+// Quiz du niveau Informatique : 6 questions tirées au hasard parmi la liste, 4 bonnes réponses obligatoires
+// (partie plus courte pour les portes ouvertes).
+export const NOMBRE = 6;
+export const SEUIL = 4;
 
 export const QUESTIONS = [
   { q: 'Que signifie « CPU » ?', r: ['Central Processing Unit', 'Computer Power Unit', 'Central Program Utility', 'Core Peripheral Unit'], ok: 0 },

@@ -6,8 +6,11 @@ import { t } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
-function ouvrir(titre, sousTitre) {
+// `quitter` : appelé par le bouton « ✕ Plus tard » (l'épreuve n'est pas validée, on pourra la refaire)
+function ouvrir(titre, sousTitre, quitter) {
   $('minijeu').hidden = false;
+  $('minijeu-quitter').hidden = !quitter;
+  $('minijeu-quitter').onclick = () => { fermer(); quitter?.(); };
   $('minijeu-titre').textContent = titre;
   $('minijeu-sous-titre').textContent = sousTitre;
   const zone = $('minijeu-contenu');
@@ -26,7 +29,7 @@ const bouton = (texte, classe = 'bouton') => Object.assign(document.createElemen
 // ---------------------------------------------------------------- Multimédia : regarder une vidéo de la bibliothèque
 export function epreuveVideo(videos) {
   return new Promise((fin) => {
-    const zone = ouvrir(t('La bibliothèque'), t('Choisis une vidéo et regarde-la jusqu’au bout.'));
+    const zone = ouvrir(t('La bibliothèque'), t('Choisis une vidéo et regarde-la jusqu’au bout.'), () => fin(false));
     const liste = document.createElement('div');
     liste.className = 'mj-videos';
     for (const v of videos) {
@@ -193,7 +196,7 @@ function lecteurYoutubeFenetre(v, ecran, ouvrirTout = true) {
 // Bibliothèque de portfolios ; celui choisi s'affiche dans le jeu. Après `duree` secondes de visite, on peut valider.
 export function epreuvePortfolios(portfolios, duree = 30) {
   return new Promise((fin) => {
-    const zone = ouvrir(t('Les e-portfolios'), t('Choisis un e-portfolio et visite-le : clique, fais défiler, découvre les projets.'));
+    const zone = ouvrir(t('Les e-portfolios'), t('Choisis un e-portfolio et visite-le : clique, fais défiler, découvre les projets.'), () => fin(false));
     const liste = document.createElement('div');
     liste.className = 'mj-videos';
     for (const p of portfolios) {
@@ -349,7 +352,7 @@ export function epreuveDifferences() {
 // ---------------------------------------------------------------- Marketing : remettre les étapes d'un projet dans l'ordre
 export function epreuveEtapes(etapes) {
   return new Promise((fin) => {
-    const zone = ouvrir(t('Le projet marketing'), t('Glisse chaque étape sur son numéro, de 1 (la première) à {n} (la dernière).', { n: etapes.length }));
+    const zone = ouvrir(t('Le projet marketing'), t('Glisse chaque étape sur son numéro, de 1 (la première) à {n} (la dernière).', { n: etapes.length }), () => fin(false));
     const melange = [...etapes].sort(() => Math.random() - 0.5);
     const cases = etapes.map(() => null); // étape posée sur chaque numéro
     let choisie = null; // étape sélectionnée d'un simple toucher (alternative au glisser)

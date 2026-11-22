@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { NIVEAUX, OBJETS, ORDRE, PALETTE } from './niveaux.js';
-import { QUESTIONS, SEUIL } from './quiz.js';
+import { QUESTIONS, SEUIL, NOMBRE } from './quiz.js';
 import { construireNiveau, RAYON_ILE, ARENE, POS } from './monde.js';
 import { creerPersonnage, animerPersonnage, APPARENCE_DEFAUT, ombrelleTranslucide } from './personnage.js';
 import { Combat } from './combat.js';
@@ -331,7 +331,7 @@ function lancerMiniJeu() {
     });
   } else if (niveau.miniJeu === 'quiz') {
     dialogue([
-      { nom: t('Gardien·ne du Réseau'), texte: t('Pour atteindre {boss}, réponds à mon quiz : {n} questions, {seuil} bonnes réponses minimum.', { boss: nomBoss, n: QUESTIONS.length, seuil: SEUIL }) },
+      { nom: t('Gardien·ne du Réseau'), texte: t('Pour atteindre {boss}, réponds à mon quiz : {n} questions, {seuil} bonnes réponses minimum.', { boss: nomBoss, n: NOMBRE, seuil: SEUIL }) },
     ], lancerQuiz);
   } else if (niveau.miniJeu === 'combat-final') {
     const manquants = ORDRE.slice(0, -1).filter((id) => !partie.objets.includes(id));
@@ -377,12 +377,20 @@ function ouvrirArene() {
 function lancerQuiz() {
   mode = 'quiz';
   let i = 0, score = 0;
+  const questions = [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, NOMBRE);
   const el = $('quiz');
   el.hidden = false;
   montrerPortrait(null);
+  // « Plus tard » : on quitte le quiz sans le valider, on pourra revenir parler au gardien
+  $('quiz-plus-tard').onclick = () => {
+    el.hidden = true;
+    montrerPortrait(false);
+    mode = 'exploration';
+    dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('Pas de souci, reviens me parler quand tu veux.') }]);
+  };
   const afficher = () => {
-    const q = QUESTIONS[i];
-    $('quiz-compteur').textContent = t('Question {i} / {n} · Bonnes réponses : {score}', { i: i + 1, n: QUESTIONS.length, score });
+    const q = questions[i];
+    $('quiz-compteur').textContent = t('Question {i} / {n} · Bonnes réponses : {score}', { i: i + 1, n: questions.length, score });
     $('quiz-question').textContent = t(q.q);
     const rep = $('quiz-reponses');
     rep.innerHTML = '';
@@ -397,7 +405,7 @@ function lancerQuiz() {
         rep.children[q.ok].classList.add('juste');
         setTimeout(() => {
           delete rep.dataset.verrou;
-          if (++i < QUESTIONS.length) afficher();
+          if (++i < questions.length) afficher();
           else terminer();
         }, 900);
       };
@@ -409,9 +417,9 @@ function lancerQuiz() {
     montrerPortrait(false);
     mode = 'exploration';
     if (score >= SEUIL) {
-      dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('{score} / {n} ! L’arène de {boss} est ouverte.', { score, n: QUESTIONS.length, boss: niveau.boss.nom }) }], ouvrirArene);
+      dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('{score} / {n} ! L’arène de {boss} est ouverte.', { score, n: questions.length, boss: niveau.boss.nom }) }], ouvrirArene);
     } else {
-      dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('{score} / {n}… Il en faut {seuil}. Reviens me parler pour réessayer.', { score, n: QUESTIONS.length, seuil: SEUIL }) }]);
+      dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('{score} / {n}… Il en faut {seuil}. Reviens me parler pour réessayer.', { score, n: questions.length, seuil: SEUIL }) }]);
     }
   };
   afficher();
@@ -601,6 +609,7 @@ function victoireFinale() {
   afficherCredits(montrerRecompense);
 }
 function montrerRecompense() {
+  $('obtenu-titre').textContent = t('Récompense');
   $('obtenu-icone').textContent = '🏆';
   $('obtenu-nom').textContent = t('Médiaventure terminée !');
   $('obtenu-texte').textContent = t(niveau.gain);
@@ -610,6 +619,7 @@ function montrerRecompense() {
   $('obtenu-ok').onclick = () => {
     $('obtenu').hidden = true;
     $('obtenu-texte').textContent = t('Il rejoint ton inventaire, en haut à droite.');
+    $('obtenu-titre').textContent = t('Objet de quête obtenu');
     afficherFin();
   };
 }
@@ -621,7 +631,7 @@ function afficherFin() {
   $('dialogue').hidden = true;
   $('hud').hidden = true;
   $('creation').hidden = true;
-  $('fin-texte').textContent = t('Bravo cher·e {prenom} ! Vous avez fini le jeu Médiaventure. Pour obtenir votre récompense, faites appel à un membre du Staff des PO.',
+  $('fin-texte').textContent = t('Bravo cher·e {prenom} ! Tu as fini le jeu Médiaventure. Pour obtenir ta récompense, fais appel à un membre du staff des portes ouvertes.',
     { prenom: partie.prenom || t('voyageur·se') });
   $('fin-jeu').hidden = false;
 }
@@ -1045,7 +1055,7 @@ function masquerEntreCameraEtJoueur(cible, dt) {
 // et on centre le personnage dedans, avec le recul qui le fait tenir en entier.
 function cadrageSas() {
   const W = innerWidth, H = innerHeight;
-  if (W > 760 && H > 500) return { x: -W * 0.24, y: 0, recul: 2.3 };
+  if (W > 760 && H > 500) return { x: -W * 0.24, y: 0, recul: partie.apparence.arme === 'ombrelle' ? 2.9 : 2.3 };
   const r = (id) => $(id).getBoundingClientRect();
   const titre = r('titre-sas'), panneau = r('panneau'), actions = r('actions-sas'), guide = r('guide-sas');
   let x0 = 0, x1 = W, y0 = titre.bottom + 6, y1;

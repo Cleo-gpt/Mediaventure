@@ -110,11 +110,17 @@ export function construireNiveau(scene, niveau, chargeurTexture) {
   colliders.push(colliderBarriere);
   animations.push((dt, t) => { barriere.material.opacity = 0.16 + Math.sin(t * 2) * 0.06; });
 
+  // Zones où la caméra ne doit pas entrer (poutres du torii, pergolas, grandes glycines) :
+  // boîtes { x0, x1, z0, z1, y0, y1 } ou cylindres { x, z, r, y0, y1 }
+  const plafonds = [];
   // Torii d'entrée
   const toriiEntree = torii(niveau.accent);
   toriiEntree.position.set(0, 0, 12);
   groupe.add(toriiEntree);
   colliders.push({ x: -2.1, z: 12, r: 0.45 }, { x: 2.1, z: 12, r: 0.45 });
+  // La caméra n'entre pas dans les poutres du torii (sinon, en parlant au gardien, l'écran est couvert de rouge) :
+  // elle passe dessous (voir eviterPlafonds dans main.js)
+  plafonds.push({ x0: -3.8, x1: 3.8, z0: 11, z1: 13, y0: 3.1, y1: 5.4 });
 
   // Portail (caché jusqu'à l'obtention de l'objet de quête)
   const portail = creerPortail(niveau.accent);
@@ -132,9 +138,6 @@ export function construireNiveau(scene, niveau, chargeurTexture) {
     glycine: decorGlycines, sakura: decorSakura, final: decorMatsue }[niveau.biome] ?? decorGenerique;
   // Décors hauts (bambous…) que la caméra masque quand ils passent entre elle et le joueur
   const masquables = [];
-  // Toits de végétation (pergolas, grandes glycines) où la caméra ne doit pas entrer :
-  // boîtes { x0, x1, z0, z1, y0, y1 } ou cylindres { x, z, r, y0, y1 }
-  const plafonds = [];
   decor({ groupe, scene, niveau, colliders, animations, chargeurTexture, masquables, plafonds });
 
   return {

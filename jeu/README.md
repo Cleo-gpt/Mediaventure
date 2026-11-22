@@ -31,10 +31,10 @@ Les sept îles de la mindmap, dans l'ordre des portails :
 | Sas | Forêt de bambous (fond dessiné) | Présentation par Cléo + combat d'entraînement | Cléo Forclaz | Clé |
 | Multimédia | Champs de tournesols de Sayo | Regarder une vidéo de la bibliothèque | Roderick Graber | Caméra |
 | Design | Hakone en automne | Visite d’e-portfolios | Jade Perroset | Massicot |
-| Informatique | Îles flottantes, fond mont Fuji | Quiz (7 bonnes réponses sur 10) | Philippe Kiener | Raspberry Pi |
+| Informatique | Îles flottantes, fond mont Fuji | Quiz (4 bonnes réponses sur 6 questions tirées au hasard) | Philippe Kiener | Raspberry Pi |
 | Marketing | Nara : glycines, cerfs, pagode | Remettre les étapes d'un projet dans l'ordre | Olivier Droz | Parchemin |
 | Admin | Tokyo : sakura, stand Gaïa | Code donné au vrai stand Gaïa | Baptiste Forestier | Bouteille Gaïa |
-| Boss final | Matsue : château au bord du lac | Les 6 objets sont obligatoires | Christophe Haenssler | Gain au stand |
+| Boss final | Kyoto : pavillon d’or (Kinkaku-ji) | Les 6 objets sont obligatoires | Christophe Haenssler | Générique, puis récompense auprès du staff |
 
 À régler avant les portes ouvertes, dans `js/niveaux.js` :
 - code du stand Gaïa (île Admin) : il change toutes les heures. La vendeuse imprime la liste du jour avec **`jeu/codes-gaia.html`** (double-clic, choisir la date, imprimer). Le jeu accepte le code de l'heure en cours et celui de l'heure précédente. Les codes ont 6 chiffres. Le PDF des codes des 27 et 28 novembre 2026 a été fait avec le `SECRET_GAIA` actuel de `js/code-gaia.js` : ne plus le changer, sinon tous les codes changent et il faut refaire le PDF ;
@@ -46,7 +46,7 @@ Les sept îles de la mindmap, dans l'ordre des portails :
 |---|---|
 | `js/niveaux.js` | Données des niveaux (biome, boss, sorts, objet, niveau suivant) |
 | `js/quiz.js` | Questions du quiz Informatique |
-| `js/minijeux.js` | Épreuves : vidéo, 7 différences, étapes marketing, code Gaïa |
+| `js/minijeux.js` | Épreuves : vidéos, e-portfolios, étapes marketing, code Gaïa |
 | `js/vestiaire.js` | Écran du Sas : catégories, cartes, rareté, historique |
 | `js/personnage.js` | Options de personnage (genre, coiffures, kimono, accessoires) |
 | `js/monde.js` | Construction des îles et décors par biome |

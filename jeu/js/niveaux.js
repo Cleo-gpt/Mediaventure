@@ -48,7 +48,7 @@ export const NIVEAUX = {
       { titre: 'Échecs', credit: 'Matteo Macaluso, Mélinda Nicolet-Dit-Félix, Salomé Duperrex', src: 'videos/echecs.mp4', youtube: '7h4dfSiwiuQ', duree: 98, icone: '♟️' },
     ],
     boss: {
-      nom: 'Roderick Graber', titre: 'Boss Multimédia', pv: 85, pa: 6, pm: 3,
+      nom: 'Roderick Graber', titre: 'Boss Multimédia', pv: 70, pa: 6, pm: 3,
       apparence: {
         espece: 'humain', tenue: 'veste', lunettes: true,
         // vraie tête tirée de la photo (texture préparée par outils/tete_photo.py)
@@ -81,7 +81,7 @@ export const NIVEAUX = {
       { nom: 'Cléo Ana Forclaz', url: 'https://cforclaz.eleves.mediamatique.ch/e-portfolio/', icone: '🏮' },
     ],
     boss: {
-      nom: 'Jade Perroset', titre: 'Boss Design', pv: 85, pa: 6, pm: 3,
+      nom: 'Jade Perroset', titre: 'Boss Design', pv: 70, pa: 6, pm: 3,
       apparence: {
         // comme M. Graber : la tenue de sa photo (haut noir) et sa vraie tête
         espece: 'humain', genre: 'femme', tenue: 'polo', polo: '#2a2a30', pantalon: '#232326', micro: false, cheveux: '#524441',
@@ -104,10 +104,11 @@ export const NIVEAUX = {
     murs: [[1, 3], [3, 3], [5, 3], [7, 3], [0, 5], [2, 5], [4, 5], [6, 5], [8, 5], [3, 7], [5, 7]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 90, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Informatique', ville: 'Mont Fuji', lieu: 'Le Ciel — îles flottantes', biome: 'ciel', jouable: true,
-    ciel: '#92a3b7', brume: '#a8b8cb', sol: '#bccad8', chemin: PALETTE.creme, accent: PALETTE.corail,
+    ciel: '#92a3b7', brume: '#a8b8cb', sol: '#bccad8', chemin: '#7489a6', // dalles bleu ardoise : visibles sur le sol clair des nuages
+    accent: PALETTE.corail,
     fond: '../fonds/informatique_fuji.jpg', miniJeu: 'quiz', suivant: 'marketing',
     boss: {
-      nom: 'Philippe Kiener', titre: 'Boss Informatique', pv: 90, pa: 6, pm: 3,
+      nom: 'Philippe Kiener', titre: 'Boss Informatique', pv: 72, pa: 6, pm: 3,
       apparence: { espece: 'humain', genre: 'homme', tenue: 'samourai', coiffure: 'samourai', cheveux: '#3a2c24', kimono: PALETTE.bleu, hakama: PALETTE.marine, hachimaki: '#f4efe4', katana: true, geta: PALETTE.bleu },
       sorts: [
         { nom: 'Erreur 404', pa: 3, portee: [1, 2], degats: [9, 13] },
@@ -132,7 +133,7 @@ export const NIVEAUX = {
       'Mesurer les résultats et ajuster',
     ],
     boss: {
-      nom: 'Olivier Droz', titre: 'Boss Marketing', pv: 95, pa: 6, pm: 3,
+      nom: 'Olivier Droz', titre: 'Boss Marketing', pv: 76, pa: 6, pm: 3,
       apparence: {
         // comme M. Graber : la tenue de sa photo (polo orange) plutôt qu'un costume de samouraï
         espece: 'humain', genre: 'homme', tenue: 'polo', polo: '#f2a25a', cheveux: '#8a8682',
@@ -160,7 +161,7 @@ export const NIVEAUX = {
     miniJeu: 'stand-gaia', suivant: 'final',
     // Le code donné par la vendeuse du stand Gaïa change toutes les heures : voir js/code-gaia.js et codes-gaia.html
     boss: {
-      nom: 'Baptiste Forestier', titre: 'Boss Admin', pv: 105, pa: 6, pm: 3,
+      nom: 'Baptiste Forestier', titre: 'Boss Admin', pv: 84, pa: 6, pm: 3,
       apparence: {
         // comme M. Graber et M. Droz : la tenue de sa photo (polo bleu-vert) et sa vraie tête
         espece: 'humain', genre: 'homme', tenue: 'polo', polo: '#2f5557', cheveux: '#3a2a22',
@@ -186,7 +187,7 @@ export const NIVEAUX = {
     titre: 'Boss final — Média global', ville: 'Kyoto', lieu: 'Kyoto — le pavillon d’or (Kinkaku-ji)', biome: 'final', jouable: true,
     ciel: '#c3cdd2', brume: '#c9d3d6', sol: '#8fa477', chemin: PALETTE.creme, accent: PALETTE.corail, // ciel gris et mousse du jardin du pavillon d'or
     miniJeu: 'combat-final', suivant: null,
-    gain: 'Passe au stand Médiaventure : ton gain t’attend (goodies, print spécial PO ou rabais sur une Gaïa) !',
+    gain: 'Ton gain t’attend : goodies, print spécial PO ou rabais sur une Gaïa !',
     boss: {
       nom: 'Christophe Haenssler', titre: 'Boss final', pv: 160, pa: 7, pm: 3,
       apparence: {

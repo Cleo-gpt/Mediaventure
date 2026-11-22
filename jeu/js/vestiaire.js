@@ -214,6 +214,8 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
       // On ne propose que ce qui est déjà modélisé ; le reste reviendra au fil des étapes
       for (const k of Object.keys(cat)) cat[k] = cat[k].filter((c) => CATEGORIES_DISPONIBLES.includes(c.id) || c.partie);
     }
+    // toutes les catégories (même cachées) : le guide compte un total d'étapes fixe
+    const toutes = Object.fromEntries(Object.entries(cat).map(([k, v]) => [k, [...v]]));
     // catégories qui n'ont de sens qu'avec un kimono ou un chignon
     for (const k of Object.keys(cat)) cat[k] = cat[k].filter((c) => c.visible !== false);
     // Onglets
@@ -226,7 +228,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
     // Catégories
     const liste = cat[onglet];
     if (!liste.some((c) => c.id === categorie)) categorie = liste[0].id;
-    majGuide(cat);
+    majGuide(cat, toutes);
     const colonne = $('categories');
     colonne.innerHTML = '';
     for (const c of liste) {
@@ -243,6 +245,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
     $('info-texte').textContent = t(c.info);
     const grille = $('cartes');
     grille.innerHTML = '';
+    grille.classList.toggle('cartes-langue', c.id === 'langue');
     $('champ-prenom').hidden = c.id !== 'prenom';
     if (c.cartes) {
       for (const carte of c.cartes) {
@@ -274,13 +277,16 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
   }
 
   // Cléo explique la catégorie affichée et propose de passer à la suivante
-  function majGuide(cat) {
-    const etapes = ETAPES.filter((e) => cat[e.onglet]?.some((c) => c.id === e.categorie));
+  // Le total ne change pas quand une catégorie apparaît (motif et ceinture avec un kimono, baguettes avec un chignon) :
+  // les étapes cachées sont comptées, et « Étape suivante » saute simplement celles qui ne sont pas disponibles.
+  function majGuide(cat, toutes = cat) {
+    const etapes = ETAPES.filter((e) => toutes[e.onglet]?.some((c) => c.id === e.categorie));
+    const dispo = (e) => cat[e.onglet]?.some((c) => c.id === e.categorie);
     const i = etapes.findIndex((e) => e.categorie === categorie);
     const etape = etapes[i];
     $('guide-texte').textContent = t(etape?.texte ?? 'Choisis ce qui te plaît dans les cartes à gauche.');
     $('guide-etape').textContent = i >= 0 ? t('Étape {n} / {total}', { n: i + 1, total: etapes.length }) : '';
-    const suivante = etapes[i + 1];
+    const suivante = etapes.slice(i + 1).find(dispo);
     $('guide-suivant').hidden = !suivante;
     $('guide-suivant').onclick = () => {
       onglet = suivante.onglet;
