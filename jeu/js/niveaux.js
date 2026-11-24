@@ -158,8 +158,10 @@ export const NIVEAUX = {
     pvJoueur: 110, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Admin & gestion', ville: 'Tokyo', lieu: 'Tokyo — sakura', biome: 'sakura', jouable: true,
     ciel: '#f2d9e8', brume: '#efd9ea', sol: '#b9cc8f', chemin: PALETTE.creme, accent: '#8a5fb4', // herbe de printemps sous les cerisiers
-    miniJeu: 'stand-gaia', suivant: 'final',
-    // Le code donné par la vendeuse du stand Gaïa change toutes les heures : voir js/code-gaia.js et codes-gaia.html
+    miniJeu: 'memory-gaia', suivant: 'final',
+    // Memory Gaïa : une paire par image (dossier jeu/gaia/, images fournies par l'équipe Gaïa). Le dos des cartes est gaia/fond.jpg.
+    gaia: ['gaia/logo.jpg', 'gaia/bouteille-avant.png', 'gaia/roll-up.png', 'gaia/equipe-allan.jpg', 'gaia/equipe-cleo.jpg',
+      'gaia/equipe-killian.jpg', 'gaia/equipe-leo.jpg', 'gaia/equipe-loric.jpg'],
     boss: {
       nom: 'Baptiste Forestier', titre: 'Boss Admin', pv: 84, pa: 6, pm: 3,
       apparence: {

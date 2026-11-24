@@ -609,6 +609,29 @@
   .sort kbd { background: var(--texte-sas); color: #fff; }
   .fin-contact { font-size: .95rem; line-height: 1.45; margin: 4px 0 10px; color: var(--texte-sas); }
   .fin-contact a { font-family: var(--mono); font-weight: 700; color: var(--texte-sas); background: #fff; padding: 3px 12px; border-radius: 999px; display: inline-block; margin-top: 6px; text-decoration: none; box-shadow: 0 3px 0 var(--violet-pastel-fonce); word-break: break-all; }
+  /* ---- Memory Gaïa (île Admin & gestion) : 12 cartes qui se retournent ---- */
+  .mj-memory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: min(460px, 100%); margin: 6px auto 4px; }
+  .mj-carte { aspect-ratio: 3 / 4; min-height: 64px; border: 0; padding: 0; background: none; cursor: pointer; perspective: 600px; }
+  .mj-carte-int { position: relative; display: block; width: 100%; height: 100%; transition: transform .45s; transform-style: preserve-3d; }
+  .mj-carte.retournee .mj-carte-int { transform: rotateY(180deg); }
+  .mj-carte-dos, .mj-carte-face { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 14px; border: 3px solid #fff; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .mj-carte-dos { background: repeating-linear-gradient(45deg, var(--violet-pastel-fonce) 0 8px, #c3b2ec 8px 16px); color: #fff; font-family: var(--titre-po); font-size: clamp(14px, 3.6vw, 20px); text-shadow: 0 2px 0 var(--texte-sas); box-shadow: 0 4px 0 #9a85d4; }
+  .mj-carte-face { background: #fff; transform: rotateY(180deg); box-shadow: 0 4px 0 var(--bleu-pastel-fonce); overflow: hidden; }
+  .mj-carte-face svg { width: 86%; height: 86%; }
+  .mj-carte-face img { width: 100%; height: 100%; object-fit: cover; }
+  .mj-carte:hover:not(.retournee) .mj-carte-int { transform: translateY(-3px); }
+  .mj-carte.trouvee .mj-carte-face { box-shadow: 0 4px 0 #7fc58b; border-color: #c8eccd; animation: paire-gaia .5s ease-out; }
+  @keyframes paire-gaia { 50% { transform: rotateY(180deg) scale(1.08); } }
+  @media (max-width: 520px) { .mj-memory { grid-template-columns: repeat(3, 1fr); width: min(300px, 100%); gap: 8px; } }
+  @media (max-height: 480px) { .mj-memory { grid-template-columns: repeat(6, 1fr); width: min(520px, 100%); } }
+  /* memory avec les images Gaïa : dos = fond pêche, faces = image entière posée sur le fond ; 16 cartes en 4×4 */
+  .mj-carte-dos.image { background: #f08a4b url('gaia/fond.jpg') center / cover; box-shadow: 0 4px 0 #c9602e; }
+  .mj-memory.images .mj-carte-face { background: #f08a4b url('gaia/fond.jpg') center / cover; }
+  .mj-memory.images .mj-carte-face img { position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); object-fit: contain; }
+  .mj-memory.grand { width: min(420px, 100%); gap: 8px; }
+  @media (max-width: 520px) { .mj-memory.grand { grid-template-columns: repeat(4, 1fr); width: min(330px, 100%); gap: 6px; } }
+  @media (max-height: 480px) { .mj-memory.grand { grid-template-columns: repeat(8, 1fr); width: min(620px, 100%); } }
+  @media (max-height: 760px) and (min-width: 521px) { .mj-memory.grand { width: min(360px, 100%); } }
 </style>
 </head>
 <body>
@@ -825,7 +848,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mwv07pg0"></script>
-<script src="./jeu.js?v=mwv07pg0"></script>
+<script src="./ressources.js?v=mwv2uqsi"></script>
+<script src="./jeu.js?v=mwv2uqsi"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ import { QUESTIONS, SEUIL, NOMBRE } from './quiz.js';
 import { construireNiveau, RAYON_ILE, ARENE, POS } from './monde.js';
 import { creerPersonnage, animerPersonnage, APPARENCE_DEFAUT, ombrelleTranslucide } from './personnage.js';
 import { Combat } from './combat.js';
-import { epreuveVideo, epreuvePortfolios, epreuveEtapes, epreuveCodeGaia } from './minijeux.js';
+import { epreuveVideo, epreuvePortfolios, epreuveEtapes, epreuveMemoryGaia } from './minijeux.js';
 import { creerVestiaire } from './vestiaire.js';
 import { ECRAN_TACTILE, joystick, installerCommandes, majBoutonAction } from './tactile.js';
 import { t, choisirLangue } from './i18n.js';
@@ -345,9 +345,9 @@ function lancerMiniJeu() {
   } else if (niveau.miniJeu === 'etapes-projet') {
     epreuve(t('Un projet marketing se construit dans l’ordre. Remets ses étapes dans le bon ordre.'),
       () => epreuveEtapes(niveau.etapes.map((e) => t(e))), t('Stratégie validée ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens quand ton plan sera prêt.'));
-  } else if (niveau.miniJeu === 'stand-gaia') {
-    epreuve(t('Passe au stand Gaïa des portes ouvertes : la vendeuse te donnera un code. Entre-le ici pour ouvrir l’arène.'),
-      () => epreuveCodeGaia(), t('Le code est bon ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens avec le code du stand Gaïa.'));
+  } else if (niveau.miniJeu === 'memory-gaia') {
+    epreuve(t('Connais-tu Gaïa, la boisson créée par les élèves ? Retrouve toutes les paires de Gaïa pour ouvrir l’arène.'),
+      () => epreuveMemoryGaia(niveau.gaia), t('Quelle mémoire ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens quand tu veux finir le memory Gaïa.'));
   }
 }
 

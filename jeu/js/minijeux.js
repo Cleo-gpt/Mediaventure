@@ -1,7 +1,6 @@
 // Épreuves du milieu de chaque île (mindmap) : vidéo, 7 différences, étapes marketing, code du stand Gaïa.
 // Chaque épreuve s'affiche dans la fenêtre #minijeu et renvoie une promesse : true si elle est réussie.
 import { PALETTE } from './niveaux.js';
-import { codeGaiaValide } from './code-gaia.js';
 import { t } from './i18n.js';
 import * as stats from './stats.js';
 
@@ -507,28 +506,82 @@ export function epreuveEtapes(etapes) {
   });
 }
 
-// ---------------------------------------------------------------- Admin : le code du stand Gaïa
-export function epreuveCodeGaia() {
+// ---------------------------------------------------------------- Admin : le memory Gaïa
+// Une paire de cartes par image de Gaïa, la boisson des élèves. On retourne deux cartes : une paire reste visible,
+// sinon elles se recachent. On ne peut pas perdre ; toutes les paires trouvées → l'arène s'ouvre.
+// `images` : chemins des images (dossier jeu/gaia/). S'il en manque, des bouteilles dessinées complètent.
+const COULEURS_GAIA = [
+  ['#f9cfe0', '#e58bb0', 'fleur'], ['#c9dcf7', '#6f97d6', 'goutte'], ['#cdeedd', '#5fae8b', 'feuille'],
+  ['#fbe7b0', '#e0a93a', 'soleil'], ['#ddd0f5', '#9a7fd6', 'etoile'], ['#ffd8c7', '#e58a63', 'vague'],
+];
+function symboleGaia(forme, c) {
+  if (forme === 'fleur') return [0, 72, 144, 216, 288].map((a) => `<ellipse cx="50" cy="88" rx="6" ry="10" fill="${c}" transform="rotate(${a} 50 98)"/>`).join('') + '<circle cx="50" cy="98" r="4" fill="#fff"/>';
+  if (forme === 'goutte') return `<path d="M50 84 C58 96 61 102 61 107 a11 11 0 0 1-22 0 c0-5 3-11 11-23z" fill="${c}"/>`;
+  if (forme === 'feuille') return `<path d="M38 110 C38 92 52 84 64 84 C64 100 54 110 38 110z" fill="${c}"/><path d="M40 108 L60 88" stroke="#fff" stroke-width="2"/>`;
+  if (forme === 'soleil') return `<circle cx="50" cy="98" r="9" fill="${c}"/>` + [0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<rect x="49" y="82" width="2.5" height="6" rx="1" fill="${c}" transform="rotate(${a} 50 98)"/>`).join('');
+  if (forme === 'etoile') return `<path d="M50 84 l4 9 10 1-7.5 7 2 10-8.5-5-8.5 5 2-10-7.5-7 10-1z" fill="${c}"/>`;
+  return `<path d="M34 100 q8-10 16 0 t16 0" stroke="${c}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M34 110 q8-10 16 0 t16 0" stroke="${c}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+}
+function bouteilleGaia([clair, fonce, forme]) {
+  return `<svg viewBox="0 0 100 150" aria-hidden="true">
+    <rect x="41" y="6" width="18" height="10" rx="3" fill="${fonce}"/>
+    <path d="M43 16 h14 v14 c0 6 15 12 15 26 v78 a10 10 0 0 1-10 10 h-24 a10 10 0 0 1-10-10 v-78 c0-14 15-20 15-26z" fill="#fff" stroke="${fonce}" stroke-width="3"/>
+    <rect x="30" y="66" width="40" height="58" rx="6" fill="${clair}"/>
+    <text x="50" y="80" text-anchor="middle" font-family="Asimovian, 'Space Mono', monospace" font-size="13" fill="#3b3360">Gaïa</text>
+    ${symboleGaia(forme, fonce)}
+  </svg>`;
+}
+export function epreuveMemoryGaia(images = []) {
   return new Promise((fin) => {
-    const zone = ouvrir(t('Le stand Gaïa'), t('Va au stand Gaïa des portes ouvertes : la vendeuse te donnera un code.'));
-    const champ = Object.assign(document.createElement('input'), { className: 'mj-code', placeholder: t('Code à 6 chiffres'), maxLength: 16, autocomplete: 'off', inputMode: 'numeric' });
-    const message = document.createElement('p');
-    message.className = 'mj-compteur';
-    const valider = bouton(t('Valider'));
-    const plusTard = bouton(t('Plus tard'), 'bouton secondaire');
+    const faces = images.length ? images.map((src) => `<img src="${src}" alt="Gaïa" draggable="false">`) : COULEURS_GAIA.map(bouteilleGaia);
+    const n = faces.length;
+    const zone = ouvrir(t('Le memory Gaïa'), t('Retourne les cartes deux par deux et retrouve les {n} paires de Gaïa !', { n }), () => fin(false));
+    const paquet = [...faces.keys(), ...faces.keys()].sort(() => Math.random() - 0.5);
+    const compteur = document.createElement('p');
+    compteur.className = 'mj-compteur';
+    const grille = document.createElement('div');
+    grille.className = `mj-memory${n > 6 ? ' grand' : ''}${images.length ? ' images' : ''}`;
+    let retournees = [], paires = 0, coups = 0, verrou = false;
+    const debut = performance.now();
+    const majCompteur = () => { compteur.textContent = t('Paires : {p} / {n} · Coups : {c}', { p: paires, n, c: coups }); };
+    for (const id of paquet) {
+      const carte = document.createElement('button');
+      carte.className = 'mj-carte';
+      carte.setAttribute('aria-label', t('Carte à retourner'));
+      carte.innerHTML = `<span class="mj-carte-int"><span class="mj-carte-dos${images.length ? ' image' : ''}">${images.length ? '' : 'Gaïa'}</span><span class="mj-carte-face">${faces[id]}</span></span>`;
+      carte.onclick = () => {
+        if (verrou || carte.classList.contains('retournee')) return;
+        carte.classList.add('retournee');
+        retournees.push({ carte, id });
+        if (retournees.length < 2) return;
+        coups++;
+        const [a, b] = retournees;
+        retournees = [];
+        if (a.id === b.id) {
+          paires++;
+          a.carte.classList.add('trouvee');
+          b.carte.classList.add('trouvee');
+          majCompteur();
+          if (paires === faces.length) gagne();
+        } else {
+          verrou = true;
+          majCompteur();
+          setTimeout(() => { a.carte.classList.remove('retournee'); b.carte.classList.remove('retournee'); verrou = false; }, 800);
+        }
+      };
+      grille.append(carte);
+    }
     const actions = document.createElement('div');
     actions.className = 'mj-actions';
-    actions.append(plusTard, valider);
-    const essayer = () => {
-      const bon = codeGaiaValide(champ.value);
-      stats.epreuveEssai({ bon }); // le code tapé n'est pas enregistré
-      if (bon) { fermer(); fin(true); }
-      else { message.textContent = t('Ce n’est pas le bon code (il change toutes les heures). Demande-le au stand Gaïa !'); champ.select(); }
-    };
-    valider.onclick = essayer;
-    champ.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') essayer(); };
-    plusTard.onclick = () => { fermer(); fin(false); };
-    zone.append(champ, message, actions);
-    champ.focus();
+    function gagne() {
+      stats.epreuveEssai({ coups, paires, duree: Math.round((performance.now() - debut) / 1000) });
+      compteur.textContent = t('Bravo ! Les {n} paires en {c} coups.', { n, c: coups });
+      const ok = bouton(t('Continuer'));
+      ok.onclick = () => { fermer(); fin(true); };
+      actions.append(ok);
+      ok.focus();
+    }
+    majCompteur();
+    zone.append(compteur, grille, actions);
   });
 }

@@ -98,7 +98,7 @@ const ILES = [
   ['sas', 'Le Sas'], ['multimedia', 'Multimédia'], ['design', 'Design'], ['informatique', 'Informatique'],
   ['marketing', 'Marketing'], ['admin', 'Admin & gestion'], ['final', 'Boss final'],
 ];
-const EPREUVES = { sas: 'Combat d’entraînement', multimedia: 'Vidéo', design: 'E-portfolio', informatique: 'Quiz', marketing: 'Étapes du projet', admin: 'Code Gaïa', final: '—' };
+const EPREUVES = { sas: 'Combat d’entraînement', multimedia: 'Vidéo', design: 'E-portfolio', informatique: 'Quiz', marketing: 'Étapes du projet', admin: 'Memory Gaïa', final: '—' };
 const NOMS = {
   shiba: 'Shiba', capybara: 'Capybara', chat: 'Chat', lapin: 'Lapin', renard: 'Renard', panda: 'Panda', tanuki: 'Tanuki',
   aucune: 'Aucune', aucun: 'Aucun', sac: 'Sac à dos', sacoche: 'Sacoche', katana: 'Katana', ombrelle: 'Ombrelle', eventail: 'Éventail',
@@ -254,11 +254,12 @@ function afficher() {
       barres(verifs.map(([k, v]) => [`${k} vérification${k > 1 ? 's' : ''}`, v]), { rendreNom: esc }) +
       `<p class="note">Au premier essai : ${nombre(moyenne(premiers.map((e) => e.justes)))} étapes justes sur ${premiers[0]?.total ?? '—'} en moyenne.</p>`);
     const G = P.map((p) => p.iles?.admin).filter((i) => i?.epreuve?.ouvertures);
-    const faux = G.reduce((s, i) => s + i.epreuve.essais.filter((e) => !e.bon).length, 0);
-    h += carte('Stand Gaïa', `<div class="ligne-barre"><span class="nom">Code validé</span><span class="jauge ok"><i style="width:${pct(G.filter((i) => i.epreuve.reussie).length, G.length)}%"></i></span><span class="val">${G.filter((i) => i.epreuve.reussie).length} / ${G.length}</span></div>
-      <div class="ligne-barre"><span class="nom">Codes faux tapés</span><span></span><span class="val">${faux}</span></div>
+    const finis = G.flatMap((i) => i.epreuve.essais.filter((e) => e.coups));
+    h += carte('Memory Gaïa', `<div class="ligne-barre"><span class="nom">Memory terminé</span><span class="jauge ok"><i style="width:${pct(G.filter((i) => i.epreuve.reussie).length, G.length)}%"></i></span><span class="val">${G.filter((i) => i.epreuve.reussie).length} / ${G.length}</span></div>
+      <div class="ligne-barre"><span class="nom">Coups moyens</span><span></span><span class="val">${nombre(moyenne(finis.map((e) => e.coups)))}</span></div>
+      <div class="ligne-barre"><span class="nom">Meilleur score</span><span></span><span class="val">${finis.length ? Math.min(...finis.map((e) => e.coups)) + ' coups' : '—'}</span></div>
       <div class="ligne-barre"><span class="nom">« Plus tard »</span><span></span><span class="val">${G.reduce((s, i) => s + i.epreuve.plusTard, 0)}</span></div>
-      <p class="note">Temps médian entre l’ouverture de l’épreuve et le bon code : ${duree(mediane(G.map((i) => i.epreuve.duree).filter((x) => x != null)))}.</p>`);
+      <p class="note">Temps médian pour finir le memory : ${duree(mediane(finis.map((e) => e.duree)))}.</p>`);
   }
   h += '</div>';
 
