@@ -183,7 +183,7 @@ const ETAPES = [
 ];
 
 // ---------------------------------------------------------------- Vestiaire
-export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre, surChoixPartie }) {
+export function creerVestiaire({ partie, surChangement, surEntrer, surChoixPartie }) {
   // on commence par la langue (onglet Identité), pour que tout le reste soit dans la bonne langue
   let onglet = 'identite';
   let categorie = 'langue';
@@ -311,7 +311,6 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surReprendre,
   $('prenom').value = partie.prenom;
   $('prenom').oninput = (e) => { partie.prenom = e.target.value.trim(); $('badge-identite').hidden = !!partie.prenom; };
   $('commencer').onclick = surEntrer;
-  $('reprendre').onclick = surReprendre;
 
   rendre();
   return { rendre };

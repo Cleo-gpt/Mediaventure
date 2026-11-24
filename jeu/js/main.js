@@ -161,13 +161,6 @@ function majApercu() {
   });
 }
 
-const sauvegarde = charger();
-function majReprendre() {
-  if (!sauvegarde || sauvegarde.niveau === 'sas') return;
-  $('reprendre').hidden = false;
-  $('reprendre').textContent = t('Reprendre : {ile}', { ile: t(NIVEAUX[sauvegarde.niveau].titre) });
-}
-majReprendre();
 creerVestiaire({
   partie,
   surChangement: () => { majApercu(); sauver(); },
@@ -180,10 +173,9 @@ creerVestiaire({
     quitterVestiaire();
     lancerNiveau('sas');
   },
-  surReprendre: () => { quitterVestiaire(); lancerNiveau(partie.niveau); },
   // langue choisie dans l'onglet Identité
   surChoixPartie: (champ, valeur) => {
-    if (champ === 'langue') { choisirLangue(valeur); majReprendre(); stats.changerLangue(valeur); }
+    if (champ === 'langue') { choisirLangue(valeur); stats.changerLangue(valeur); }
     sauver();
   },
 });
