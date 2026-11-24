@@ -548,6 +548,65 @@
   }
   /* Sur petit écran, le portrait laisse la place aux fenêtres (quiz, épreuves, carte…) */
   @media (max-width: 760px) { body:has(.modale:not([hidden])) #dialogue-portrait { display: none; } }
+
+  /* ===== Fenêtres du jeu aux couleurs du Sas (comme la carte) : lavande, pastels, textes violet foncé ===== */
+  #minijeu .carte, #quiz .carte, #obtenu .carte, #fin-jeu .carte, #staff .carte {
+    background: var(--violet-pastel); color: var(--texte-sas); border: 3px solid #fff;
+    box-shadow: 0 6px 0 var(--violet-pastel-fonce), 0 18px 40px rgba(20,29,85,.35); }
+  #minijeu-titre, #obtenu-nom, #fin-jeu h2, #staff h2 { font-family: var(--titre-po); font-weight: 400; color: var(--texte-sas); }
+  #minijeu-sous-titre, #quiz-compteur, #obtenu .carte > p, .mj-compteur { color: var(--texte-sas); }
+  #quiz-question { color: var(--texte-sas); }
+  #minijeu .bouton, #quiz .bouton, #obtenu .bouton, #fin-jeu .bouton, #staff .bouton {
+    font-family: var(--mono); font-weight: 700; color: var(--texte-sas); border-radius: 24px;
+    background: var(--rose-pastel); box-shadow: 0 4px 0 var(--rose-pastel-fonce); transition: transform .2s, box-shadow .2s; }
+  #minijeu .bouton:hover, #quiz .bouton:hover, #obtenu .bouton:hover, #fin-jeu .bouton:hover, #staff .bouton:hover { transform: translateY(-3px); box-shadow: 0 7px 0 var(--rose-pastel-fonce); }
+  #minijeu .bouton.secondaire, #quiz .bouton.secondaire, #staff .bouton.secondaire { background: var(--bleu-pastel); box-shadow: 0 4px 0 var(--bleu-pastel-fonce); }
+  #minijeu .bouton.secondaire:hover, #quiz .bouton.secondaire:hover { box-shadow: 0 7px 0 var(--bleu-pastel-fonce); }
+  .mj-quitter { background: #fff; color: var(--texte-sas); font-family: var(--mono); font-weight: 700; box-shadow: 0 3px 0 var(--violet-pastel-fonce); }
+  #fin-jeu .bouton-staff { color: var(--texte-sas); border-color: var(--violet-pastel-fonce); font-family: var(--mono); }
+  /* cartes de choix (vidéos, e-portfolios) et réponses du quiz : blanches, ombre bleu pastel, comme les îles de la carte */
+  .mj-video, #quiz-reponses button { border: 0; background: #fff; color: var(--texte-sas); box-shadow: 0 4px 0 var(--bleu-pastel-fonce); transition: transform .15s, box-shadow .15s; }
+  .mj-video:hover, #quiz-reponses button:hover { background: #fff; transform: translateY(-3px); box-shadow: 0 7px 0 var(--bleu-pastel-fonce); }
+  .mj-video small { color: #7a6f9e; }
+  #quiz-reponses .juste { background: #c8eccd !important; box-shadow: 0 4px 0 #7fc58b; }
+  #quiz-reponses .faux { background: var(--rose-pastel) !important; box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
+  /* écrans vidéo et sites : cadre blanc ; barre de progression rose */
+  .mj-site, .mj-ecran { border: 3px solid #fff; box-shadow: 0 4px 0 var(--violet-pastel-fonce); }
+  .mj-progression { background: rgba(255,255,255,.7); }
+  .mj-progression div { background: var(--rose-pastel-fonce); }
+  .mj-credit { color: #7a6f9e; }
+  .mj-credit a { color: #b8457a; }
+  /* étapes Marketing */
+  .mj-case { border-color: var(--violet-pastel-fonce); background: rgba(255,255,255,.55); }
+  .mj-case.survol { border-color: var(--rose-pastel-fonce); background: var(--rose-pastel); }
+  .mj-numero { background: var(--texte-sas); color: #fff; }
+  .mj-vide { color: #8a80b0; }
+  .mj-etape { border: 0; color: var(--texte-sas); box-shadow: 0 3px 0 var(--bleu-pastel-fonce); }
+  .mj-etape:hover { background: var(--bleu-pastel); }
+  .mj-etape.choisie { background: var(--rose-pastel); color: var(--texte-sas); box-shadow: 0 3px 0 var(--rose-pastel-fonce); }
+  .mj-reserve { background: rgba(255,255,255,.45); }
+  /* code du stand Gaïa */
+  .mj-code { border-color: var(--rose-pastel-fonce); color: var(--texte-sas); font-family: var(--mono); }
+  /* ---- HUD, dialogue et combat aux couleurs du Sas (comme la carte et les fenêtres) ---- */
+  #hud-niveau { background: rgba(240,234,255,.94); color: var(--texte-sas); border: 3px solid #fff; border-left: 6px solid var(--violet-pastel-fonce); box-shadow: 0 4px 0 var(--violet-pastel-fonce), 0 8px 18px rgba(80,60,140,.18); }
+  #hud-titre { font-family: var(--titre-po); }
+  .case-inv { background: rgba(221,208,245,.45); border: 2px dashed rgba(255,255,255,.85); }
+  .case-inv.acquis { background: #fff; border: 2px solid var(--rose-pastel-fonce); box-shadow: 0 3px 0 var(--rose-pastel-fonce); }
+  #invite { background: rgba(240,234,255,.96); color: var(--texte-sas); border: 2px solid #fff; box-shadow: 0 4px 0 var(--violet-pastel-fonce); }
+  #invite kbd, #aide kbd { background: var(--texte-sas); color: #fff; }
+  #dialogue { background: #f3eeff; color: var(--texte-sas); border: 3px solid #fff; box-shadow: 0 6px 0 var(--violet-pastel-fonce), 0 14px 30px rgba(80,60,140,.25); }
+  #dialogue-nom { background: var(--rose-pastel); color: var(--texte-sas); border: 2px solid #fff; box-shadow: 0 3px 0 var(--rose-pastel-fonce); }
+  #dialogue small { color: #7a72a3; }
+  #combat-haut, #combat-bas { background: rgba(243,238,255,.96); color: var(--texte-sas); border: 3px solid #fff; box-shadow: 0 5px 0 var(--violet-pastel-fonce), 0 12px 26px rgba(80,60,140,.2); }
+  .barre { border-color: var(--texte-sas); background: rgba(59,51,96,.35); }
+  #pv-boss { --couleur: #e58bb0; }
+  .points span b { color: #c25a8a; }
+  .sort { border: 2px solid #fff; color: var(--texte-sas); box-shadow: 0 3px 0 var(--bleu-pastel-fonce); }
+  .sort.actif { background: var(--rose-pastel); color: var(--texte-sas); box-shadow: 0 3px 0 var(--rose-pastel-fonce); }
+  body #bouton-action { background: var(--rose-pastel); color: var(--texte-sas); border: 2px solid #fff; box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
+  body #bouton-sauter { background: var(--bleu-pastel); color: var(--texte-sas); border: 2px solid #fff; box-shadow: 0 4px 0 var(--bleu-pastel-fonce); }
+  #combat .bouton, #fin-tour { background: var(--rose-pastel); color: var(--texte-sas); border: 2px solid #fff; box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
+  .sort kbd { background: var(--texte-sas); color: #fff; }
 </style>
 </head>
 <body>
@@ -764,7 +823,7 @@
   }, true);
 </script>
 <!-- Code assemblé par outils/construire.mjs (sources dans js/) : fonctionne aussi par double-clic, sans serveur -->
-<script src="./ressources.js?v=mws1yyab"></script>
-<script src="./jeu.js?v=mws1yyab"></script>
+<script src="./ressources.js?v=mwuo3ker"></script>
+<script src="./jeu.js?v=mwuo3ker"></script>
 </body>
 </html>

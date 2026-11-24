@@ -1,0 +1,372 @@
+<!doctype html>
+<!-- Statistiques des parties de Médiaventure (page du staff).
+     En ligne : https://cforclaz.eleves.mediamatique.ch/jeu/stats/  —  code staff demandé.
+     Les fiches sont envoyées par le jeu à enregistrer.php et lues ici par lire.php. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Statistiques Médiaventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Asimovian&family=Space+Mono:wght@400;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose-pastel: #f9cfe0; --rose-pastel-fonce: #eaa3c0;
+    --bleu-pastel: #c9dcf7; --bleu-pastel-fonce: #93b4e3;
+    --violet-pastel: #ddd0f5; --violet-pastel-fonce: #b49fe2;
+    --fond: #efe8fb; --carte: #f7f3ff; --texte: #3b3360; --discret: #6d6596; --ligne: #e3d9f7;
+    --ok: #5fae8b; --ko: #e07a8f;
+    --titre: 'Asimovian', 'Space Mono', monospace; --mono: 'Space Mono', monospace;
+    --corps: 'Zen Maru Gothic', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font-family: var(--corps); }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-family: var(--titre); font-weight: 400; font-size: clamp(26px, 5vw, 40px); margin: 0 0 4px; letter-spacing: .02em; }
+  h2 { font-family: var(--titre); font-weight: 400; font-size: 22px; margin: 34px 0 12px; }
+  h3 { font-family: var(--mono); font-size: 14px; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 10px; color: var(--discret); }
+  p.sous { margin: 0 0 20px; color: var(--discret); font-family: var(--mono); font-size: 13px; }
+  .carte { background: var(--carte); border: 3px solid #fff; border-radius: 18px; box-shadow: 0 6px 0 var(--violet-pastel-fonce), 0 14px 30px rgba(80, 60, 140, .14); padding: 18px; }
+  .bouton { font: 700 14px var(--mono); color: var(--texte); background: var(--rose-pastel); border: 2px solid #fff; border-radius: 999px; padding: 10px 18px; cursor: pointer; box-shadow: 0 4px 0 var(--rose-pastel-fonce); }
+  .bouton:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--rose-pastel-fonce); }
+  .bouton.secondaire { background: var(--bleu-pastel); box-shadow: 0 4px 0 var(--bleu-pastel-fonce); }
+  input, select { font: 700 15px var(--mono); color: var(--texte); background: #fff; border: 2px solid var(--violet-pastel-fonce); border-radius: 12px; padding: 9px 12px; }
+  #connexion { max-width: 420px; margin: 12vh auto 0; text-align: center; }
+  #connexion form { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+  #erreur { color: var(--ko); font-family: var(--mono); font-size: 13px; min-height: 1.2em; }
+  .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  .barre-outils label { font-family: var(--mono); font-size: 13px; }
+  .barre-outils .espace { flex: 1; }
+  .chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+  .chiffre { padding: 14px 16px; }
+  .chiffre b { display: block; font-family: var(--titre); font-weight: 400; font-size: 32px; line-height: 1.1; }
+  .chiffre span { font-family: var(--mono); font-size: 12px; color: var(--discret); }
+  .grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .table-defile { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--ligne); vertical-align: middle; }
+  th { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--discret); font-weight: 700; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ligne-barre { display: grid; grid-template-columns: minmax(90px, 38%) 1fr auto; gap: 10px; align-items: center; margin: 7px 0; font-size: 14px; }
+  .ligne-barre .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jauge { height: 14px; background: #fff; border-radius: 999px; overflow: hidden; border: 1px solid var(--ligne); }
+  .jauge i { display: block; height: 100%; background: var(--violet-pastel-fonce); border-radius: 999px; }
+  .jauge.ok i { background: var(--ok); }
+  .ligne-barre .val { font-family: var(--mono); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .pastille { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); vertical-align: -2px; margin-right: 6px; }
+  .vide { color: var(--discret); font-style: italic; font-size: 14px; }
+  .etat { font: 700 11px var(--mono); padding: 2px 8px; border-radius: 999px; background: var(--bleu-pastel); white-space: nowrap; }
+  .etat.fini { background: #cdeedd; } .etat.abandon { background: var(--rose-pastel); }
+  .note { font-size: 12px; color: var(--discret); margin: 8px 0 0; }
+  .heures { display: flex; align-items: flex-end; gap: 4px; height: 120px; padding-top: 10px; }
+  .heures div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font: 10px var(--mono); color: var(--discret); }
+  .heures i { display: block; width: 100%; background: var(--violet-pastel-fonce); border-radius: 6px 6px 0 0; min-height: 2px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 600px) { .grille { grid-template-columns: 1fr; } .ligne-barre { grid-template-columns: 34% 1fr auto; } }
+</style>
+</head>
+<body>
+<main>
+  <section id="connexion" class="carte">
+    <h1>Statistiques</h1>
+    <p class="sous">Médiaventure · parties anonymes</p>
+    <form id="formulaire">
+      <input id="code" type="password" inputmode="numeric" autocomplete="off" placeholder="Code staff" aria-label="Code staff">
+      <button class="bouton" type="submit">Ouvrir</button>
+    </form>
+    <p id="erreur"></p>
+  </section>
+
+  <section id="tableau" hidden>
+    <h1>Statistiques Médiaventure</h1>
+    <p class="sous" id="resume"></p>
+    <div class="barre-outils">
+      <label>Jour <select id="jour"></select></label>
+      <label>Appareil <select id="filtre-appareil"><option value="">Tous</option><option>ordinateur</option><option>téléphone</option><option>tablette</option></select></label>
+      <span class="espace"></span>
+      <button class="bouton secondaire" id="actualiser" type="button">Actualiser</button>
+      <button class="bouton" id="csv" type="button">Exporter CSV</button>
+      <button class="bouton secondaire" id="json" type="button">JSON</button>
+    </div>
+    <div id="contenu"></div>
+  </section>
+</main>
+
+<script>
+const ILES = [
+  ['sas', 'Le Sas'], ['multimedia', 'Multimédia'], ['design', 'Design'], ['informatique', 'Informatique'],
+  ['marketing', 'Marketing'], ['admin', 'Admin & gestion'], ['final', 'Boss final'],
+];
+const EPREUVES = { sas: 'Combat d’entraînement', multimedia: 'Vidéo', design: 'E-portfolio', informatique: 'Quiz', marketing: 'Étapes du projet', admin: 'Code Gaïa', final: '—' };
+const NOMS = {
+  shiba: 'Shiba', capybara: 'Capybara', chat: 'Chat', lapin: 'Lapin', renard: 'Renard', panda: 'Panda', tanuki: 'Tanuki',
+  aucune: 'Aucune', aucun: 'Aucun', sac: 'Sac à dos', sacoche: 'Sacoche', katana: 'Katana', ombrelle: 'Ombrelle', eventail: 'Éventail',
+  fr: 'Français', en: 'English', de: 'Deutsch', it: 'Italiano', bois: 'Bois', sakura: 'Sakura', momiji: 'Momiji',
+  asanoha: 'Asanoha', nuages: 'Nuages', vagues: 'Vagues', seigaiha: 'Seigaiha', uni: 'Uni',
+};
+const $ = (id) => document.getElementById(id);
+let parties = [], code = '';
+
+// ---------------------------------------------------------------- outils
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const nom = (v) => NOMS[v] ?? v ?? '—';
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+const moyenne = (l) => (l.length ? l.reduce((a, b) => a + b, 0) / l.length : null);
+const mediane = (l) => { if (!l.length) return null; const s = [...l].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const duree = (sec) => (sec == null ? '—' : sec < 60 ? `${Math.round(sec)} s` : `${Math.floor(sec / 60)} min ${String(Math.round(sec % 60)).padStart(2, '0')}`);
+const nombre = (v, d = 1) => (v == null ? '—' : (Math.round(v * 10 ** d) / 10 ** d).toLocaleString('fr-CH'));
+const jourDe = (iso) => new Date(iso).toLocaleDateString('fr-CH', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+const cleJour = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const etat = (p) => (p.termine ? 'terminée' : p.abandon ? 'abandonnée' : 'en cours / quittée');
+function compter(valeurs) {
+  const m = new Map();
+  for (const v of valeurs) if (v != null) m.set(v, (m.get(v) ?? 0) + 1);
+  return [...m].sort((a, b) => b[1] - a[1]);
+}
+function barres(liste, { total, rendreNom = (v) => esc(nom(v)), suffixe = '', ok = false } = {}) {
+  if (!liste.length) return '<p class="vide">Pas encore de données.</p>';
+  const max = Math.max(...liste.map((l) => l[1]));
+  return liste.map(([v, n]) => `<div class="ligne-barre"><span class="nom" title="${esc(nom(v))}">${rendreNom(v)}</span>
+    <span class="jauge${ok ? ' ok' : ''}"><i style="width:${(n / (total ?? max)) * 100}%"></i></span>
+    <span class="val">${n}${total ? ` · ${pct(n, total)} %` : ''}${suffixe}</span></div>`).join('');
+}
+const carte = (titre, corps, classe = '') => `<div class="carte ${classe}"><h3>${esc(titre)}</h3>${corps}</div>`;
+
+// ---------------------------------------------------------------- connexion et données
+async function charger() {
+  const r = await fetch('lire.php', { method: 'POST', body: JSON.stringify({ code }), cache: 'no-store' });
+  if (r.status === 403) throw new Error('Code incorrect.');
+  if (!r.ok) throw new Error(`Le serveur a répondu ${r.status}.`);
+  const d = await r.json();
+  parties = (d.parties ?? []).filter((p) => p && p.debut).sort((a, b) => b.debut.localeCompare(a.debut));
+}
+$('formulaire').onsubmit = async (e) => {
+  e.preventDefault();
+  code = $('code').value.trim();
+  $('erreur').textContent = '';
+  try {
+    await charger();
+    try { sessionStorage.setItem('stats-code', code); } catch {}
+    ouvrir();
+  } catch (err) { $('erreur').textContent = location.protocol === 'file:' ? 'Cette page fonctionne une fois mise sur le serveur.' : err.message; }
+};
+$('actualiser').onclick = async () => { try { await charger(); remplirJours(); afficher(); } catch (err) { alert(err.message); } };
+$('jour').onchange = afficher;
+$('filtre-appareil').onchange = afficher;
+
+function ouvrir() {
+  $('connexion').hidden = true;
+  $('tableau').hidden = false;
+  remplirJours();
+  afficher();
+}
+function remplirJours() {
+  const choix = $('jour').value;
+  const jours = [...new Set(parties.map((p) => cleJour(p.debut)))].sort().reverse();
+  $('jour').innerHTML = '<option value="">Tous les jours</option><option value="po">Portes ouvertes (27-28.11)</option>' +
+    jours.map((j) => `<option value="${j}">${esc(jourDe(j + 'T12:00:00'))}</option>`).join('');
+  $('jour').value = choix && [...$('jour').options].some((o) => o.value === choix) ? choix : '';
+}
+function filtrees() {
+  const j = $('jour').value, a = $('filtre-appareil').value;
+  return parties.filter((p) => {
+    const cj = cleJour(p.debut);
+    if (j === 'po' && !/-11-2[78]$/.test(cj)) return false;
+    if (j && j !== 'po' && cj !== j) return false;
+    if (a && p.appareil?.type !== a) return false;
+    return true;
+  });
+}
+
+// ---------------------------------------------------------------- tableau de bord
+function afficher() {
+  const P = filtrees();
+  const n = P.length;
+  const finies = P.filter((p) => p.termine), abandons = P.filter((p) => p.abandon);
+  $('resume').textContent = `${n} partie${n > 1 ? 's' : ''} · mise à jour ${new Date().toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}`;
+  if (!n) { $('contenu').innerHTML = '<div class="carte"><p class="vide">Aucune partie enregistrée pour ce filtre.</p></div>'; return; }
+
+  let h = '';
+  // chiffres clés
+  const dureesFinies = finies.map((p) => p.duree).filter((d) => d > 0);
+  const vestiaire = P.map((p) => p.tempsVestiaire).filter((d) => d > 0 && d < 3600);
+  h += `<div class="chiffres">
+    <div class="carte chiffre"><b>${n}</b><span>parties commencées</span></div>
+    <div class="carte chiffre"><b>${finies.length}</b><span>terminées · ${pct(finies.length, n)} %</span></div>
+    <div class="carte chiffre"><b>${abandons.length}</b><span>abandonnées (code staff)</span></div>
+    <div class="carte chiffre"><b>${duree(mediane(dureesFinies))}</b><span>durée médiane d’une partie finie</span></div>
+    <div class="carte chiffre"><b>${duree(mediane(vestiaire))}</b><span>création du personnage (médiane)</span></div>
+  </div>`;
+
+  // parcours
+  h += '<h2>Parcours</h2><div class="grille">';
+  const atteintes = ILES.map(([id, titre]) => [titre, P.filter((p) => p.iles?.[id]).length]);
+  h += carte('Îles atteintes', barres(atteintes, { total: n, rendreNom: esc }));
+  const heures = new Array(24).fill(0);
+  for (const p of P) heures[new Date(p.debut).getHours()]++;
+  const hMin = Math.max(0, heures.findIndex((x) => x) - 1), hMax = Math.min(23, 23 - [...heures].reverse().findIndex((x) => x) + 1);
+  const maxH = Math.max(...heures);
+  h += carte('Parties commencées par heure', `<div class="heures">${heures.slice(hMin, hMax + 1).map((x, k) =>
+    `<div title="${x} partie(s)"><span>${x || ''}</span><i style="height:${(x / maxH) * 85}%"></i>${hMin + k}h</div>`).join('')}</div>`);
+  h += '</div>';
+
+  // par île
+  h += '<h2>Étape par étape</h2><div class="carte table-defile"><table><thead><tr><th>Île</th><th>Épreuve</th><th class="n">Atteinte</th><th class="n">Temps médian</th>' +
+    '<th class="n">Épreuve réussie</th><th class="n">« Plus tard »</th><th class="n">Essais moyens</th><th class="n">Combat gagné</th>' +
+    '<th class="n">Tentatives moy.</th><th class="n">Gagné du 1er coup</th><th class="n">Tours moy.</th><th class="n">PV restants moy.</th><th class="n">Objet</th></tr></thead><tbody>';
+  for (const [id, titre] of ILES) {
+    const I = P.map((p) => p.iles?.[id]).filter(Boolean);
+    const avecEpreuve = I.filter((i) => i.epreuve?.ouvertures);
+    const combats = I.flatMap((i) => i.combat?.combats ?? []);
+    const gagnes = I.filter((i) => i.combat?.victoire);
+    const victoires = combats.filter((c) => c.victoire);
+    const essais = avecEpreuve.filter((i) => i.epreuve.reussie).map((i) => i.epreuve.essais.length).filter((x) => x > 0);
+    h += `<tr><td><b>${esc(titre)}</b></td><td>${esc(EPREUVES[id])}</td><td class="n">${I.length}</td>
+      <td class="n">${duree(mediane(I.map((i) => i.temps).filter((x) => x > 0)))}</td>
+      <td class="n">${id === 'sas' || id === 'final' ? '—' : `${avecEpreuve.filter((i) => i.epreuve.reussie).length} / ${avecEpreuve.length}`}</td>
+      <td class="n">${id === 'sas' || id === 'final' ? '—' : avecEpreuve.reduce((s, i) => s + (i.epreuve.plusTard ?? 0), 0)}</td>
+      <td class="n">${nombre(moyenne(essais))}</td>
+      <td class="n">${gagnes.length} / ${I.filter((i) => i.combat?.tentatives).length}</td>
+      <td class="n">${nombre(moyenne(gagnes.map((i) => i.combat.combats.findIndex((c) => c.victoire) + 1)))}</td>
+      <td class="n">${pct(gagnes.filter((i) => i.combat.combats[0]?.victoire).length, gagnes.length)} %</td>
+      <td class="n">${nombre(moyenne(combats.map((c) => c.tours)))}</td>
+      <td class="n">${nombre(moyenne(victoires.map((c) => c.pvJoueur)), 0)}</td>
+      <td class="n">${id === 'final' ? '—' : I.filter((i) => i.objet).length}</td></tr>`;
+  }
+  h += '</tbody></table><p class="note">Temps médian = temps passé sur l’île. Essais = vérifications (étapes), codes tapés (Gaïa) ou quiz complets, pour ceux qui ont réussi. Tentatives = nombre de combats jusqu’à la victoire.</p></div>';
+
+  // choix des épreuves
+  h += '<h2>Choix dans les épreuves</h2><div class="grille">';
+  for (const [id, titre] of [['multimedia', 'Vidéos choisies'], ['design', 'E-portfolios visités']]) {
+    const I = P.map((p) => p.iles?.[id]).filter(Boolean);
+    const choisis = compter(I.flatMap((i) => i.epreuve?.choix?.map((c) => c.nom) ?? []));
+    const finis = compter(I.filter((i) => i.epreuve?.reussie && i.epreuve.choix?.length).map((i) => i.epreuve.choix.at(-1).nom));
+    h += carte(titre, barres(choisis, { rendreNom: esc }) +
+      (finis.length ? `<h3 style="margin-top:14px">${id === 'multimedia' ? 'Regardées jusqu’au bout' : 'Visites terminées'}</h3>${barres(finis, { rendreNom: esc, ok: true })}` : ''));
+  }
+  // étapes et Gaïa
+  {
+    const I = P.map((p) => p.iles?.marketing).filter((i) => i?.epreuve?.essais?.length);
+    const verifs = compter(I.filter((i) => i.epreuve.reussie).map((i) => i.epreuve.essais.length)).sort((a, b) => a[0] - b[0]);
+    const premiers = I.map((i) => i.epreuve.essais[0]).filter(Boolean);
+    h += carte('Étapes du projet : vérifications avant réussite',
+      barres(verifs.map(([k, v]) => [`${k} vérification${k > 1 ? 's' : ''}`, v]), { rendreNom: esc }) +
+      `<p class="note">Au premier essai : ${nombre(moyenne(premiers.map((e) => e.justes)))} étapes justes sur ${premiers[0]?.total ?? '—'} en moyenne.</p>`);
+    const G = P.map((p) => p.iles?.admin).filter((i) => i?.epreuve?.ouvertures);
+    const faux = G.reduce((s, i) => s + i.epreuve.essais.filter((e) => !e.bon).length, 0);
+    h += carte('Stand Gaïa', `<div class="ligne-barre"><span class="nom">Code validé</span><span class="jauge ok"><i style="width:${pct(G.filter((i) => i.epreuve.reussie).length, G.length)}%"></i></span><span class="val">${G.filter((i) => i.epreuve.reussie).length} / ${G.length}</span></div>
+      <div class="ligne-barre"><span class="nom">Codes faux tapés</span><span></span><span class="val">${faux}</span></div>
+      <div class="ligne-barre"><span class="nom">« Plus tard »</span><span></span><span class="val">${G.reduce((s, i) => s + i.epreuve.plusTard, 0)}</span></div>
+      <p class="note">Temps médian entre l’ouverture de l’épreuve et le bon code : ${duree(mediane(G.map((i) => i.epreuve.duree).filter((x) => x != null)))}.</p>`);
+  }
+  h += '</div>';
+
+  // quiz
+  {
+    const quiz = P.flatMap((p) => p.iles?.informatique?.epreuve?.essais ?? []).filter((e) => e.reponses);
+    const complets = quiz.filter((e) => !e.interrompu);
+    const parQuestion = new Map();
+    for (const e of quiz) for (const r of e.reponses) {
+      const q = parQuestion.get(r.question) ?? { posee: 0, justes: 0, faux: [] };
+      q.posee++; if (r.juste) q.justes++; else q.faux.push(r.choisie);
+      parQuestion.set(r.question, q);
+    }
+    const lignes = [...parQuestion].sort((a, b) => a[1].justes / a[1].posee - b[1].justes / b[1].posee);
+    h += '<h2>Quiz Informatique</h2><div class="carte table-defile">';
+    h += `<p class="note" style="margin:0 0 10px">${complets.length} quiz complet(s) · score moyen ${nombre(moyenne(complets.map((e) => e.score)))} / ${complets[0]?.total ?? 6} · réussis : ${complets.filter((e) => e.score >= 4).length}. Questions classées de la plus ratée à la mieux réussie.</p>`;
+    h += lignes.length ? `<table><thead><tr><th>Question</th><th class="n">Posée</th><th style="width:28%">Bonnes réponses</th><th>Erreur la plus fréquente</th></tr></thead><tbody>${lignes.map(([q, s]) => {
+      const erreur = compter(s.faux)[0];
+      return `<tr><td>${esc(q)}</td><td class="n">${s.posee}</td><td><div class="ligne-barre" style="grid-template-columns:1fr auto;margin:0"><span class="jauge ok"><i style="width:${pct(s.justes, s.posee)}%"></i></span><span class="val">${pct(s.justes, s.posee)} %</span></div></td><td>${erreur ? `${esc(erreur[0])} (${erreur[1]})` : '—'}</td></tr>`;
+    }).join('')}</tbody></table>` : '<p class="vide">Pas encore de données.</p>';
+    h += '</div>';
+  }
+
+  // combats : sorts
+  {
+    const sorts = new Map();
+    for (const p of P) for (const i of Object.values(p.iles ?? {})) for (const c of i.combat?.combats ?? []) for (const [s, k] of Object.entries(c.sorts ?? {})) sorts.set(s, (sorts.get(s) ?? 0) + k);
+    const combats = P.flatMap((p) => Object.values(p.iles ?? {}).flatMap((i) => i.combat?.combats ?? []));
+    h += '<h2>Combats</h2><div class="grille">';
+    h += carte('Sorts lancés', barres([...sorts].sort((a, b) => b[1] - a[1]), { rendreNom: esc }));
+    h += carte('Combats', `<div class="ligne-barre"><span class="nom">Combats joués</span><span></span><span class="val">${combats.length}</span></div>
+      <div class="ligne-barre"><span class="nom">Victoires</span><span class="jauge ok"><i style="width:${pct(combats.filter((c) => c.victoire).length, combats.length)}%"></i></span><span class="val">${pct(combats.filter((c) => c.victoire).length, combats.length)} %</span></div>
+      <div class="ligne-barre"><span class="nom">Durée médiane</span><span></span><span class="val">${duree(mediane(combats.map((c) => c.duree)))}</span></div>
+      <div class="ligne-barre"><span class="nom">PV du boss restant (défaites)</span><span></span><span class="val">${nombre(moyenne(combats.filter((c) => !c.victoire).map((c) => c.pvBoss)), 0)}</span></div>`);
+    h += '</div>';
+  }
+
+  // personnage
+  {
+    const T = P.map((p) => p.tenue).filter(Boolean);
+    const couleur = (v) => (/^#[0-9a-f]{6}$/i.test(v) ? `<span class="pastille" style="background:${v}"></span>${esc(v)}` : esc(nom(v)));
+    h += '<h2>Personnages créés au Sas</h2><div class="grille">';
+    h += carte('Espèce', barres(compter(T.map((x) => x.espece)), { total: T.length }));
+    h += carte('Coupe', barres(compter(T.map((x) => x.coiffure)), { total: T.length }));
+    h += carte('Couleur du kimono', barres(compter(T.map((x) => x.kimono)), { total: T.length, rendreNom: couleur }));
+    h += carte('Motif du kimono', barres(compter(T.map((x) => x.motif)), { total: T.length }));
+    h += carte('Ceinture', barres(compter(T.map((x) => x.ceinture)), { total: T.length, rendreNom: couleur }));
+    h += carte('Couleur des cheveux', barres(compter(T.map((x) => x.cheveux)), { total: T.length, rendreNom: couleur }));
+    h += carte('À la main', barres(compter(T.map((x) => x.arme)), { total: T.length }));
+    h += carte('Sac', barres(compter(T.map((x) => x.accessoire)), { total: T.length }));
+    h += carte('Baguettes (chignon)', barres(compter(T.map((x) => x.baguettes)), { total: T.filter((x) => x.baguettes).length || undefined }));
+    h += '</div>';
+  }
+
+  // visiteurs
+  h += '<h2>Visiteurs</h2><div class="grille">';
+  h += carte('Langue', barres(compter(P.map((p) => p.langue)), { total: n }));
+  h += carte('Appareil', barres(compter(P.map((p) => p.appareil?.type)), { total: n }));
+  h += carte('Navigateur', barres(compter(P.map((p) => p.appareil?.navigateur)), { total: n }));
+  h += carte('Jeu ouvert', barres(compter(P.map((p) => p.appareil?.hebergement)), { total: n }));
+  h += '</div>';
+
+  // liste
+  h += `<h2>Dernières parties</h2><div class="carte table-defile"><table><thead><tr><th>Début</th><th>État</th><th class="n">Durée</th><th>Dernière île</th><th class="n">Objets</th><th>Appareil</th><th>Langue</th><th>Personnage</th></tr></thead><tbody>${
+    P.slice(0, 80).map((p) => {
+      const derniere = p.parcours?.at(-1)?.ile;
+      const objets = Object.values(p.iles ?? {}).filter((i) => i.objet).length;
+      const d = p.duree ?? Math.round((Date.parse(p.maj) - Date.parse(p.debut)) / 1000);
+      return `<tr><td>${esc(new Date(p.debut).toLocaleString('fr-CH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}</td>
+        <td><span class="etat ${p.termine ? 'fini' : p.abandon ? 'abandon' : ''}">${etat(p)}</span></td><td class="n">${duree(d)}</td>
+        <td>${esc(ILES.find(([id]) => id === derniere)?.[1] ?? '—')}</td><td class="n">${objets}</td>
+        <td>${esc(p.appareil?.type ?? '—')}</td><td>${esc(nom(p.langue))}</td><td>${esc(nom(p.tenue?.espece))}${p.tenue?.kimono ? ` <span class="pastille" style="background:${/^#[0-9a-f]{6}$/i.test(p.tenue.kimono) ? p.tenue.kimono : '#fff'}"></span>` : ''}</td></tr>`;
+    }).join('')}</tbody></table>${P.length > 80 ? `<p class="note">80 parties affichées sur ${P.length} : l’export CSV contient tout.</p>` : ''}</div>`;
+
+  $('contenu').innerHTML = h;
+}
+
+// ---------------------------------------------------------------- exports
+function telecharger(nomFichier, contenu, type) {
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([contenu], { type })), download: nomFichier });
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('json').onclick = () => telecharger('mediaventure-parties.json', JSON.stringify(filtrees(), null, 2), 'application/json');
+$('csv').onclick = () => {
+  const colonnes = ['id', 'debut', 'fin', 'etat', 'duree_s', 'creation_perso_s', 'langue', 'appareil', 'navigateur', 'ouvert',
+    'espece', 'coiffure', 'cheveux', 'kimono', 'motif', 'ceinture', 'a_la_main', 'sac', 'baguettes'];
+  for (const [id] of ILES) colonnes.push(`${id}_temps_s`, `${id}_epreuve_reussie`, `${id}_plus_tard`, `${id}_essais`, `${id}_choix`, `${id}_combats`, `${id}_combat_gagne`, `${id}_objet`);
+  colonnes.push('quiz_score');
+  const lignes = filtrees().map((p) => {
+    const t = p.tenue ?? {};
+    const v = [p.id, p.debut, p.fin ?? '', etat(p), p.duree ?? '', p.tempsVestiaire ?? '', p.langue, p.appareil?.type, p.appareil?.navigateur, p.appareil?.hebergement,
+      t.espece, t.coiffure, t.cheveux, t.kimono, t.motif, t.ceinture, t.arme, t.accessoire, t.baguettes];
+    for (const [id] of ILES) {
+      const i = p.iles?.[id];
+      v.push(i?.temps ?? '', i ? (i.epreuve.reussie ? 'oui' : 'non') : '', i?.epreuve.plusTard ?? '', i?.epreuve.essais.length ?? '',
+        i?.epreuve.choix.map((c) => c.nom).join(' | ') ?? '', i?.combat.tentatives ?? '', i ? (i.combat.victoire ? 'oui' : 'non') : '', i?.objet ? 'oui' : '');
+    }
+    v.push(p.iles?.informatique?.epreuve.essais.filter((e) => !e.interrompu).map((e) => `${e.score}/${e.total}`).join(' | ') ?? '');
+    return v;
+  });
+  const cellule = (x) => { const s = String(x ?? ''); return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  // point-virgule et BOM : s'ouvre directement dans Excel (réglages suisses / français)
+  telecharger('mediaventure-parties.csv', '﻿' + [colonnes, ...lignes].map((l) => l.map(cellule).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+};
+
+// code déjà tapé dans cet onglet
+try { const c = sessionStorage.getItem('stats-code'); if (c) { $('code').value = c; $('formulaire').requestSubmit(); } } catch {}
+</script>
+</body>
+</html>

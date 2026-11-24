@@ -9,6 +9,7 @@ import { epreuveVideo, epreuvePortfolios, epreuveEtapes, epreuveCodeGaia } from 
 import { creerVestiaire } from './vestiaire.js';
 import { ECRAN_TACTILE, joystick, installerCommandes, majBoutonAction } from './tactile.js';
 import { t, choisirLangue } from './i18n.js';
+import * as stats from './stats.js';
 
 const $ = (id) => document.getElementById(id);
 const DOSSIER_OBJETS = '../objets-quete/';
@@ -52,12 +53,9 @@ redimensionner();
 
 let mode = 'creation'; // creation | exploration | dialogue | quiz | epreuve | combat | transition
 
-// Gardien·ne du milieu de chaque île, selon son épreuve
-const NOMS_PNJ = {
-  quiz: 'Gardien·ne du Réseau', video: 'Projectionniste', portfolios: 'Esprit des couleurs',
-  'etapes-projet': 'Stratège de Nara', 'stand-gaia': 'Gardien·ne du stand', 'combat-final': 'Esprit du château',
-};
-const nomPnj = () => t(NOMS_PNJ[niveau.miniJeu] ?? 'Esprit du biome');
+// Gardienne du milieu de chaque île : c'est Cléo qui accueille le joueur à chaque étape
+const nomPnj = () => 'Cléo Forclaz';
+const APPARENCE_CLEO = { espece: 'humain', coiffure: 'longs', cheveux: '#7a4a25', tenue: 'miko', masque: 'kitsune' };
 let scene = new THREE.Scene();
 
 // ------------------------------------------------------------------ Le Sas : vestiaire sous un ciel étoilé
@@ -178,13 +176,14 @@ creerVestiaire({
     partie.niveau = 'sas';
     partie.objets = [];
     sauver();
+    stats.demarrerPartie(partie.apparence, partie.langue);
     quitterVestiaire();
     lancerNiveau('sas');
   },
   surReprendre: () => { quitterVestiaire(); lancerNiveau(partie.niveau); },
   // langue choisie dans l'onglet Identité
   surChoixPartie: (champ, valeur) => {
-    if (champ === 'langue') { choisirLangue(valeur); majReprendre(); }
+    if (champ === 'langue') { choisirLangue(valeur); majReprendre(); stats.changerLangue(valeur); }
     sauver();
   },
 });
@@ -205,17 +204,21 @@ let interactions = [];
 let combat = null;
 const etatNiveau = { miniJeuReussi: false, bossVaincu: false };
 
-function etiquette(texte, couleur = PALETTE.marine) {
+function etiquette(texte, couleur = '#3b3360') {
   const c = document.createElement('canvas');
   const ctx = c.getContext('2d');
   ctx.font = 'bold 44px "Zen Maru Gothic", sans-serif';
   c.width = Math.ceil(ctx.measureText(texte).width) + 48;
   c.height = 72;
   ctx.font = 'bold 44px "Zen Maru Gothic", sans-serif';
-  ctx.fillStyle = 'rgba(241,230,208,0.92)';
+  // pastille lavande bordée de blanc, comme les boutons du Sas
   ctx.beginPath();
-  ctx.roundRect(0, 0, c.width, c.height, 36);
+  ctx.roundRect(3, 3, c.width - 6, c.height - 6, 33);
+  ctx.fillStyle = 'rgba(240,234,255,0.94)';
   ctx.fill();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#ffffff';
+  ctx.stroke();
   ctx.fillStyle = couleur;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -245,6 +248,7 @@ async function lancerNiveau(id) {
   scene = new THREE.Scene();
   partie.niveau = id;
   sauver();
+  stats.entrerIle(id, partie.apparence, partie.langue);
   niveau = NIVEAUX[id];
   niveau.id = id;
   niveau.boss = completerBoss(niveau.boss);
@@ -262,7 +266,7 @@ async function lancerNiveau(id) {
 
   boss = creerPersonnage(niveau.boss.apparence);
   boss.scale.setScalar(1.12);
-  boss.add(etiquette(niveau.boss.nom, PALETTE.corail));
+  boss.add(etiquette(niveau.boss.nom, '#c25a8a'));
   scene.add(boss);
   objetQuete = null;
   interactions = [];
@@ -272,7 +276,7 @@ async function lancerNiveau(id) {
     pnj = boss;
     boss.position.copy(POS.pnj);
   } else {
-    pnj = creerPersonnage({ genre: 'neutre', coiffure: 'courte', kimono: PALETTE.bleu, cheveux: '#e8d2a6', accessoire: 'sacoche', katana: false });
+    pnj = creerPersonnage(APPARENCE_CLEO);
     pnj.add(etiquette(nomPnj()));
     pnj.position.copy(POS.pnj);
     scene.add(pnj);
@@ -331,7 +335,7 @@ function lancerMiniJeu() {
     });
   } else if (niveau.miniJeu === 'quiz') {
     dialogue([
-      { nom: t('Gardien·ne du Réseau'), texte: t('Pour atteindre {boss}, réponds à mon quiz : {n} questions, {seuil} bonnes réponses minimum.', { boss: nomBoss, n: NOMBRE, seuil: SEUIL }) },
+      { nom: nomPnj(), texte: t('Pour atteindre {boss}, réponds à mon quiz : {n} questions, {seuil} bonnes réponses minimum.', { boss: nomBoss, n: NOMBRE, seuil: SEUIL }) },
     ], lancerQuiz);
   } else if (niveau.miniJeu === 'combat-final') {
     const manquants = ORDRE.slice(0, -1).filter((id) => !partie.objets.includes(id));
@@ -342,7 +346,7 @@ function lancerMiniJeu() {
     }
   } else if (niveau.miniJeu === 'video') {
     epreuve(t('Bienvenue au cinéma des tournesols ! Choisis une vidéo dans la bibliothèque et regarde-la jusqu’au bout.'),
-      () => epreuveVideo(niveau.videos.map((v) => ({ ...v, titre: t(v.titre) }))), t('Belle séance ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens quand tu veux finir ta vidéo.'));
+      () => epreuveVideo(niveau.videos.map((v) => ({ ...v, titre: t(v.titre), titreFr: v.titre }))), t('Belle séance ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens quand tu veux finir ta vidéo.'));
   } else if (niveau.miniJeu === 'portfolios') {
     epreuve(t('Un bon designer s’inspire du travail des autres : choisis un e-portfolio et prends le temps de le visiter.'),
       () => epreuvePortfolios(niveau.portfolios, niveau.dureeVisite), t('Quel regard ! {boss} t’attend dans l’arène.', { boss: nomBoss }), t('Reviens me voir quand tu veux visiter un portfolio.'));
@@ -360,7 +364,9 @@ function epreuve(intro, lancer, succes, echec) {
   dialogue([{ nom: nomPnj(), texte: intro }], async () => {
     mode = 'epreuve';
     montrerPortrait(null);
+    stats.epreuveOuverte();
     const reussie = await lancer();
+    stats.epreuveFin(reussie);
     montrerPortrait(false);
     mode = 'exploration';
     if (reussie) dialogue([{ nom: nomPnj(), texte: succes }], ouvrirArene);
@@ -382,11 +388,15 @@ function lancerQuiz() {
   el.hidden = false;
   montrerPortrait(null);
   // « Plus tard » : on quitte le quiz sans le valider, on pourra revenir parler au gardien
+  stats.epreuveOuverte();
+  const reponses = []; // pour les statistiques : chaque question et la réponse choisie
   $('quiz-plus-tard').onclick = () => {
+    if (reponses.length) stats.epreuveEssai({ score, total: questions.length, reponses, interrompu: true });
+    stats.epreuveFin(false);
     el.hidden = true;
     montrerPortrait(false);
     mode = 'exploration';
-    dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('Pas de souci, reviens me parler quand tu veux.') }]);
+    dialogue([{ nom: nomPnj(), texte: t('Pas de souci, reviens me parler quand tu veux.') }]);
   };
   const afficher = () => {
     const q = questions[i];
@@ -401,6 +411,7 @@ function lancerQuiz() {
         if (rep.dataset.verrou) return;
         rep.dataset.verrou = '1';
         if (k === q.ok) score++;
+        reponses.push({ question: q.q, choisie: q.r[k], juste: k === q.ok });
         b.classList.add(k === q.ok ? 'juste' : 'faux');
         rep.children[q.ok].classList.add('juste');
         setTimeout(() => {
@@ -413,13 +424,15 @@ function lancerQuiz() {
     });
   };
   const terminer = () => {
+    stats.epreuveEssai({ score, total: questions.length, reponses });
+    if (score >= SEUIL) stats.epreuveFin(true); // un quiz raté reste un essai, pas un « Plus tard »
     el.hidden = true;
     montrerPortrait(false);
     mode = 'exploration';
     if (score >= SEUIL) {
-      dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('{score} / {n} ! L’arène de {boss} est ouverte.', { score, n: questions.length, boss: niveau.boss.nom }) }], ouvrirArene);
+      dialogue([{ nom: nomPnj(), texte: t('{score} / {n} ! L’arène de {boss} est ouverte.', { score, n: questions.length, boss: niveau.boss.nom }) }], ouvrirArene);
     } else {
-      dialogue([{ nom: t('Gardien·ne du Réseau'), texte: t('{score} / {n}… Il en faut {seuil}. Reviens me parler pour réessayer.', { score, n: questions.length, seuil: SEUIL }) }]);
+      dialogue([{ nom: nomPnj(), texte: t('{score} / {n}… Il en faut {seuil}. Reviens me parler pour réessayer.', { score, n: questions.length, seuil: SEUIL }) }]);
     }
   };
   afficher();
@@ -431,9 +444,11 @@ function lancerCombat() {
   document.body.classList.add('en-combat');
   $('invite').hidden = true;
   $('aide').hidden = true;
+  stats.combatDebut(niveau.boss.nom);
   combat = new Combat({
     scene, camera, canvas, joueur, boss, def: niveau.boss, pvJoueur: niveau.pvJoueur, tutoriel: niveau.id === 'sas', murs: niveau.murs,
     onFin: (victoire) => {
+      stats.combatFin(victoire, combat.j.pv, combat.b.pv);
       combat = null;
       document.body.classList.remove('en-combat');
       mode = 'exploration';
@@ -605,6 +620,7 @@ function afficherCredits(ensuite) {
 }
 
 function victoireFinale() {
+  stats.finPartie();
   partie.termine = true; // la partie reste terminée même si la page est rechargée, jusqu'au code staff
   sauver();
   afficherCredits(montrerRecompense);
@@ -660,6 +676,7 @@ function validerStaff() {
     $('code-staff').select();
     return;
   }
+  stats.nouvellePartie(); // la partie en cours est envoyée (abandonnée si pas finie)
   try { localStorage.removeItem(CLE_SAUVEGARDE); } catch { /* navigation privée */ }
   location.replace(location.pathname); // recharge la page : on repart du Sas
 }
@@ -773,6 +790,7 @@ function ramasser(def) {
   objetQuete = null;
   if (!partie.objets.includes(niveau.id)) partie.objets.push(niveau.id);
   sauver();
+  stats.objetRamasse(niveau.id);
   majInventaire();
   $('obtenu-icone').textContent = '';
   if (def) apercuObjet.tourner(niveau.id, $('obtenu-icone')).catch(() => { $('obtenu-icone').textContent = def.icone; });

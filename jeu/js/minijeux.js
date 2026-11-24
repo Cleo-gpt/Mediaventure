@@ -3,6 +3,7 @@
 import { PALETTE } from './niveaux.js';
 import { codeGaiaValide } from './code-gaia.js';
 import { t } from './i18n.js';
+import * as stats from './stats.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -44,6 +45,7 @@ export function epreuveVideo(videos) {
     zone.append(liste);
 
     function lire(v) {
+      stats.epreuveChoix(v.titreFr ?? v.titre);
       zone.innerHTML = '';
       grandEcran(true);
       const ecran = document.createElement('div');
@@ -215,6 +217,7 @@ export function epreuvePortfolios(portfolios, duree = 30) {
     zone.append(liste, actions);
 
     function visiter(p) {
+      stats.epreuveChoix(p.nom);
       zone.innerHTML = '';
       grandEcran(true);
       $('minijeu-sous-titre').textContent = t('Visite de l’e-portfolio de {nom}', { nom: p.nom });
@@ -485,6 +488,7 @@ export function epreuveEtapes(etapes) {
 
     verifier.onclick = () => {
       const justes = cases.filter((e, i) => e === etapes[i]).length;
+      stats.epreuveEssai({ justes, total: etapes.length, placees: cases.filter(Boolean).length });
       corrige = true;
       rendre();
       if (justes === etapes.length) {
@@ -516,7 +520,9 @@ export function epreuveCodeGaia() {
     actions.className = 'mj-actions';
     actions.append(plusTard, valider);
     const essayer = () => {
-      if (codeGaiaValide(champ.value)) { fermer(); fin(true); }
+      const bon = codeGaiaValide(champ.value);
+      stats.epreuveEssai({ bon }); // le code tapé n'est pas enregistré
+      if (bon) { fermer(); fin(true); }
       else { message.textContent = t('Ce n’est pas le bon code (il change toutes les heures). Demande-le au stand Gaïa !'); champ.select(); }
     };
     valider.onclick = essayer;

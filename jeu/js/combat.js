@@ -4,6 +4,7 @@ import { ARENE } from './monde.js';
 import { SORTS_JOUEUR, PALETTE } from './niveaux.js';
 import { t } from './i18n.js';
 import { animerPersonnage } from './personnage.js';
+import * as stats from './stats.js';
 
 const PV_JOUEUR = 60, PA_JOUEUR = 6, PM_JOUEUR = 3;
 const N = ARENE.cases, S = ARENE.taille;
@@ -333,6 +334,7 @@ export class Combat {
     const avant = this.etat;
     this.etat = 'anim';
     lanceur.pa -= s.pa;
+    if (lanceur === this.j) stats.combatSort(s.nom);
     if (s.parTour) this.utilises[s.id] = (this.utilises[s.id] ?? 0) + 1;
     this.majUI();
     const nomL = lanceur === this.j ? 'Tu' : this.def.nom;
@@ -410,6 +412,7 @@ export class Combat {
 
   // ---------------------------------------------------------------- Tours
   debutTourJoueur() {
+    stats.combatTour();
     Object.assign(this.j, { pa: PA_JOUEUR, pm: PM_JOUEUR });
     this.utilises = {};
     this.sort = null;
