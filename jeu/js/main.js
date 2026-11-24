@@ -640,7 +640,7 @@ function afficherFin() {
   $('dialogue').hidden = true;
   $('hud').hidden = true;
   $('creation').hidden = true;
-  $('fin-texte').textContent = t('Bravo cher·e {prenom} ! Tu as fini le jeu Médiaventure. Pour obtenir ta récompense, fais appel à un membre du staff des portes ouvertes.',
+  $('fin-texte').textContent = t('Bravo cher·e {prenom} ! Tu as fini le jeu Médiaventure. Pour obtenir ta récompense, fais appel à un ou une élève.',
     { prenom: partie.prenom || t('voyageur·se') });
   $('fin-jeu').hidden = false;
 }
