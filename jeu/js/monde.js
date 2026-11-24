@@ -120,7 +120,7 @@ export function construireNiveau(scene, niveau, chargeurTexture) {
   colliders.push({ x: -2.1, z: 12, r: 0.45 }, { x: 2.1, z: 12, r: 0.45 });
   // La caméra n'entre pas dans les poutres du torii (sinon, en parlant au gardien, l'écran est couvert de rouge) :
   // elle passe dessous (voir eviterPlafonds dans main.js)
-  plafonds.push({ x0: -3.8, x1: 3.8, z0: 11, z1: 13, y0: 3.1, y1: 5.4 });
+  plafonds.push({ x0: -3.8, x1: 3.8, z0: 10.4, z1: 15, y0: 3.1, y1: 5.6 }); // large en z : la poutre se voit encore à 1 m derrière
 
   // Portail (caché jusqu'à l'obtention de l'objet de quête)
   const portail = creerPortail(niveau.accent);
