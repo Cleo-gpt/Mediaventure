@@ -211,7 +211,9 @@ function creerPortail(couleur) {
 
 // Décor dessiné collé à l'intérieur d'un grand cylindre, répété en miroir pour ne pas voir de raccord.
 // `bas` = hauteur du bas de l'image ; le centre de l'image tombe face à l'arrivée (-z).
-function fondPanoramique(groupe, url, chargeurTexture, { rayon, repetitions, bas }) {
+// `fonduHaut` (facultatif) : hauteur d'une bande au-dessus du dessin qui reprend en miroir le haut de l'image
+// (penchée vers l'intérieur) et s'efface dans le ciel, pour ne pas voir de ligne nette en haut du décor.
+function fondPanoramique(groupe, url, chargeurTexture, { rayon, repetitions, bas, fonduHaut = 0 }) {
   const tex = chargeurTexture.load(url);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.MirroredRepeatWrapping;
@@ -222,6 +224,27 @@ function fondPanoramique(groupe, url, chargeurTexture, { rayon, repetitions, bas
   fond.position.y = bas + H / 2;
   if (repetitions % 2 === 0) fond.rotation.y = Math.PI / repetitions; // garde le centre de l'image face à l'arrivée
   groupe.add(fond);
+  if (fonduHaut > 0) {
+    // même image, mais seulement ses 15 % du haut, retournés : la bande continue sans raccord au-dessus du dessin
+    const bande = tex.clone();
+    bande.wrapT = THREE.MirroredRepeatWrapping;
+    bande.repeat.set(repetitions, -0.15);
+    bande.offset.y = 1;
+    // transparence : opaque en bas, effacée en haut
+    const c = document.createElement('canvas');
+    c.width = 4; c.height = 128;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 128);
+    g.addColorStop(0, '#000'); g.addColorStop(0.75, '#fff'); g.addColorStop(1, '#fff');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 4, 128);
+    const alpha = new THREE.CanvasTexture(c);
+    const voute = new THREE.Mesh(new THREE.CylinderGeometry(rayon * 0.82, rayon, fonduHaut, 96, 1, true),
+      new THREE.MeshBasicMaterial({ map: bande, alphaMap: alpha, transparent: true, depthWrite: false, side: THREE.BackSide, fog: false }));
+    voute.position.y = bas + H + fonduHaut / 2;
+    voute.rotation.y = fond.rotation.y;
+    groupe.add(voute);
+  }
   return fond;
 }
 
@@ -725,7 +748,7 @@ function decorAutomne({ groupe, scene, niveau, colliders, animations, chargeurTe
 function decorGlycines({ groupe, scene, niveau, colliders, animations, plafonds, chargeurTexture }) {
   // Fond dessiné (nuit étoilée, torii sous les glycines, herbe) tout autour de l'île, comme sur l'île Design ;
   // brume et sol aux couleurs de son herbe pour que le décor 3D s'y fonde
-  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 24, bas: -4.3 });
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 10, bas: -18.3, fonduHaut: 8 });
   scene.fog = new THREE.Fog('#5e9638', 32, 118);
   solExterieur(groupe, '#63993a', '#558a33', 91);
   const bois = '#5c4030';
