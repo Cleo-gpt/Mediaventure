@@ -725,7 +725,7 @@ function decorAutomne({ groupe, scene, niveau, colliders, animations, chargeurTe
 function decorGlycines({ groupe, scene, niveau, colliders, animations, plafonds, chargeurTexture }) {
   // Fond dessiné (nuit étoilée, torii sous les glycines, herbe) tout autour de l'île, comme sur l'île Design ;
   // brume et sol aux couleurs de son herbe pour que le décor 3D s'y fonde
-  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 6, bas: -12 });
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 24, bas: -4.3 });
   scene.fog = new THREE.Fog('#5e9638', 32, 118);
   solExterieur(groupe, '#63993a', '#558a33', 91);
   const bois = '#5c4030';
