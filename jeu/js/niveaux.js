@@ -120,8 +120,8 @@ export const NIVEAUX = {
     murs: [[2, 2], [6, 2], [0, 3], [4, 3], [8, 3], [2, 4], [6, 4], [1, 5], [4, 5], [7, 5], [3, 6], [5, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 100, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Marketing', ville: 'Nara', lieu: 'Nara — glycines', biome: 'glycine', jouable: true,
-    ciel: '#d9b3e0', brume: '#dcbde3', sol: '#9db56a', chemin: PALETTE.creme, accent: '#a44c94',
-    miniJeu: 'etapes-projet', suivant: 'admin',
+    ciel: '#0b1254', brume: '#5e9638', sol: '#63993a', chemin: PALETTE.creme, accent: '#a44c94',
+    fond: '../fonds/marketing_glycines.jpg', miniJeu: 'etapes-projet', suivant: 'admin',
     // Étapes d'un projet marketing, dans le bon ordre (elles sont mélangées dans l'épreuve)
     etapes: [
       'Analyser le marché et la concurrence',

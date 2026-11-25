@@ -722,9 +722,12 @@ function decorAutomne({ groupe, scene, niveau, colliders, animations, chargeurTe
 }
 
 // ------------------------------------------------------------------ Marketing : Nara, glycines et cerfs
-function decorGlycines({ groupe, scene, colliders, animations, plafonds }) {
-  scene.fog = new THREE.Fog('#dcbde3', 35, 150);
-  solExterieur(groupe, '#8fa860', '#7c9a56');
+function decorGlycines({ groupe, scene, niveau, colliders, animations, plafonds, chargeurTexture }) {
+  // Fond dessiné (nuit étoilée, torii sous les glycines, herbe) tout autour de l'île, comme sur l'île Design ;
+  // brume et sol aux couleurs de son herbe pour que le décor 3D s'y fonde
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 6, bas: -12 });
+  scene.fog = new THREE.Fog('#5e9638', 32, 118);
+  solExterieur(groupe, '#63993a', '#558a33', 91);
   const bois = '#5c4030';
 
   // Grappes de glycine : une vraie grappe = des dizaines de petites fleurs en spirale autour d'une tige
