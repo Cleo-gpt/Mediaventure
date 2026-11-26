@@ -366,6 +366,8 @@ const L = [
   ["Asanoha", "Asanoha", "Asanoha", "Asanoha"],
   ["Nuages", "Clouds", "Wolken", "Nuvole"],
   ["Vagues et fleurs", "Waves and flowers", "Wellen und Blüten", "Onde e fiori"],
+  ["Grandes vagues", "Great waves", "Große Wellen", "Grandi onde"],
+  ["Fleurs violettes", "Purple flowers", "Violette Blüten", "Fiori viola"],
   ["Seigaiha", "Seigaiha", "Seigaiha", "Seigaiha"],
   ["Uni", "Plain", "Einfarbig", "Tinta unita"],
   ["Chaque couleur de kimono a son motif. Garde-le ou choisis-en un autre.", "Each kimono colour has its own pattern. Keep it or choose another one.", "Jede Kimonofarbe hat ihr eigenes Muster. Behalte es oder wähle ein anderes.", "Ogni colore di kimono ha il suo motivo. Tienilo o scegline un altro."],

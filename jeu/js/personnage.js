@@ -26,7 +26,8 @@ export const OPTIONS = {
   // Motifs du tissu (références/personnages/Kimono/Texture)
   motif: [
     { id: 'sakura', nom: 'Fleurs de sakura' }, { id: 'asanoha', nom: 'Asanoha' }, { id: 'nuages', nom: 'Nuages' },
-    { id: 'vagues', nom: 'Vagues et fleurs' }, { id: 'seigaiha', nom: 'Seigaiha' }, { id: 'uni', nom: 'Uni' },
+    { id: 'vagues', nom: 'Grandes vagues' }, { id: 'seigaiha', nom: 'Seigaiha' }, { id: 'vagues-fleurs', nom: 'Vagues et fleurs' },
+    { id: 'fleurs-violettes', nom: 'Fleurs violettes' }, { id: 'uni', nom: 'Uni' },
   ],
   ceinture: ['#1f1f24', '#3b3e45', '#d9c6a3', '#f7f4ee'], // noir, anthracite, beige, blanc
   // Baguettes plantées dans les chignons (références/personnages/accessoirs/Baguettes)
@@ -121,15 +122,16 @@ float perX(float p) { return TOUR / nX(p); }                      // période aj
 float idX(float i, float p) { return mod(i, nX(p)); }             // case repliée sur le tour (mêmes tirages au hasard)
 float freqX(float w) { return 6.2832 / perX(6.2832 / w); }        // fréquence d'un sinus ajustée de même
 `;
-function materiau(couleur, { vertexColors = false, motif = '', liseré = 0.3, cle = '', projection = 'cyl', meche = false, side } = {}) {
+function materiau(couleur, { vertexColors = false, motif = '', liseré = 0.3, cle = '', projection = 'cyl', meche = false, side, tissu = null } = {}) {
   const m = new THREE.MeshToonMaterial({ color: couleur, vertexColors, gradientMap: degradeDoux });
   if (side !== undefined) m.side = side;
   m.onBeforeCompile = (sh) => {
+    if (tissu) sh.uniforms.tissu = { value: tissu };
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vPosObj;' + (meche ? 'attribute vec2 meche; varying vec2 vMeche;' : ''))
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPosObj = position;' + (meche ? 'vMeche = meche;' : ''));
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vPosObj;' + (meche ? 'varying vec2 vMeche;' : '') + BRUIT + PERIODIQUE)
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPosObj;' + (meche ? 'varying vec2 vMeche;' : '') + BRUIT + PERIODIQUE + (tissu ? 'uniform sampler2D tissu;' : ''))
       .replace('#include <color_fragment>', '#include <color_fragment>\n' + (motif.includes('cm') ? PROJECTIONS[projection] : '') + motif)
       .replace('#include <opaque_fragment>', `
         float bord = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.6);
@@ -258,9 +260,38 @@ const MOTIFS_KIMONO = {
     col = mix(ev, mix(ev, L, 0.75), anneaux * step(rr, 1.0));` + TRAME,
   uni: TEINTES_KIMONO + TRAME,
 };
+// Motifs tirés des textures de référence (références/personnages/Kimono/Texture, préparées dans textures-kimono/ :
+// rubans redressés et tuiles raccordables). `taille` = hauteur d'une tuile sur le tissu, `moy` = couleur moyenne
+// de la tuile (linéaire) : elle est remplacée par la couleur de kimono choisie, les détails du motif restent.
+export const TEXTURES_KIMONO = {
+  sakura: { taille: 0.14, moy: [0.727, 0.601, 0.602], ratio: 1 },
+  asanoha: { taille: 0.3, moy: [0.831, 0.382, 0.47], ratio: 419 / 512 },
+  nuages: { taille: 0.12, moy: [0.11, 0.118, 0.212], ratio: 200 / 170 },
+  vagues: { fichier: 'grandes-vagues', taille: 0.09, moy: [0.172, 0.2, 0.279], ratio: 200 / 110 },
+  seigaiha: { taille: 0.15, moy: [0.331, 0.317, 0.348], ratio: 512 / 293 },
+  'vagues-fleurs': { taille: 0.16, moy: [0.162, 0.1, 0.113], ratio: 512 / 287 },
+  'fleurs-violettes': { taille: 0.14, moy: [0.109, 0.04, 0.076], ratio: 1 },
+};
+const texturesTissu = new Map();
+function textureTissu(id) {
+  if (!texturesTissu.has(id)) {
+    const t = new THREE.TextureLoader().load(`../textures-kimono/${TEXTURES_KIMONO[id].fichier ?? id}.jpg`);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = 4;
+    texturesTissu.set(id, t);
+  }
+  return texturesTissu.get(id);
+}
+const MOTIF_TEXTURE = ({ taille, moy, ratio }) => `
+  vec3 base = diffuseColor.rgb;
+  vec2 T = vec2(perX(${(taille * ratio).toFixed(4)}), ${taille.toFixed(4)});
+  vec3 tc = texture2D(tissu, cm / T).rgb;
+  vec3 col = clamp(tc - vec3(${moy.map((v) => v.toFixed(3)).join(', ')}) + base, 0.0, 1.0);` + TRAME;
 // Matériau du tissu du kimono (et des accessoires assortis) selon la couleur et le motif choisis
-const tissuKimono = (couleur, motif, projection = 'cyl', side) =>
-  materiau(couleur, { motif: MOTIFS_KIMONO[motif] ?? MOTIFS_KIMONO.sakura, liseré: 0.12, cle: 'kimono-' + motif, projection, side });
+const tissuKimono = (couleur, motif, projection = 'cyl', side) => (TEXTURES_KIMONO[motif]
+  ? materiau(couleur, { motif: MOTIF_TEXTURE(TEXTURES_KIMONO[motif]), tissu: textureTissu(motif), liseré: 0.12, cle: 'kimono-tex-' + motif, projection, side })
+  : materiau(couleur, { motif: MOTIFS_KIMONO[motif] ?? MOTIFS_KIMONO.uni, liseré: 0.12, cle: 'kimono-' + motif, projection, side }));
 
 // ---------------------------------------------------------------- Squelette chibi (≈ 2 têtes)
 const J = (() => {
