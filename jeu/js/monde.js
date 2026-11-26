@@ -211,9 +211,9 @@ function creerPortail(couleur) {
 
 // Décor dessiné collé à l'intérieur d'un grand cylindre, répété en miroir pour ne pas voir de raccord.
 // `bas` = hauteur du bas de l'image ; le centre de l'image tombe face à l'arrivée (-z).
-// `fonduHaut` (facultatif) : hauteur d'une bande au-dessus du dessin qui reprend en miroir le haut de l'image
-// (penchée vers l'intérieur) et s'efface dans le ciel, pour ne pas voir de ligne nette en haut du décor.
-function fondPanoramique(groupe, url, chargeurTexture, { rayon, repetitions, bas, fonduHaut = 0 }) {
+// `fonduHaut` (facultatif) : le haut du dessin s'efface dans la couleur `ciel` par un dégradé (sur `fonduHaut` unités,
+// prolongé d'autant au-dessus), pour ne pas voir de ligne nette entre le décor et le ciel. L'image n'est pas modifiée.
+function fondPanoramique(groupe, url, chargeurTexture, { rayon, repetitions, bas, fonduHaut = 0, ciel = '#000000' }) {
   const tex = chargeurTexture.load(url);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.MirroredRepeatWrapping;
@@ -225,25 +225,18 @@ function fondPanoramique(groupe, url, chargeurTexture, { rayon, repetitions, bas
   if (repetitions % 2 === 0) fond.rotation.y = Math.PI / repetitions; // garde le centre de l'image face à l'arrivée
   groupe.add(fond);
   if (fonduHaut > 0) {
-    // même image, mais seulement ses 15 % du haut, retournés : la bande continue sans raccord au-dessus du dessin
-    const bande = tex.clone();
-    bande.wrapT = THREE.MirroredRepeatWrapping;
-    bande.repeat.set(repetitions, -0.15);
-    bande.offset.y = 1;
-    // transparence : opaque en bas, effacée en haut
+    // voile de la couleur du ciel : transparent en bas, opaque à partir du bord haut du dessin
     const c = document.createElement('canvas');
     c.width = 4; c.height = 128;
     const ctx = c.getContext('2d');
-    const g = ctx.createLinearGradient(0, 0, 0, 128);
-    g.addColorStop(0, '#000'); g.addColorStop(0.75, '#fff'); g.addColorStop(1, '#fff');
+    const g = ctx.createLinearGradient(0, 128, 0, 0); // du bas vers le haut
+    g.addColorStop(0, '#000'); g.addColorStop(0.5, '#fff'); g.addColorStop(1, '#fff');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 4, 128);
-    const alpha = new THREE.CanvasTexture(c);
-    const voute = new THREE.Mesh(new THREE.CylinderGeometry(rayon * 0.82, rayon, fonduHaut, 96, 1, true),
-      new THREE.MeshBasicMaterial({ map: bande, alphaMap: alpha, transparent: true, depthWrite: false, side: THREE.BackSide, fog: false }));
-    voute.position.y = bas + H + fonduHaut / 2;
-    voute.rotation.y = fond.rotation.y;
-    groupe.add(voute);
+    const voile = new THREE.Mesh(new THREE.CylinderGeometry(rayon * 0.99, rayon * 0.99, fonduHaut * 2, 96, 1, true),
+      new THREE.MeshBasicMaterial({ color: ciel, alphaMap: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.BackSide, fog: false, toneMapped: false }));
+    voile.position.y = bas + H; // moitié sur le haut du dessin (fondu), moitié au-dessus (opaque)
+    groupe.add(voile);
   }
   return fond;
 }
@@ -748,7 +741,7 @@ function decorAutomne({ groupe, scene, niveau, colliders, animations, chargeurTe
 function decorGlycines({ groupe, scene, niveau, colliders, animations, plafonds, chargeurTexture }) {
   // Fond dessiné (nuit étoilée, torii sous les glycines, herbe) tout autour de l'île, comme sur l'île Design ;
   // brume et sol aux couleurs de son herbe pour que le décor 3D s'y fonde
-  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 10, bas: -18.3, fonduHaut: 8 });
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 10, bas: -18.3, fonduHaut: 5, ciel: niveau.ciel });
   scene.fog = new THREE.Fog('#5e9638', 32, 118);
   solExterieur(groupe, '#63993a', '#558a33', 91);
   const bois = '#5c4030';
@@ -933,9 +926,12 @@ function decorGlycines({ groupe, scene, niveau, colliders, animations, plafonds,
 }
 
 // ------------------------------------------------------------------ Admin : Tokyo, sakura et stand Gaïa
-function decorSakura({ groupe, scene, colliders, animations, masquables }) {
-  scene.fog = new THREE.Fog('#efd9ea', 40, 170);
-  solExterieur(groupe, '#b9c98f', '#a4b67e'); // herbe de printemps, comme un parc au moment du hanami
+function decorSakura({ groupe, scene, niveau, colliders, animations, masquables, chargeurTexture }) {
+  // Fond dessiné (canal bordé de cerisiers sous un ciel bleu) tout autour de l'île, réglé comme celui de Marketing :
+  // son horizon (herbe, à 48 % du bas de l'image) au niveau du sol, le haut fondu dans la couleur du ciel
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 10, bas: -20.1, fonduHaut: 5, ciel: niveau.ciel });
+  scene.fog = new THREE.Fog('#7ea84a', 32, 118);
+  solExterieur(groupe, '#7eaa4a', '#6f9a42', 91); // herbe aux couleurs du fond
   const ROSES = ['#f9c6d6', '#f6b3c8', '#fbd9e4', '#f29bb8', '#fde8ee'];
   const ecorce = '#4b302b';
   // Cerisier : tronc penché, branches qui s'ouvrent en parasol, nuages de fleurs à leurs bouts
@@ -1030,8 +1026,11 @@ function decorSakura({ groupe, scene, colliders, animations, masquables }) {
 }
 
 // ------------------------------------------------------------------ Boss final : Kinkaku-ji, le pavillon d'or sur son étang
-function decorMatsue({ groupe, scene, colliders, animations }) {
-  scene.fog = new THREE.Fog('#c9d3d6', 80, 260);
+function decorMatsue({ groupe, scene, niveau, colliders, animations, chargeurTexture }) {
+  // Fond dessiné (pavillon d'or entre les cerisiers) tout autour de l'île, réglé comme Marketing et Admin :
+  // son herbe (à 27 % du bas de l'image) au niveau du sol, le haut fondu dans la couleur du ciel
+  if (niveau.fond) fondPanoramique(groupe, niveau.fond, chargeurTexture, { rayon: 90, repetitions: 10, bas: -11.1, fonduHaut: 5, ciel: niveau.ciel });
+  scene.fog = new THREE.Fog('#75a848', 60, 150); // brume lointaine : les pins des rives gardent leur couleur
   // Étang vert sombre tout autour de l'île, un peu transparent pour laisser voir les reflets
   const eau = new THREE.MeshLambertMaterial({ color: '#5f7d6a', transparent: true, opacity: 0.86 });
   const etang = new THREE.Mesh(new THREE.CircleGeometry(200, 64), eau);
@@ -1110,15 +1109,7 @@ function decorMatsue({ groupe, scene, colliders, animations }) {
     if (Math.abs(a + Math.PI / 2) < 0.25 && r < 70) continue; // dégagé devant le pavillon
     pin(Math.cos(a) * r, Math.sin(a) * r, auHasard(1.6, 2.6));
   }
-  // Collines boisées sombres à l'horizon
-  const collines = [];
-  for (let i = 0; i < 16; i++) {
-    const a = (i / 16) * Math.PI * 2, h = auHasard(18, 34);
-    collines.push(colorer(new THREE.SphereGeometry(h * 1.6, 12, 8).scale(1, 0.55, 1).translate(Math.cos(a) * 150, -2, Math.sin(a) * 150), i % 2 ? '#3f5a45' : '#4d6a52'));
-  }
-  const fond = fusionner(collines);
-  fond.castShadow = fond.receiveShadow = false;
-  groupe.add(fond);
+  // (les collines boisées de l'horizon sont remplacées par le fond dessiné)
   // Rochers au bord de l'étang
   const rochers = [];
   for (let i = 0; i < 40; i++) {
@@ -1130,7 +1121,7 @@ function decorMatsue({ groupe, scene, colliders, animations }) {
   const rive = new THREE.Mesh(new THREE.CylinderGeometry(RAYON_ILE + 2.5, RAYON_ILE + 4, 1, 48), mat('#7d7a72'));
   rive.position.y = -1.0;
   groupe.add(rive);
-  for (let i = 0; i < 20; i++) groupe.add(nuage(auHasard(3, 6), 0.9).translateX(auHasard(-150, 150)).translateY(auHasard(35, 60)).translateZ(auHasard(-150, -60)));
+  // (pas de nuages 3D : ceux du fond dessiné suffisent)
 }
 
 // Feuilles ou pétales qui tombent en tournoyant au-dessus de l'île

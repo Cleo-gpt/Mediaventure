@@ -157,8 +157,8 @@ export const NIVEAUX = {
     murs: [[1, 2], [7, 2], [3, 3], [5, 3], [4, 4], [0, 5], [2, 5], [6, 5], [8, 5], [3, 6], [5, 6]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 110, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Admin & gestion', ville: 'Tokyo', lieu: 'Tokyo — sakura', biome: 'sakura', jouable: true,
-    ciel: '#f2d9e8', brume: '#efd9ea', sol: '#b9cc8f', chemin: PALETTE.creme, accent: '#8a5fb4', // herbe de printemps sous les cerisiers
-    miniJeu: 'memory-gaia', suivant: 'final',
+    ciel: '#8bcfe6', brume: '#7ea84a', sol: '#8fb558', chemin: PALETTE.creme, accent: '#8a5fb4', // ciel et herbe du fond dessiné
+    fond: '../fonds/admin_sakura.jpg', miniJeu: 'memory-gaia', suivant: 'final',
     // Memory Gaïa : une paire par image (dossier jeu/gaia/, images fournies par l'équipe Gaïa). Le dos des cartes est gaia/fond.jpg.
     gaia: ['gaia/logo.jpg', 'gaia/bouteille-avant.png', 'gaia/roll-up.png', 'gaia/equipe-allan.jpg', 'gaia/equipe-cleo.jpg',
       'gaia/equipe-killian.jpg', 'gaia/equipe-leo.jpg', 'gaia/equipe-loric.jpg'],
@@ -187,8 +187,8 @@ export const NIVEAUX = {
     murs: [[2, 2], [4, 2], [6, 2], [1, 4], [3, 4], [5, 4], [7, 4], [2, 6], [4, 6], [6, 6], [0, 7], [8, 7]], // murs de bois de l'arène de combat (case [colonne, rangée])
     pvJoueur: 130, // PV du joueur sur cette île (ils augmentent au fil de l'aventure)
     titre: 'Boss final — Média global', ville: 'Kyoto', lieu: 'Kyoto — le pavillon d’or (Kinkaku-ji)', biome: 'final', jouable: true,
-    ciel: '#c3cdd2', brume: '#c9d3d6', sol: '#8fa477', chemin: PALETTE.creme, accent: PALETTE.corail, // ciel gris et mousse du jardin du pavillon d'or
-    miniJeu: 'combat-final', suivant: null,
+    ciel: '#74c5e5', brume: '#75a848', sol: '#8fa477', chemin: PALETTE.creme, accent: PALETTE.corail, // ciel et herbe du fond dessiné du pavillon d'or
+    fond: '../fonds/final_kinkakuji.jpg', miniJeu: 'combat-final', suivant: null,
     gain: 'Ton gain t’attend : goodies, print spécial PO ou rabais sur une Gaïa !',
     boss: {
       nom: 'Christophe Haenssler', titre: 'Boss final', pv: 160, pa: 7, pm: 3,
