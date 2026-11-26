@@ -286,8 +286,15 @@ function textureTissu(id) {
 const MOTIF_TEXTURE = ({ taille, moy, ratio }) => `
   vec3 base = diffuseColor.rgb;
   vec2 T = vec2(perX(${(taille * ratio).toFixed(4)}), ${taille.toFixed(4)});
-  vec3 tc = texture2D(tissu, cm / T).rgb;
-  vec3 col = clamp(tc - vec3(${moy.map((v) => v.toFixed(3)).join(', ')}) + base, 0.0, 1.0);` + TRAME;
+  // pas d'un pixel à l'autre sans le saut de l'angle au milieu du dos (sinon la carte graphique y prend une texture floue)
+  vec2 dx = dFdx(cm), dy = dFdy(cm);
+  if (abs(dx.x) > TOUR * 0.5) dx.x -= sign(dx.x) * TOUR;
+  if (abs(dy.x) > TOUR * 0.5) dy.x -= sign(dy.x) * TOUR;
+  vec3 tc = textureGrad(tissu, cm / T, dx / T, dy / T).rgb;
+  // la moyenne de la tuile devient la couleur choisie ; le noir reste noir et le blanc reste blanc (contraste gardé)
+  vec3 moy = vec3(${moy.map((v) => v.toFixed(3)).join(', ')});
+  vec3 sombre = base * tc / moy, clair = base + (1.0 - base) * (tc - moy) / (1.0 - moy);
+  vec3 col = clamp(mix(sombre, clair, step(moy, tc)), 0.0, 1.0);` + TRAME;
 // Matériau du tissu du kimono (et des accessoires assortis) selon la couleur et le motif choisis
 const tissuKimono = (couleur, motif, projection = 'cyl', side) => (TEXTURES_KIMONO[motif]
   ? materiau(couleur, { motif: MOTIF_TEXTURE(TEXTURES_KIMONO[motif]), tissu: textureTissu(motif), liseré: 0.12, cle: 'kimono-tex-' + motif, projection, side })

@@ -29,7 +29,9 @@ const ICONES = {
       const lin = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
       const url = `../textures-kimono/${tex.fichier ?? id}.jpg`, src = window.RESSOURCES?.[url] ?? url;
       const f = `tx-${id}-${c.replace('#', '')}`, k = ['R', 'G', 'B'];
-      const ct = lin.map((v, i) => `<feFunc${k[i]} type="linear" slope="1" intercept="${(v - tex.moy[i]).toFixed(3)}"/>`).join('');
+      // même recoloration que le kimono 3D : moyenne → couleur choisie, noir et blanc conservés (table de 17 points)
+      const table = (b, m) => Array.from({ length: 17 }, (_, j) => { const x = j / 16; return (x < m ? b * x / m : b + (1 - b) * (x - m) / (1 - m)).toFixed(3); }).join(' ');
+      const ct = lin.map((v, i) => `<feFunc${k[i]} type="table" tableValues="${table(v, tex.moy[i])}"/>`).join('');
       const h = 40, w = h * tex.ratio;
       const tuiles = [0, 1, 2].map((y) => [0, 1, 2, 3].map((x) => `<image href="${src}" x="${(x * w).toFixed(1)}" y="${y * h}" width="${w.toFixed(1)}" height="${h}" preserveAspectRatio="none"/>`).join('')).join('');
       return svg(`<defs><clipPath id="cm-${f}"><path d="M20 8h24l14 14-8 8-6-6v34H20V24l-6 6-8-8z"/></clipPath><filter id="${f}" color-interpolation-filters="linearRGB"><feComponentTransfer>${ct}</feComponentTransfer></filter></defs><g clip-path="url(#cm-${f})"><g filter="url(#${f})">${tuiles}</g></g><path d="M20 8h24l14 14-8 8-6-6v34H20V24l-6 6-8-8z" fill="none" stroke="#243447" stroke-width="2"/>`);
