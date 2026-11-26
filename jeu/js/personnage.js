@@ -106,11 +106,21 @@ float sakura(vec2 p, float r, float rot) {
 // Matériau toon enrichi : `motif` est du GLSL qui modifie diffuseColor à partir de vPosObj (position au repos)
 // `projection` (motifs de tissu) : 'cyl' autour du corps, 'xz' ou 'xy' pour une pièce plate (ombrelle, éventail).
 // `meche` : la géométrie porte l'attribut `meche` (coordonnées le long des mèches de cheveux).
+// TOUR = longueur d'un tour complet du corps en unités de motif : les motifs s'y répètent un nombre entier de fois
+// (voir perX/nX), sinon on verrait une couture au milieu du dos, là où l'angle passe de -180° à +180°.
 const PROJECTIONS = {
-  cyl: 'vec2 cm = vec2(atan(vPosObj.x, vPosObj.z) * 0.22, vPosObj.y);',
+  cyl: 'TOUR = 6.2832 * 0.22; vec2 cm = vec2(atan(vPosObj.x, vPosObj.z) * 0.22, vPosObj.y);',
   xz: 'vec2 cm = vPosObj.xz;',
   xy: 'vec2 cm = vPosObj.xy;',
 };
+// Outils des motifs périodiques (portée globale du shader). Pour une pièce plate, TOUR reste immense : rien ne change.
+const PERIODIQUE = `
+float TOUR = 1.0e4;
+float nX(float p) { return max(1.0, floor(TOUR / p + 0.5)); }   // nombre de répétitions sur un tour
+float perX(float p) { return TOUR / nX(p); }                      // période ajustée pour tomber juste sur le tour
+float idX(float i, float p) { return mod(i, nX(p)); }             // case repliée sur le tour (mêmes tirages au hasard)
+float freqX(float w) { return 6.2832 / perX(6.2832 / w); }        // fréquence d'un sinus ajustée de même
+`;
 function materiau(couleur, { vertexColors = false, motif = '', liseré = 0.3, cle = '', projection = 'cyl', meche = false, side } = {}) {
   const m = new THREE.MeshToonMaterial({ color: couleur, vertexColors, gradientMap: degradeDoux });
   if (side !== undefined) m.side = side;
@@ -119,7 +129,7 @@ function materiau(couleur, { vertexColors = false, motif = '', liseré = 0.3, cl
       .replace('#include <common>', '#include <common>\nvarying vec3 vPosObj;' + (meche ? 'attribute vec2 meche; varying vec2 vMeche;' : ''))
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPosObj = position;' + (meche ? 'vMeche = meche;' : ''));
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vPosObj;' + (meche ? 'varying vec2 vMeche;' : '') + BRUIT)
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPosObj;' + (meche ? 'varying vec2 vMeche;' : '') + BRUIT + PERIODIQUE)
       .replace('#include <color_fragment>', '#include <color_fragment>\n' + (motif.includes('cm') ? PROJECTIONS[projection] : '') + motif)
       .replace('#include <opaque_fragment>', `
         float bord = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.6);
@@ -183,13 +193,15 @@ const TRAME = 'diffuseColor.rgb = col * (0.95 + 0.07 * bruit(vPosObj * 500.0));'
 // Fleurs de sakura éparpillées, avec cœur doré et pétales qui volent
 const FLEURS = (taille, densite) => `
   {
-    vec2 g = cm / ${taille}; vec2 id = floor(g), h = hash2(id);
-    vec2 p = (fract(g) - 0.5 - (h - 0.5) * 0.3) * ${taille};
+    vec2 T = vec2(perX(${taille}), ${taille});
+    vec2 g = cm / T; vec2 id = floor(g); id.x = idX(id.x, T.x); vec2 h = hash2(id);
+    vec2 p = (fract(g) - 0.5 - (h - 0.5) * 0.3) * T;
     float r = ${taille} * (0.24 + 0.14 * h.x);
     float fl = sakura(p, r, h.y * 6.28) * step(${densite}, h.y);
     col = mix(col, h.x > 0.5 ? A : B, fl);
     col = mix(col, OR, fl * (1.0 - smoothstep(r * 0.16, r * 0.26, length(p))));
-    vec2 g2 = cm / (${taille} * 0.5) + 0.37; vec2 h2 = hash2(floor(g2) + 7.0);
+    vec2 T2 = vec2(perX(${taille} * 0.5), ${taille} * 0.5);
+    vec2 g2 = cm / T2 + 0.37; vec2 id2 = floor(g2); id2.x = idX(id2.x, T2.x); vec2 h2 = hash2(id2 + 7.0);
     vec2 q = (fract(g2) - 0.5) * ${taille} * 0.5; float an = h2.x * 6.28;
     q = mat2(cos(an), -sin(an), sin(an), cos(an)) * q;
     float pet = 1.0 - smoothstep(0.8, 1.0, length(q / vec2(0.008, 0.0045)));
@@ -199,7 +211,7 @@ const MOTIFS_KIMONO = {
   sakura: TEINTES_KIMONO + FLEURS('0.085', '0.18') + TRAME,
   // étoiles de feuilles de chanvre : grille de triangles + rayons du centre vers les sommets
   asanoha: TEINTES_KIMONO + `
-    vec2 q = cm / 0.06; q = vec2(q.x - q.y * 0.57735, q.y * 1.1547);
+    vec2 q = vec2(cm.x / perX(0.06), cm.y / 0.06); q = vec2(q.x - q.y * 0.57735, q.y * 1.1547);
     vec2 f = fract(q);
     vec3 b = (f.x + f.y < 1.0) ? vec3(1.0 - f.x - f.y, f.x, f.y) : vec3(f.x + f.y - 1.0, 1.0 - f.y, 1.0 - f.x);
     float arete = min(b.x, min(b.y, b.z));
@@ -207,9 +219,9 @@ const MOTIFS_KIMONO = {
     col = mix(col, L, (1.0 - smoothstep(0.03, 0.065, min(arete, rayon * 0.577))) * 0.9);` + TRAME,
   // nuages ronds crème cernés d'or sur des stries ondulées (ruban bleu des références)
   nuages: TEINTES_KIMONO + `
-    float st = sin(cm.y * 75.0 + sin(cm.x * 22.0) * 2.0);
+    float st = sin(cm.y * 75.0 + sin(cm.x * freqX(22.0)) * 2.0);
     col = mix(col, L, smoothstep(0.85, 0.97, st) * 0.6);
-    vec2 t = vec2(0.15, 0.11); vec2 g = cm / t; vec2 id = floor(g), h = hash2(id);
+    vec2 t = vec2(perX(0.15), 0.11); vec2 g = cm / t; vec2 id = floor(g); id.x = idX(id.x, t.x); vec2 h = hash2(id);
     g.x += mod(id.y, 2.0) * 0.5;
     vec2 p = (fract(g) - 0.5) * t - (h - 0.5) * 0.02;
     float d = min(min(length(p - vec2(-0.026, 0.0)) - 0.019, length(p - vec2(0.0, 0.012)) - 0.025),
@@ -221,7 +233,7 @@ const MOTIFS_KIMONO = {
     col = mix(col, OR, (1.0 - smoothstep(0.1, 0.22, spirale)) * (1.0 - smoothstep(-0.012, -0.008, length(p - vec2(0.0, 0.012)) - 0.025)) * on * 0.6);` + TRAME,
   // vagues en lignes fines et fleurs de sakura par-dessus (tissu marine des références)
   vagues: TEINTES_KIMONO + `
-    float y = cm.y + 0.02 * sin(cm.x * 28.0) + 0.008 * sin(cm.x * 67.0 + cm.y * 20.0);
+    float y = cm.y + 0.02 * sin(cm.x * freqX(28.0)) + 0.008 * sin(cm.x * freqX(67.0) + cm.y * 20.0);
     float bande = fract(y / 0.028);
     col = mix(col, mix(base, L, 0.85), (1.0 - smoothstep(0.05, 0.12, abs(bande - 0.5))) * step(0.5, fract(y / 0.112)));
     col = mix(col, OR * 0.9, (1.0 - smoothstep(0.03, 0.08, abs(bande - 0.5))) * (1.0 - step(0.5, fract(y / 0.112))) * 0.7);` +
@@ -229,7 +241,7 @@ const MOTIFS_KIMONO = {
   // seigaiha : écailles de vagues en éventail, de plusieurs couleurs, cerclées de lignes fines
   seigaiha: TEINTES_KIMONO + `
     // écailles de rayon 1, espacées de 2, rangées tous les 0,5 ; la rangée la plus basse passe devant
-    vec2 q = cm / 0.026;
+    vec2 q = vec2(cm.x / (perX(0.052) * 0.5), cm.y / 0.026);
     vec2 cc = vec2(0.0); float rr = 2.0;
     // on teste les rangées de la plus basse (devant) à la plus haute : la première écaille qui contient le point gagne,
     // ce qui donne des éventails entiers dont le bas est caché par la rangée de devant (pas de découpe en briques)
@@ -240,7 +252,7 @@ const MOTIFS_KIMONO = {
       float r = length(q - c);
       if (rr > 1.5 && r < 1.0) { cc = c; rr = r; }
     }
-    float hh = hash2(cc).x;
+    float hh = hash2(vec2(mod(cc.x, 2.0 * nX(0.052)), cc.y)).x;
     vec3 ev = hh < 0.3 ? base : hh < 0.55 ? B : hh < 0.8 ? mix(base, A, 0.55) : mix(base, L, 0.45);
     float anneaux = 1.0 - smoothstep(0.06, 0.16, abs(fract(rr * 4.0) - 0.5));
     col = mix(ev, mix(ev, L, 0.75), anneaux * step(rr, 1.0));` + TRAME,
