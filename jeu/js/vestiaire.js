@@ -1,5 +1,5 @@
 // Le Sas : vestiaire de création du personnage (onglets, catégories, cartes à étoiles, historique).
-import { OPTIONS, CATEGORIES_DISPONIBLES, MOTIF_PAR_COULEUR, motifDe, accessoireDe, armeDe, ceintureDe, TEXTURES_KIMONO } from './personnage.js';
+import { OPTIONS, CATEGORIES_DISPONIBLES, MOTIF_PAR_COULEUR, motifDe, accessoireDe, armeDe, ceintureDe } from './personnage.js';
 import { PALETTE } from './niveaux.js';
 import { t, LANGUES, langueActuelle } from './i18n.js';
 
@@ -22,20 +22,6 @@ const ICONES = {
   kimono: (c) => svg(`<path d="M20 8h24l14 14-8 8-6-6v34H20V24l-6 6-8-8z" fill="${c}" stroke="#243447" stroke-width="2"/><path d="M26 8l6 16 6-16" fill="none" stroke="${c === PALETTE.creme ? PALETTE.marine : PALETTE.creme}" stroke-width="3"/><rect x="20" y="34" width="24" height="6" fill="${c === PALETTE.marine ? PALETTE.corail : PALETTE.marine}"/>`),
   // aperçu d'un motif de kimono dans la couleur c (teintes d'accompagnement comme dans le jeu)
   motif: (c, id) => {
-    const tex = TEXTURES_KIMONO[id];
-    if (tex) {
-      // texture de référence décalée vers la couleur choisie, comme sur le kimono 3D
-      const n = parseInt((c.length === 7 ? c : '#ff696a').slice(1), 16);
-      const lin = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
-      const url = `../textures-kimono/${tex.fichier ?? id}.jpg`, src = window.RESSOURCES?.[url] ?? url;
-      const f = `tx-${id}-${c.replace('#', '')}`, k = ['R', 'G', 'B'];
-      // même recoloration que le kimono 3D : moyenne → couleur choisie, noir et blanc conservés (table de 17 points)
-      const table = (b, m) => Array.from({ length: 17 }, (_, j) => { const x = j / 16; return (x < m ? b * x / m : b + (1 - b) * (x - m) / (1 - m)).toFixed(3); }).join(' ');
-      const ct = lin.map((v, i) => `<feFunc${k[i]} type="table" tableValues="${table(v, tex.moy[i])}"/>`).join('');
-      const h = 40, w = h * tex.ratio;
-      const tuiles = [0, 1, 2].map((y) => [0, 1, 2, 3].map((x) => `<image href="${src}" x="${(x * w).toFixed(1)}" y="${y * h}" width="${w.toFixed(1)}" height="${h}" preserveAspectRatio="none"/>`).join('')).join('');
-      return svg(`<defs><clipPath id="cm-${f}"><path d="M20 8h24l14 14-8 8-6-6v34H20V24l-6 6-8-8z"/></clipPath><filter id="${f}" color-interpolation-filters="linearRGB"><feComponentTransfer>${ct}</feComponentTransfer></filter></defs><g clip-path="url(#cm-${f})"><g filter="url(#${f})">${tuiles}</g></g><path d="M20 8h24l14 14-8 8-6-6v34H20V24l-6 6-8-8z" fill="none" stroke="#243447" stroke-width="2"/>`);
-    }
     const lum = (() => { const n = parseInt((c.length === 7 ? c : '#ff696a').slice(1), 16); return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255; })();
     const A = lum > 0.8 ? PALETTE.corail : lum > 0.45 ? '#fbf6ee' : PALETTE.rose;
     const L = lum > 0.45 ? 'rgba(36,52,71,.65)' : 'rgba(155,179,214,.8)';

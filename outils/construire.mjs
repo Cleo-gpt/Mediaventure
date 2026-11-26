@@ -56,7 +56,7 @@ await build({
 const TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.glb': 'model/gltf-binary' };
 const ressources = {};
 // [dossier sur le disque, chemin utilisé par le jeu] (les portraits sont rangés dans jeu/portraits)
-for (const [dossier, chemin] of [['fonds', '../fonds'], ['objets-quete', '../objets-quete'], ['jeu/portraits', 'portraits'], ['carpes', '../carpes'], ['textures-kimono', '../textures-kimono']]) {
+for (const [dossier, chemin] of [['fonds', '../fonds'], ['objets-quete', '../objets-quete'], ['jeu/portraits', 'portraits'], ['carpes', '../carpes']]) {
   for (const f of readdirSync(join(racine, dossier))) {
     const type = TYPES[extname(f).toLowerCase()];
     if (!type) continue;
