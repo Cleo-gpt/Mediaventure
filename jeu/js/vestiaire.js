@@ -224,7 +224,6 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surChoixParti
       b.classList.toggle('actif', b.dataset.onglet === onglet);
       b.hidden = !cat[b.dataset.onglet].length;
     }
-    $('badge-identite').hidden = !!partie.prenom;
     // Catégories
     const liste = cat[onglet];
     if (!liste.some((c) => c.id === categorie)) categorie = liste[0].id;
@@ -309,7 +308,7 @@ export function creerVestiaire({ partie, surChangement, surEntrer, surChoixParti
   }
   $('info').onclick = () => { $('info-texte').hidden = !$('info-texte').hidden; };
   $('prenom').value = partie.prenom;
-  $('prenom').oninput = (e) => { partie.prenom = e.target.value.trim(); $('badge-identite').hidden = !!partie.prenom; };
+  $('prenom').oninput = (e) => { partie.prenom = e.target.value.trim(); };
   $('commencer').onclick = surEntrer;
 
   rendre();
