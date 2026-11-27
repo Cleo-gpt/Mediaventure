@@ -23,7 +23,12 @@ function sauver() {
   try { localStorage.setItem(CLE_SAUVEGARDE, JSON.stringify(partie)); } catch { /* navigation privée */ }
 }
 let partie = charger() ?? { prenom: '', apparence: { ...APPARENCE_DEFAUT }, objets: [], niveau: 'sas' };
-partie.apparence = { ...APPARENCE_DEFAUT, ...partie.apparence };
+// Chaque nouvelle partie commence avec le personnage de base (shiba sans kimono ni accessoire) et sans prénom :
+// la tenue du visiteur précédent n'est pas reprise. Seule une partie terminée garde son prénom pour l'écran de fin.
+if (!partie.termine) {
+  partie.prenom = '';
+  partie.apparence = { ...APPARENCE_DEFAUT };
+} else partie.apparence = { ...APPARENCE_DEFAUT, ...partie.apparence };
 partie.langue ??= 'fr';
 choisirLangue(partie.langue);
 
